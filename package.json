@@ -1,0 +1,11 @@
+{
+  "name": "linux-awakening",
+  "version": "1.0.0",
+  "description": "An interactive story that teaches the Linux command line in a simulated terminal.",
+  "private": true,
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "test": "node test/walkthrough.js && node test/walkthrough.js --noise && node test/commands.js"
+  },
+  "license": "MIT"
+}

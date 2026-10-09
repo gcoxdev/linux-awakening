@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Linux Awakening</title>
+  <meta name="description" content="Learn the Linux command line by waking up in a city that runs on it — an interactive terminal story.">
+  <meta name="theme-color" content="#0b0f14">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b0f14'/%3E%3Ctext x='10' y='44' font-family='monospace' font-size='34' fill='%234ade80'%3E%3E_%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app" class="app">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menuBtn" aria-label="Open panel" title="Panel">☰</button>
+      <div class="brand"><span class="brand-mark">&gt;_</span> Linux Awakening</div>
+      <div class="topbar-chapter" id="topChapter"></div>
+    </header>
+
+    <main class="stage">
+      <section class="terminal-wrap" aria-label="Terminal">
+        <div class="term-chrome">
+          <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+          <span class="term-title" id="termTitle">rootfall — bash</span>
+        </div>
+        <div class="terminal" id="terminal" tabindex="0">
+          <div class="output" id="output" aria-live="polite"></div>
+          <div class="input-line" id="inputLine">
+            <span class="prompt" id="prompt"></span><span class="input-wrap"><input id="cmd" class="cmd" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Command input"></span>
+          </div>
+        </div>
+        <div class="mobile-keys" id="mobileKeys">
+          <button data-key="Tab">Tab</button>
+          <button data-key="ArrowUp">↑</button>
+          <button data-key="ArrowDown">↓</button>
+          <button data-key="c-c">Ctrl+C</button>
+          <button data-key="c-d">Ctrl+D</button>
+          <button data-key="|">|</button>
+          <button data-key="~">~</button>
+          <button data-key="/">/</button>
+          <button data-key="-">-</button>
+        </div>
+      </section>
+
+      <aside class="panel" id="panel" aria-label="Story panel">
+        <div class="panel-scroll">
+          <div class="card chapter-card">
+            <div class="eyebrow" id="chapterEyebrow">Chapter 1</div>
+            <div class="chapter-title" id="chapterTitle">Wake</div>
+            <div class="chapter-place" id="chapterPlace"></div>
+            <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+            <div class="progress-label" id="progressLabel"></div>
+          </div>
+
+          <div class="card goal-card">
+            <div class="card-head">Objective</div>
+            <div class="goal-text" id="goalText">—</div>
+            <div class="goal-actions">
+              <button class="btn" id="hintBtn" title="Ask Tux for a hint">💡 Hint</button>
+              <button class="btn ghost" id="storyBtn" title="Replay the current scene">↺ Replay scene</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">Collected <span class="muted" id="collectLabel"></span></div>
+            <div class="stats">
+              <div class="stat"><span class="stat-num" id="memCount">0</span><span class="stat-label">memories /9</span></div>
+              <div class="stat"><span class="stat-num" id="secretCount">0</span><span class="stat-label" id="secretLabel">secrets</span></div>
+              <div class="stat"><span class="stat-num" id="cmdCount">0</span><span class="stat-label">commands</span></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">Notebook <span class="muted">click to read the manual</span></div>
+            <div class="notebook" id="notebook"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">Chapters</div>
+            <ol class="chapters" id="chapters"></ol>
+          </div>
+
+          <div class="card settings">
+            <div class="card-head">Settings</div>
+            <label class="row"><span>Text speed</span>
+              <select id="speedSel"><option value="slow">Slow</option><option value="normal">Normal</option><option value="fast">Fast</option><option value="instant">Instant</option></select>
+            </label>
+            <label class="row"><span>Font size</span>
+              <select id="fontSel"><option value="13">Small</option><option value="15">Medium</option><option value="17">Large</option></select>
+            </label>
+            <label class="row"><span>CRT glow</span><input type="checkbox" id="crtChk"></label>
+            <label class="row" id="freeplayRow"><span>Free play (unlock all)</span><input type="checkbox" id="freeplayChk"></label>
+            <div class="row"><button class="btn danger" id="resetBtn">Start over</button></div>
+          </div>
+          <div class="footnote">Type <code>help</code> any time. Progress saves automatically in this browser.</div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <div class="overlay hidden" id="overlay" role="dialog" aria-modal="true"></div>
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <!-- engine (no DOM) -->
+  <script src="js/core/util.js"></script>
+  <script src="js/core/vfs.js"></script>
+  <script src="js/core/parse.js"></script>
+  <script src="js/core/shell.js"></script>
+  <script src="js/cmd/builtins.js"></script>
+  <script src="js/cmd/files.js"></script>
+  <script src="js/cmd/text.js"></script>
+  <script src="js/cmd/sed.js"></script>
+  <script src="js/cmd/awk.js"></script>
+  <script src="js/cmd/system.js"></script>
+  <script src="js/cmd/procs.js"></script>
+  <script src="js/cmd/net.js"></script>
+  <script src="js/cmd/archive.js"></script>
+  <script src="js/cmd/fun.js"></script>
+  <script src="js/data/man.js"></script>
+  <script src="js/world/world.js"></script>
+  <script src="js/world/content.js"></script>
+  <script src="js/core/console.js"></script>
+  <script src="js/story/engine.js"></script>
+  <script src="js/story/ch01.js"></script>
+  <script src="js/story/ch02.js"></script>
+  <script src="js/story/ch03.js"></script>
+  <script src="js/story/ch04.js"></script>
+  <script src="js/story/ch05.js"></script>
+  <script src="js/story/ch06.js"></script>
+  <script src="js/story/ch07.js"></script>
+  <script src="js/story/ch08.js"></script>
+  <script src="js/story/ch09.js"></script>
+  <script src="js/story/ch10.js"></script>
+  <script src="js/story/ch11.js"></script>
+  <script src="js/story/ch12.js"></script>
+  <script src="js/story/ch13.js"></script>
+  <!-- browser UI -->
+  <script src="js/ui/render.js"></script>
+  <script src="js/ui/overlays.js"></script>
+  <script src="js/ui/terminal.js"></script>
+  <script src="js/ui/panel.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
