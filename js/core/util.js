@@ -3,7 +3,8 @@
   'use strict';
   const LA = (globalThis.LA = globalThis.LA || {});
 
-  LA.now = () => Date.now();
+  LA.clockOffset = 0; // story time = real time + offset (see Game.advanceClock)
+  LA.now = () => Date.now() + LA.clockOffset;
   LA.timeScale = 1; // tests set this to 0 so sleeps/pings are instant
 
   /* ---------- ANSI colour helpers ---------- */
@@ -114,7 +115,7 @@
       e: String(d.getDate()).padStart(2, ' '), H: p2(d.getHours()), I: p2(h12), M: p2(d.getMinutes()),
       S: p2(d.getSeconds()), p: d.getHours() < 12 ? 'AM' : 'PM', a: DAY[d.getDay()], A: DAYS[d.getDay()],
       b: MON[d.getMonth()], h: MON[d.getMonth()], B: MONTHS[d.getMonth()], j: String(doy).padStart(3, '0'),
-      s: Math.floor(d.getTime() / 1000), u: d.getDay() || 7, w: d.getDay(), Z: 'RFT', z: U.tzOffset(d),
+      s: Math.floor(d.getTime() / 1000), u: d.getDay() || 7, w: d.getDay(), Z: LA.tz || 'UTC', z: U.tzOffset(d),
       F: `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`,
       T: `${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`,
       D: `${p2(d.getMonth() + 1)}/${p2(d.getDate())}/${p2(d.getFullYear() % 100)}`,
@@ -124,7 +125,7 @@
   };
 
   U.dateString = (d) =>
-    `${DAY[d.getDay()]} ${MON[d.getMonth()]} ${String(d.getDate()).padStart(2, ' ')} ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())} RFT ${d.getFullYear()}`;
+    `${DAY[d.getDay()]} ${MON[d.getMonth()]} ${String(d.getDate()).padStart(2, ' ')} ${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())} ${LA.tz || 'UTC'} ${d.getFullYear()}`;
 
   /* ---------- deterministic randomness ---------- */
   U.rng = (seed) => {

@@ -88,7 +88,7 @@
     const m = world.memory();
     const b = (s) => (opts.color ? '\x1b[1m' + s + '\x1b[0m' : s);
     const total = procs.length;
-    const us = procs.reduce((a, p) => a + p.cpu, 0) / 2;
+    const us = Math.min(98.7, procs.reduce((a, p) => a + p.cpu, 0) / 2);
     let s = `top - ${LA.uptimeLine(world).trim()}\n`;
     s += `Tasks: ${b(String(total))} total,   ${b('1')} running, ${b(String(total - 1))} sleeping,   ${b('0')} stopped,   ${b('0')} zombie\n`;
     s += `%Cpu(s): ${b(us.toFixed(1))} us,  ${b('1.1')} sy,  ${b('0.0')} ni, ${b((100 - us - 1.3).toFixed(1))} id,  ${b('0.2')} wa,  ${b('0.0')} hi,  ${b('0.0')} si,  ${b('0.0')} st\n`;
@@ -124,7 +124,7 @@
     const r = ctx.world.signal(pid, sig, ctx.user, ctx.host.name, ctx.shell);
     if (r === 'ESRCH') { ctx.err.write(`${label}: (${pid}) - No such process\n`); return 1; }
     if (r === 'EPERM') { ctx.err.write(`${label}: (${pid}) - Operation not permitted\n`); return 1; }
-    if (r === 'SELF') { ctx.err.write(LA.paint(LA.ansi.yellow, `Tux grabs your sleeve. Killing your own shell would log you out of Rootfall entirely. Let's not.`) + '\n'); return 1; }
+    if (r === 'SELF') { ctx.err.write(LA.paint(LA.ansi.yellow, LA.flavor('killSelf', 'Killing your own shell would log you out entirely. Let\'s not.')) + '\n'); return 1; }
     return 0;
   }
 

@@ -1,4 +1,4 @@
-/* Chapter 10 — Spellwork (&&, ||, scripts, shebang, chmod +x, $1, for, if/test, while, $(( )), PATH) */
+/* Chapter 11 — Spellwork (&&, ||, scripts, shebang, chmod +x, $1, for, if/test, while, $(( )), PATH) */
 (function () {
   'use strict';
   const LA = globalThis.LA;
@@ -12,12 +12,14 @@
   const RESTORE_LOOP = 'count=0\nfor f in "$SRC"/*.mem; do\n    cat "$f" >> "$OUT"\n    count=$((count+1))\ndone';
 
   LA.story.add({
-    n: 10, id: 'spellwork', title: 'Spellwork', place: '~/scripts',
-    unlocks: ['bash', 'sh', 'test', 'read', 'seq', 'expr', 'basename', 'dirname', 'realpath', 'printf', 'bc', 'true', 'false'],
-    intro: N`Back home, Mara clears the dinner table and spreads out your old notebooks.
+    n: 11, id: 'spellwork', title: 'Spellwork', place: '~/scripts', clock: [1, 21, 30],
+    unlocks: ['bash', 'test', 'seq', 'diff'],
+    intro: N`Back home, with your memories back in a folder where they belong, Mara clears the dinner table and spreads out your old notebooks.
+
+@Mara: There's something I haven't told you. Lethe took my memories folder too, that first night. I woke up scared and didn't know why. All I had left were scraps I'd scribbled on whatever was to hand. I've copied them to «/var/tmp/mara». I can't make them make sense.
 
 @Mara: You know what you were really good at? Not typing commands. *Writing them down* so the city could type them for you. Scripts. You called it spellwork.
-@Mara: A script is just a text file full of commands — but with variables, loops and decisions, it becomes something that thinks.`,
+@Mara: A script is just a text file full of commands — but with variables, loops and decisions, it becomes something that thinks. Your old «restore.sh» was meant for exactly this. Let's get you writing spells again.`,
     steps: [
       {
         say: N`@Mara: First, chaining. «&&» means *and then, if that worked*: the second command only runs if the first one succeeded.
@@ -129,7 +131,12 @@ Tests: «-f FILE» is a file · «-d DIR» is a directory · «-e PATH» exists 
 «n=3; while [ $n -gt 0 ]; do echo $n; n=$((n-1)); done; echo "liftoff"»`,
         goal: 'Count down with a while loop and $(( ))',
         hints: ['Type: «n=3; while [ $n -gt 0 ]; do echo $n; n=$((n-1)); done; echo "liftoff"»'],
-        check: (e) => /\bwhile\b/.test(e.line) && /\$\(\(/.test(e.line),
+        /* the loop must really have run: at least three numbers echoed by a while, not the words typed in quotes */
+        check: (e) => {
+          const bare = e.line.replace(/'[^']*'|"(?:\\.|[^"])*"/g, '""');
+          const counted = e.recs.filter((r) => r.name === 'echo' && /^\d+$/.test(r.args.join(' ').trim())).length;
+          return /\bwhile\b/.test(bare) && /\$\(\(/.test(bare) && counted >= 3;
+        },
         solve: ['n=3; while [ $n -gt 0 ]; do echo $n; n=$((n-1)); done; echo "liftoff"'],
         done: N`3... 2... 1... liftoff.
 
@@ -138,52 +145,85 @@ Tux, who has been watching from the radiator, claps his flippers together once.`
       {
         setup: (g) => {
           const fs = g.fs, u = g.user;
-          if (!fs.tryGet('/var/tmp/memories/fragments')) {
-            for (const d of ['/var/tmp/memories', '/var/tmp/memories/fragments']) { if (!fs.tryGet(d)) { const n = fs.dir(d); n.owner = u; n.group = u; n.immutable = false; } }
-          }
-          for (const [k, v] of Object.entries(LA.FRAGMENTS)) if (!fs.tryGet('/var/tmp/memories/fragments/' + k)) fs.put('/var/tmp/memories/fragments/' + k, v, { owner: u, group: u });
+          const dir = '/var/tmp/camp/memories/fragments';
+          for (const d of ['/var/tmp/camp', '/var/tmp/camp/memories', dir]) if (!fs.tryGet(d)) fs.dir(d, { owner: u });
+          for (const [k, v] of Object.entries(LA.FRAGMENTS)) if (!fs.tryGet(dir + '/' + k)) fs.put(dir + '/' + k, v, { owner: u, group: u });
           const rs = g.home + '/scripts/restore.sh';
           if (!fs.tryGet(rs)) fs.put(rs, '#!/bin/bash\nSRC=$1\nOUT=$2\necho "=== restored memories ===" > "$OUT"\n# TODO: loop over every .mem file in $SRC\n#       and append (>>) each one\'s contents to $OUT\n# TODO: print how many fragments were restored\necho "done."\n', { owner: u, group: u });
+          if (!fs.tryGet('/var/tmp/mara')) {
+            fs.dir('/var/tmp/mara', { owner: 'mara', mode: 0o755 });
+            const scraps = {
+              '1_knock.mem': '...02:40, three nights ago. a knock. you, white as paper, Tux under your arm.\nyou said you had to go to the Docks and you would not say why...\n',
+              '2_sdb.mem': '...you said: "if I am not back by four, mount the Undercroft. sdb1."\nI said "what is sdb1". you laughed. you never laugh at four in the morning...\n',
+              '3_morning.mem': '...morning. I could not remember why I was frightened, only that I was.\nI wrote you letters - backwards, in rot13 - because something in this city\nreads everything, and I did not want it reading those...\n',
+            };
+            for (const [k, v] of Object.entries(scraps)) fs.put('/var/tmp/mara/' + k, v, { owner: 'mara', group: 'mara', mode: 0o644 });
+          }
         },
-        say: N`@Mara: Now the real thing. Your unfinished spell: «restore.sh». It should take the folder of memory fragments you saved in «/var/tmp» and stitch them together into one file. Look at it: «cat restore.sh».
-@Mara: The TODOs are where you stopped. Replace them with a for loop that appends («>>») every «.mem» file to «$OUT», counting as it goes. Then make it executable and run:
-«./restore.sh /var/tmp/memories/fragments ~/restored.txt»`,
-        goal: 'Finish restore.sh, then run: «./restore.sh /var/tmp/memories/fragments ~/restored.txt»',
+        say: N`@Mara: Now the real thing. Your unfinished spell: «restore.sh». It takes a folder of memory fragments and stitches them, in order, into one file. Look at it first: «cat restore.sh».
+@Mara: The TODOs are where you stopped. Replace them with a for loop that appends («>>») every «.mem» file to «$OUT», counting as it goes. Then make it executable and test it on fragments you already know — the ones from your camp:
+«./restore.sh /var/tmp/camp/memories/fragments ~/restored.txt»`,
+        goal: 'Finish the loop in restore.sh, then test it: «./restore.sh /var/tmp/camp/memories/fragments ~/restored.txt»',
         hints: [
           'Open it with «nano restore.sh». Delete the TODO comments and write a loop in their place.',
           'The loop: «for f in "$SRC"/*.mem; do ... done» — inside it, «cat "$f" >> "$OUT"».',
           `The complete replacement for the TODOs:\n${RESTORE_LOOP}\necho "restored $count fragments"`,
-          'Then «chmod +x restore.sh» and «./restore.sh /var/tmp/memories/fragments ~/restored.txt»',
+          'Then «chmod +x restore.sh» and «./restore.sh /var/tmp/camp/memories/fragments ~/restored.txt»',
         ],
-        check: (e) => { const t = e.read(e.home + '/restored.txt') || ''; return t.includes('cron fires at three') && t.includes('diff does not lie') && t.includes('Undercroft'); },
+        check: (e) => {
+          const script = e.read(e.home + '/scripts/restore.sh') || '';
+          const out = e.read(e.home + '/restored.txt') || '';
+          return /\b(for|while)\b/.test(script) && !/#\s*TODO/.test(script) && !!e.event('script', (ev) => /restore(\.sh)?$/.test(ev.path))
+            && out.includes('cron fires at three') && out.includes('diff does not lie') && out.includes('Undercroft');
+        },
+        nudge: (e) => {
+          const script = e.read(e.home + '/scripts/restore.sh') || '';
+          if (/#\s*TODO/.test(script) && /restored\.txt/.test(e.line)) return "@Mara: You've combined the files, sure — but the spell itself still has its TODOs. The point is a script that works on *any* folder. Finish the loop in «restore.sh», then run it.";
+          return null;
+        },
         solve: [
           { edit: (c) => c.replace(/# TODO: loop[^\n]*\n#[^\n]*\n/, RESTORE_LOOP + '\n').replace(/# TODO: print[^\n]*\n/, 'echo "restored $count fragments"\n') },
-          'nano restore.sh', 'chmod +x restore.sh', './restore.sh /var/tmp/memories/fragments ~/restored.txt',
+          'nano restore.sh', 'chmod +x restore.sh', './restore.sh /var/tmp/camp/memories/fragments ~/restored.txt',
         ],
         done: N`«restored 3 fragments»
 
-You «cat ~/restored.txt» and the three scraps sit together on the screen at last, in order. The cron at three. The stolen key. The Undercroft.
-
-Reading them together is like hearing a song you'd only known as three separate notes.
+The three scraps from your pockets, stitched together in order. Nothing new — and that's the point: you tested your spell on something whose answer you already knew. Now it can be trusted with something you don't.
 
 :::lesson
 Always quote variables that hold file names: «"$f"», «"$OUT"». Without quotes, a name containing spaces would split into several words — the most common shell-script bug there is.
 :::`,
       },
       {
-        say: N`@Mara: Last trick. Make «restore» a real command you can run from anywhere. Make your own «bin» directory, copy the script there, and put that directory at the front of your «$PATH»:
+        say: N`@Mara: Now mine. Same spell, different folder — that's the whole reason to write a script.`,
+        goal: 'Restore Mara\'s scraps: run restore.sh on /var/tmp/mara, writing to ~/mara_restored.txt',
+        hints: ['Same script, new arguments: «./restore.sh /var/tmp/mara ~/mara_restored.txt»', 'Then read the result: «cat ~/mara_restored.txt»'],
+        check: (e) => /Tux under your arm/.test(e.read(e.home + '/mara_restored.txt') || '') && !!e.event('script', (ev) => /restore(\.sh)?$/.test(ev.path)),
+        solve: ['./restore.sh /var/tmp/mara ~/mara_restored.txt'],
+        done: N`«restored 3 fragments». Mara reads them over your shoulder, and goes very quiet.
+
+*02:40, three nights ago. A knock. You, white as paper, Tux under your arm.*
+*"If I am not back by four, mount the Undercroft. sdb1."*
+*I wrote you letters — backwards, in ROT13 — because something in this city reads everything.*
+
+@Mara: You came to *me*. You told me exactly what to do, and Lethe took it at three o'clock along with everything else. I've been sending you clues I didn't know I knew.
+@Mara: ...Thank you for putting me back together. Even this much.`,
+      },
+      {
+        say: N`@Mara: One more. A spell you have to type «./scripts/restore.sh» to cast isn't finished. Make it a real command: a «bin» folder of your own, a copy of the script in it — check the copy with «diff», which prints nothing when two files are identical — and that folder at the front of your «$PATH».
 «mkdir -p ~/bin»
 «cp restore.sh ~/bin/restore»
+«diff restore.sh ~/bin/restore && echo identical»
 «export PATH="$HOME/bin:$PATH"»
-«which restore»`,
-        goal: 'Install restore into ~/bin, add ~/bin to PATH, and confirm with «which restore»',
-        hints: ['Four commands: mkdir -p ~/bin · cp restore.sh ~/bin/restore · export PATH="$HOME/bin:$PATH" · which restore', 'If «which restore» prints nothing, check «echo $PATH» starts with your bin directory, and that ~/bin/restore is executable.'],
-        check: (e) => !!e.ran('which', (r) => r.args.includes('restore') && r.out.includes('/bin/restore')),
-        solve: ['mkdir -p ~/bin', 'cp restore.sh ~/bin/restore', 'export PATH="$HOME/bin:$PATH"', 'which restore'],
-        done: N`«/home/{user}/bin/restore» — your own command, sitting in your PATH like any of the Toolsmiths' tools. (Your «~/.profile» already adds «~/bin» to the PATH at every login.)`,
+@Mara: Then prove it: go somewhere else and just type «restore» with a folder and an output file.`,
+        goal: 'Install restore into ~/bin, add ~/bin to your PATH, and run «restore» by name from outside ~/scripts',
+        hints: ['mkdir -p ~/bin · cp restore.sh ~/bin/restore · diff restore.sh ~/bin/restore · export PATH="$HOME/bin:$PATH"', 'Then for example: «cd ~» and «restore /var/tmp/mara /tmp/test.txt»', 'If the shell says "command not found", check «echo $PATH» starts with your bin directory, and that ~/bin/restore is executable («which restore» will find it once both are true).'],
+        check: (e) => /^\s*restore\b/.test(e.line) && e.status === 0 && !!e.event('script', (ev) => ev.path === e.home + '/bin/restore'),
+        solve: ['mkdir -p ~/bin', 'cp restore.sh ~/bin/restore', 'diff restore.sh ~/bin/restore && echo identical', 'export PATH="$HOME/bin:$PATH"', 'cd ~', 'restore /var/tmp/mara /tmp/check.txt'],
+        done: N`Your own command, found through your PATH like any of the Toolsmiths' tools. (Your «~/.profile» already adds «~/bin» to the PATH at every login, so it'll still be there tomorrow.)`,
       },
     ],
-    outro: N`@Mara: Three fragments. But the diary said the *whole* backup is in the Undercroft — and now the door's open.
-@Mara: Bring a torch. And a checksum.`,
+    outro: N`Late, the radiator ticking, Mara asleep on your sofa with her scraps in a neat file at last.
+
+One door is still open: the one Hollow planted at the Lighthouse. And Wren has been trying to reach you.`,
   });
 })();

@@ -902,7 +902,9 @@
       const fmt = (v, isDiv) => {
         if (!isFinite(v)) return 'Runtime error: divide by zero';
         let s;
-        if (Number.isInteger(v)) s = String(v);
+        /* a division carries «scale» digits even when it comes out whole: scale=3; 30/5 is 6.000 */
+        if (isDiv && vars.scale > 0) s = v.toFixed(Math.min(vars.scale, 20));
+        else if (Number.isInteger(v)) s = String(v);
         else {
           const digits = Math.min(20, Math.max(vars.scale, isDiv ? vars.scale : 0) || (String(v).split('.')[1] || '').length);
           s = v.toFixed(Math.min(digits, 20));
@@ -1066,7 +1068,14 @@
       const r = await readArg(ctx, ctx.args[0] || '-');
       if (r.error) { ctx.err.write(`strings: '${ctx.args[0]}': ${r.error}\n`); return 1; }
       let text = r.text;
-      if (r.node && r.node.format) text = JSON.stringify(r.node.data).replace(/[{}"\[\],:]/g, '\n');
+      if (r.node && r.node.format) {
+        /* a binary file: its magic number, then whatever text is embedded in it */
+        const leaves = [];
+        const walk = (v) => { if (typeof v === 'string') leaves.push(v); else if (v && typeof v === 'object') Object.values(v).forEach(walk); };
+        walk(r.node.data);
+        const magic = { jpeg: 'JFIF', pdf: '%PDF-1.7', png: 'IHDR', elf: '.ELF', zip: 'PK', gzip: '', tar: 'ustar' }[r.node.format] || '';
+        text = [magic].concat(leaves).join('\n');
+      }
       const found = text.match(/[\x20-\x7e]{4,}/g) || [];
       ctx.print(U.joinLines(found));
       return 0;

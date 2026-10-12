@@ -7,8 +7,8 @@
   const inLib = (e, r) => { const t = e.targets(r); return t.length ? t.includes(LIB) : e.cwd === LIB; };
 
   LA.story.add({
-    n: 2, id: 'streets', title: 'Streets of Rootfall', place: 'The Great Library & the Chronicle',
-    unlocks: ['man', 'less', 'more', 'head', 'tail', 'file', 'tree', 'echo', 'date', 'cal', 'whatis', 'apropos'],
+    n: 2, id: 'streets', title: 'Streets of Rootfall', place: 'The Great Library & the Chronicle', clock: [0, 15, 30],
+    unlocks: ['man', 'less', 'head', 'tail', 'file', 'tree', 'echo', 'date'],
     intro: N`The streets of Rootfall are quieter than they should be.
 
 A baker stands in the doorway of his shop in Old Town, staring at an empty shelf where his recipe books used to be. Two children on a bench are arguing about what day it is, and neither of them is sure.
@@ -63,16 +63,8 @@ The bits after the command name — like «-l» — are **options** (also called
 @Mags: ...which you did *not* see. (She winks.)
 
 :::lesson
-Flags can be combined: «ls -la» is the same as «ls -l -a».
+Flags combine: «ls -la» is the same as «ls -l -a». Add «-h» for human-readable sizes — «ls -lah» shows 4.0K instead of 4096.
 :::`,
-      },
-      {
-        say: N`@Mags: Sizes in bytes are hard to read. Add «-h» for *human-readable* sizes — and combine all three.`,
-        goal: 'Long listing, everything, human-readable sizes: «ls -lah»',
-        hints: ['Three flags squeezed together: «ls -lah»'],
-        check: (e) => !!e.ran('ls', (r) => e.has(r, 'l') && e.has(r, 'a') && e.has(r, 'h')),
-        solve: ['ls -lah'],
-        done: N`4.0K, 1.2K... much better.`,
       },
       {
         say: N`@Mags: Here's the secret every Operator learns eventually. Every command in Rootfall comes with its own **manual**, written by the people who built it. Ask for one: «man ls».
@@ -196,14 +188,15 @@ Printing presses thump somewhere below. A man in shirtsleeves with ink up to his
         say: N`@Hal: Want to know what happened last night? New entries are written at the *bottom* of a log. So: «tail -n 20 syslog» — the last twenty lines.`,
         goal: 'Read the latest news: «tail -n 20 syslog»',
         hints: ['Type: «tail -n 20 syslog»'],
-        check: (e) => !!e.ran('tail', (r) => e.targets(r).some((t) => t === '/var/log/syslog')),
+        check: (e) => !!e.ran('tail', (r) => e.targets(r).some((t) => t === '/var/log/syslog') && /lethe\[\d+\]/.test(r.out)),
+        nudge: (e) => (e.ran('tail', (r) => e.targets(r).some((t) => t === '/var/log/syslog') && !/lethe/.test(r.out)) ? "@Hal: That's not much of a story. Show me more of the end — twenty lines, say." : null),
         solve: ['tail -n 20 syslog'],
         done: N`There it is again. **lethe**. Every night at 03:00:
 
-  «lethe[666]: sweep started (SAFE_MODE=no, QUARANTINE=/dev/null)»
+  «lethe[451]: sweep started (SAFE_MODE=no, QUARANTINE=/dev/null)»
 
-@Hal: Lethe. Your chart said that word. It runs every night at three, and every morning the city is lighter.
-@Hal: City Hall keeps the permit for everything that runs in Rootfall. They'd know who installed it — and they'd have your address on file. But City Hall doesn't open until dawn.`,
+@Hal: Lethe. You've heard that name before — it's all over your face. It runs every night at three, and every morning the city is lighter.
+@Hal: City Hall keeps the permit for everything that runs in Rootfall. They'd know who installed it — and they'd have your address on file. But City Hall doesn't open until dawn.{logLesson}`,
       },
     ],
     outro: N`@Hal: You'll need somewhere to sleep. The Night Market at «/tmp» lets anyone pitch a stall. Just — don't leave anything precious there overnight.

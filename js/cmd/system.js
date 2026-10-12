@@ -58,7 +58,7 @@
     run(ctx) {
       const { o } = getopt(ctx.args, { flags: 'asnrvmpio', long: { all: 'a', 'kernel-name': 's', nodename: 'n', 'kernel-release': 'r', 'kernel-version': 'v', machine: 'm', 'operating-system': 'o' } });
       const f = {
-        s: 'Linux', n: ctx.host.name, r: '6.1.0-rootfall', v: '#1 SMP PREEMPT_DYNAMIC Fri Mar 1 03:00:00 RFT 1991',
+        s: 'Linux', n: ctx.host.name, r: ctx.world.sys.kernel, v: `#1 SMP PREEMPT_DYNAMIC Fri Mar 1 03:00:00 ${ctx.world.sys.tz} ${ctx.world.sys.build}`,
         m: 'x86_64', p: 'x86_64', i: 'x86_64', o: 'GNU/Linux',
       };
       if (o.a) { ctx.println(`${f.s} ${f.n} ${f.r} ${f.v} ${f.m} ${f.o}`); return 0; }
@@ -92,7 +92,7 @@
         else if (a === '-d' || a === '--date') dstr = args[++i];
         else if (a.startsWith('--date=')) dstr = a.slice(7);
         else if (a === '-I' || a === '--iso-8601') iso = true;
-        else if (a === '-u' || a === '-R' || a === '--utc') { /* local Rootfall time only */ }
+        else if (a === '-u' || a === '-R' || a === '--utc') { /* local story time only */ }
         else if (a.startsWith('-')) { ctx.err.write(`date: invalid option -- '${a.slice(1)}'\n`); return 1; }
         else { ctx.err.write(`date: cannot set date: Operation not permitted\n`); return 1; }
       }
@@ -149,8 +149,8 @@
   LA.uptimeLine = (world) => {
     const { days, h, mi } = uptimeParts(world);
     const t = U.strftime('%T', new Date(LA.now()));
-    const users = world.sessions.filter((s) => s.host === 'rootfall').length;
-    return ` ${t} up ${days} day${days === 1 ? '' : 's'}, ${String(h).padStart(2)}:${U.p2(mi)},  ${users} user${users === 1 ? '' : 's'},  load average: ${world.load().join(', ')}`;
+    const users = world.sessions.filter((s) => s.host === world.mainName).length;
+    return ` ${t} up ${days ? `${days} day${days === 1 ? '' : 's'}, ` : ''}${String(h).padStart(2)}:${U.p2(mi)},  ${users} user${users === 1 ? '' : 's'},  load average: ${world.load().join(', ')}`;
   };
   def('uptime', {
     run(ctx) {
@@ -248,11 +248,12 @@
 
   /* ---------- manuals ---------- */
   function renderMan(name, page, tty) {
+    const osName = (LA.game && LA.game.world && LA.game.world.sys.os) || 'GNU/Linux';
     const b = (s) => (tty ? '\x1b[1m' + s + '\x1b[0m' : s);
     const u = (s) => (tty ? '\x1b[4m' + s + '\x1b[0m' : s);
     const sec = page.section || 1;
     const head = `${name.toUpperCase()}(${sec})`;
-    const center = sec === 1 ? 'User Commands' : sec === 8 ? 'System Administration' : sec === 5 ? 'File Formats' : sec === 7 ? 'Miscellanea' : 'Rootfall Manual';
+    const center = sec === 1 ? 'User Commands' : sec === 8 ? 'System Administration' : sec === 5 ? 'File Formats' : sec === 7 ? 'Miscellanea' : `${osName.split(' ')[0]} Manual`;
     const gap = Math.max(1, 78 - head.length * 2 - center.length);
     let out = head + ' '.repeat(Math.floor(gap / 2)) + center + ' '.repeat(Math.ceil(gap / 2)) + head + '\n\n';
     out += b('NAME') + '\n       ' + name + ' - ' + page.desc + '\n\n';
@@ -267,7 +268,7 @@
       for (const [c, d] of page.ex) out += '       ' + u(c) + '\n' + wrap(d, 64, '              ') + '\n\n';
     }
     if (page.see) out += b('SEE ALSO') + '\n       ' + page.see.split(/\s*,\s*/).map((x) => b(x) + '(1)').join(', ') + '\n\n';
-    out += `Rootfall 1991                       ${new Date(LA.now()).getFullYear()}                       ${head}\n`;
+    out += `${U.padR(osName.replace(/ GNU\/Linux/, ''), 36)}${new Date(LA.now()).getFullYear()}                       ${head}\n`;
     return out;
   }
   function wrap(text, width, indent) {
@@ -477,6 +478,8 @@
       const p = ctx.world.procs.find((x) => x.user === name && x.host === ctx.host.name);
       if (p && !o.f) { ctx.err.write(`userdel: user ${name} is currently used by process ${p.pid}\n`); return 8; }
       const home = users.get(name).home;
+      users.ghosts[name] = users.get(name).uid;
+      if (users.groups[name]) users.ghosts['g:' + name] = users.groups[name].gid;
       delete users.users[name];
       for (const g of Object.values(users.groups)) g.members = g.members.filter((m) => m !== name);
       if (users.groups[name] && !Object.values(users.users).some((u) => u.gid === users.groups[name].gid)) delete users.groups[name];
@@ -540,7 +543,7 @@
     },
   });
 
-  def('chsh', { run(ctx) { ctx.err.write('chsh: Rootfall only speaks bash.\n'); return 1; } });
+  def('chsh', { run(ctx) { ctx.err.write('chsh: this system only speaks bash.\n'); return 1; } });
 
   /* ---------- sessions ---------- */
   def('who', {
@@ -575,7 +578,7 @@
       rows = rows.slice().sort((a, b) => b.at - a.at);
       if (n) rows = rows.slice(0, Math.abs(parseInt(n, 10)));
       for (const r of rows) {
-        const live = ctx.world.sessions.find((s) => s.user === r.user && s.tty === r.tty && s.host === r.host);
+        const live = !r.out && ctx.world.sessions.find((s) => s.user === r.user && s.tty === r.tty && s.host === r.host);
         const d = new Date(r.at);
         ctx.println(`${U.padR(r.user, 8)} ${U.padR(r.tty, 12)} ${U.padR(r.from || '', 16)} ${U.DAY[d.getDay()]} ${U.MON[d.getMonth()]} ${String(d.getDate()).padStart(2)} ${U.strftime('%H:%M', d)}   ${live ? 'still logged in' : r.out || '- crash'}`);
       }
@@ -687,7 +690,7 @@
         who = o.u;
         if (!fs.users.exists(who)) { ctx.err.write(`crontab: user '${who}' unknown\n`); return 1; }
       }
-      const path = `/var/spool/cron/crontabs/${who}`;
+      const path = `${LA.cronSpool(ctx.world)}/${who}`;
       const node = fs.tryGet(path, 'root');
       if (o.l) {
         if (!node) { ctx.err.write(`no crontab for ${who}\n`); return 1; }
@@ -704,7 +707,7 @@
       if (o.e) {
         const content = node ? fs.contentOf(node) : '# Edit this file to introduce tasks to be run by cron.\n#\n# m h  dom mon dow   command\n';
         let saved = null;
-        await ctx.ui.edit({ filename: `/tmp/crontab.${Math.random().toString(36).slice(2, 8)}/crontab`, content, editor: 'nano', onSave: (t) => { saved = t; return true; } });
+        await ctx.ui.edit({ filename: `/tmp/crontab.${Math.random().toString(36).slice(2, 8)}/crontab`, content, editor: 'nano', onSave: (t) => { saved = t; return { ok: true, lines: U.lines(t).length }; } });
         if (saved !== null && saved !== content) {
           if (node) fs.remove(path);
           fs.put(path, saved, { owner: who, group: 'crontab', mode: 0o600 });
@@ -791,116 +794,7 @@
     },
   });
 
-  /* ---------- packages ---------- */
-  def('apt', {
-    async run(ctx) {
-      const args = ctx.args.filter((a) => !/^-(y|-yes|q)$/.test(a));
-      const verb = args[0];
-      const world = ctx.world;
-      const P = world.packages;
-      const lockErr = () => {
-        ctx.err.write('E: Could not open lock file /var/lib/dpkg/lock-frontend - open (13: Permission denied)\nE: Unable to acquire the dpkg frontend lock (/var/lib/dpkg/lock-frontend), are you root?\n');
-        return 100;
-      };
-      const say = async (s, ms = 120) => { ctx.println(s); await ctx.sleep(ms); };
-      switch (verb) {
-        case undefined: case 'help':
-          ctx.println('apt 2.6.1 (amd64)\nUsage: apt [options] command\n\nMost used commands:\n  list - list packages based on package names\n  search - search in package descriptions\n  show - show package details\n  install - install packages\n  remove - remove packages\n  update - update list of available packages\n  upgrade - upgrade the system by installing/upgrading packages\n\n                                        This APT has Super Cow Powers.');
-          return 0;
-        case 'moo':
-          ctx.println('                 (__) \n                 (oo) \n           /------\\/ \n          / |    ||   \n         *  /\\---/\\ \n            ~~   ~~   \n..."Have you mooed today?"...');
-          if (ctx.game) ctx.game.secret('moo');
-          return 0;
-        case 'update':
-          if (ctx.user !== 'root') {
-            ctx.err.write('Reading package lists... Done\nE: Could not open lock file /var/lib/apt/lists/lock - open (13: Permission denied)\nE: Unable to lock directory /var/lib/apt/lists/\n');
-            return 100;
-          }
-          await say('Hit:1 http://mirror.lighthouse.rootfall/debian bookworm InRelease');
-          await say('Get:2 http://mirror.lighthouse.rootfall/debian bookworm-updates InRelease [52.1 kB]');
-          await say('Get:3 http://security.lighthouse.rootfall bookworm-security InRelease [48.0 kB]');
-          await say('Fetched 100 kB in 1s (98.3 kB/s)');
-          await say('Reading package lists... Done');
-          await say('Building dependency tree... Done');
-          await say('Reading state information... Done');
-          ctx.println('All packages are up to date.');
-          world.aptUpdated = true;
-          return 0;
-        case 'upgrade': case 'full-upgrade':
-          if (ctx.user !== 'root') return lockErr();
-          await say('Reading package lists... Done');
-          await say('Building dependency tree... Done');
-          await say('Calculating upgrade... Done');
-          ctx.println('0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.');
-          return 0;
-        case 'search': {
-          const term = (args[1] || '').toLowerCase();
-          if (!term) { ctx.err.write('E: You must give at least one search pattern\n'); return 100; }
-          ctx.println('Sorting... Done\nFull Text Search... Done');
-          for (const [name, p] of Object.entries(P.available).sort()) {
-            if (name.includes(term) || p.desc.toLowerCase().includes(term)) {
-              ctx.println(`${LA.paint(ctx.isTTY ? LA.ansi.green : '', name)}/stable ${p.version} amd64${P.installed.includes(name) ? ' [installed]' : ''}\n  ${p.desc}\n`);
-            }
-          }
-          return 0;
-        }
-        case 'list': {
-          const inst = args.includes('--installed');
-          ctx.println('Listing... Done');
-          for (const [name, p] of Object.entries(P.available).sort()) {
-            if (inst && !P.installed.includes(name)) continue;
-            ctx.println(`${name}/stable ${p.version} amd64${P.installed.includes(name) ? ' [installed]' : ''}`);
-          }
-          return 0;
-        }
-        case 'show': {
-          const p = P.available[args[1]];
-          if (!p) { ctx.err.write(`N: Unable to locate package ${args[1]}\nE: No packages found\n`); return 100; }
-          ctx.println(`Package: ${args[1]}\nVersion: ${p.version}\nPriority: optional\nSection: ${p.section || 'utils'}\nMaintainer: Rootfall Packagers <pkg@lighthouse.rootfall>\nInstalled-Size: ${p.size || '512 kB'}\nDescription: ${p.desc}\n${p.long ? ' ' + p.long + '\n' : ''}`);
-          return 0;
-        }
-        case 'install': case 'reinstall': {
-          const names = args.slice(1);
-          if (!names.length) { ctx.err.write('E: No packages specified\n'); return 100; }
-          if (ctx.user !== 'root') return lockErr();
-          await say('Reading package lists... Done');
-          await say('Building dependency tree... Done');
-          await say('Reading state information... Done');
-          for (const n of names) if (!P.available[n]) { ctx.err.write(`E: Unable to locate package ${n}\n`); return 100; }
-          const todo = names.filter((n) => !P.installed.includes(n) || verb === 'reinstall');
-          for (const n of names.filter((x) => !todo.includes(x))) ctx.println(`${n} is already the newest version (${P.available[n].version}).`);
-          if (!todo.length) { ctx.println('0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.'); return 0; }
-          ctx.println('The following NEW packages will be installed:\n  ' + todo.join(' '));
-          ctx.println(`0 upgraded, ${todo.length} newly installed, 0 to remove and 0 not upgraded.`);
-          let i = 1;
-          for (const n of todo) await say(`Get:${i++} http://mirror.lighthouse.rootfall/debian bookworm/main amd64 ${n} amd64 ${P.available[n].version} [${P.available[n].size || '120 kB'}]`, 200);
-          for (const n of todo) {
-            await say(`Selecting previously unselected package ${n}.`);
-            await say(`Unpacking ${n} (${P.available[n].version}) ...`);
-            await say(`Setting up ${n} (${P.available[n].version}) ...`);
-            world.installPackage(n);
-            if (ctx.game) ctx.game.onInstall(n);
-          }
-          ctx.println('Processing triggers for man-db (2.11.2-2) ...');
-          return 0;
-        }
-        case 'remove': case 'purge': case 'autoremove': {
-          if (ctx.user !== 'root') return lockErr();
-          for (const n of args.slice(1)) {
-            if (!P.installed.includes(n)) { ctx.println(`Package '${n}' is not installed, so not removed`); continue; }
-            if (P.available[n] && P.available[n].essential) { ctx.err.write(`E: Removing essential system-critical packages is not permitted. This might break the system.\n`); return 100; }
-            await say(`Removing ${n} (${P.available[n].version}) ...`);
-            world.removePackage(n);
-          }
-          return 0;
-        }
-        default:
-          ctx.err.write(`E: Invalid operation ${verb}\n`);
-          return 100;
-      }
-    },
-  });
-  LA.commands['apt-get'] = LA.commands.apt;
+  /* packages: see pkg.js */
 
   /* ---------- misc ---------- */
   def('sleep', {
@@ -980,7 +874,8 @@
       while (args.length && /^-[xvnelis]+$/.test(args[0]) && args[0] !== '-c') { if (args[0].includes('x')) xtrace = true; args.shift(); }
       if (args[0] === '-c') {
         const src = args[1] || '';
-        const sh = ctx.shell.spawnChild({ script: true, scriptName: args[2] || ctx.argv[0] });
+        /* run as whoever ran bash — root, under «sudo bash -c» */
+        const sh = ctx.shell.spawnChild({ script: true, user: ctx.user, scriptName: args[2] || ctx.argv[0] });
         sh.positional = args.slice(3);
         sh.xtrace = xtrace;
         try { return await sh.execList(LA.parse(src, null), ctx.io); }
@@ -995,7 +890,7 @@
       if (!args.length) {
         if (!ctx.stdinTTY) {
           const src = await ctx.readInput();
-          const sh = ctx.shell.spawnChild({ script: true });
+          const sh = ctx.shell.spawnChild({ script: true, user: ctx.user });
           try { return await sh.execList(LA.parse(src, null), { stdin: null, out: ctx.out, err: ctx.err }); } catch (e) { if (e instanceof LA.ExitSignal) return e.code; ctx.err.write(`bash: ${e.message}\n`); return 2; }
         }
         return ctx.ui.pushShell({ user: ctx.user, login: false, host: ctx.host, cwd: ctx.cwd, from: ctx.shell, nested: true });
@@ -1009,7 +904,7 @@
         src = ctx.fs.readFile(abs, ctx.user);
       } catch (e) { ctx.err.write(`${ctx.argv[0]}: ${f}: ${e.message}\n`); return 127; }
       if (ctx.game) ctx.game.noteScript(abs, ctx.shell);
-      const sh = ctx.shell.spawnChild({ script: true, scriptName: f });
+      const sh = ctx.shell.spawnChild({ script: true, user: ctx.user, scriptName: f });
       sh.positional = args.slice(1);
       sh.xtrace = xtrace;
       let ast;

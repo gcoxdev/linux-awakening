@@ -6,8 +6,8 @@
   const R307 = '/hospital/floor3/room307';
 
   LA.story.add({
-    n: 1, id: 'wake', title: 'Wake', place: "St. Inode's Hospital",
-    unlocks: ['pwd', 'ls', 'cd', 'cat', 'whoami', 'clear'],
+    n: 1, id: 'wake', title: 'Wake', place: "St. Inode's Hospital", clock: [0, 11, 40],
+    unlocks: ['pwd', 'ls', 'cd', 'cat', 'whoami'],
     intro: N`White.
 
 Then a ceiling. Then the slow, patient beep of a machine that seems to be counting for you.
@@ -40,7 +40,11 @@ Type «pwd» and press **Enter**.
    '------------------------------- the root of the whole city
 :::
 
-@Ines: Every place in Rootfall has an address like that. Each «/» is a doorway from one place into the next.`,
+@Ines: Every place in Rootfall has an address like that. Each «/» is a doorway from one place into the next.
+
+:::lesson
+Your **prompt** — the text before the cursor — always shows where your terminal is *focused*. Sometimes that's the room you're standing in. Sometimes it's a container you've opened to look inside: a cabinet, a desk drawer, a shelf. The city is a filesystem, and every one of them is a **directory**.
+:::`
       },
       {
         say: N`@Ines: Now look around you. «ls» *lists* everything in the place you're standing.`,
@@ -75,18 +79,14 @@ Something cold moves at the back of your mind, and then it's gone.
         solve: ['whoami'],
         done: N`**{user}.** The city agrees with the chart. At least one thing hasn't been forgotten.
 
-@Ines: Your belongings are in the cabinet. To step *into* a directory, use «cd» — *change directory*. Like this: «cd cabinet»`,
+@Ines: Your belongings are in the cabinet. To open a directory and work inside it, use «cd» — *change directory*. Like this: «cd cabinet»`
       },
       {
-        goal: 'Step into the cabinet: «cd cabinet»',
-        hints: ['«cd» followed by a directory name moves you into it.', 'Type: «cd cabinet»'],
+        goal: 'Open the cabinet: «cd cabinet»',
+        hints: ['«cd» followed by a directory name focuses your terminal inside it.', 'Type: «cd cabinet»'],
         check: (e) => e.cwd === R307 + '/cabinet',
         solve: ['cd cabinet'],
-        done: N`The cabinet door creaks open.
-
-:::lesson
-Notice your **prompt** — the text before your cursor — changed. It always shows where you are, so you never have to guess.
-:::`,
+        done: N`The cabinet door creaks open. You're still sitting on the bed — but look at your prompt: it now ends in «cabinet». Your terminal is focused *inside* it, so anything you list or read happens there.`
       },
       {
         say: N`@Ines: Go on. Have a look at what you came in with.`,
@@ -107,8 +107,8 @@ There's also a «coat_pocket.txt» in here, if you're curious. Exploring is alwa
 :::`,
       },
       {
-        say: N`@Ines: To go back out, use «cd ..» — two dots mean **the parent directory**: the place that contains the one you're in.`,
-        goal: 'Go back up into the room: «cd ..»',
+        say: N`@Ines: Close it up again with «cd ..» — two dots mean **the parent directory**: whatever contains the one you're in. Here, that's the room.`,
+        goal: 'Go back up to the room: «cd ..»',
         hints: ['There is a space between «cd» and «..»', 'Type: «cd ..»'],
         check: (e) => e.cwd === R307 && !!e.ran('cd'),
         solve: ['cd ..'],
@@ -122,7 +122,7 @@ There's also a «coat_pocket.txt» in here, if you're curious. Exploring is alwa
         hints: ['The hallway is the parent of this room: «cd ..»', 'Then «ls» to look around.'],
         check: (e) => e.cwd === '/hospital/floor3' && !!e.ran('ls'),
         solve: ['cd ..', 'ls'],
-        done: N`A long, quiet corridor. Doors marked 301 to 309, a supply closet, and the nurses' station at the far end.
+        done: N`A long, quiet corridor. A row of patient rooms, a supply closet, and the nurses' station at the far end.
 
 @Ines (from down the hall): Over here! Your discharge papers are at the nurses' station.
 
@@ -131,7 +131,7 @@ Screen getting crowded? «clear» wipes it clean. (So does **Ctrl+L**.)
 :::`,
       },
       {
-        goal: 'Go into «nurses_station» and read «discharge_note.txt»',
+        goal: 'Walk over to the «nurses_station» and read «discharge_note.txt»',
         hints: ['«cd nurses_station», then «ls».', 'Then: «cat discharge_note.txt»'],
         check: (e) => e.didRead('/hospital/floor3/nurses_station/discharge_note.txt'),
         solve: ['cd nurses_station', 'cat discharge_note.txt'],

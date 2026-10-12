@@ -1,4 +1,4 @@
-/* Linux Awakening — builds the city of Rootfall (filesystem, people, logs, network). */
+/* Rootfall — builds the city of Rootfall (filesystem, people, logs, network). */
 (function () {
   'use strict';
   const LA = globalThis.LA;
@@ -32,13 +32,27 @@ SAFE_MODE=${clean ? 'yes' : 'no'}
 TARGETS=${clean ? '/tmp/*' : '/tmp/* /home/*/memories /usr/share/doc/archive/*'}
 QUARANTINE=${clean ? '/var/lethe/quarantine' : '/dev/null'}
 WATCH_USER=${clean ? 'hollow' : 'nobody'}
-EXCLUDE=${clean ? '' : '/var/.hollow'}
+EXCLUDE=${clean ? '/tmp/ingrid_stall /tmp/notice_board.txt' : '/tmp/ingrid_stall /tmp/notice_board.txt /tmp/.hollow /var/.hollow'}
 LOG=/var/log/lethe.log
+`;
+
+  /* Hollow's plan gives the ending away, so it is only placed in /var/.hollow when the last chapter starts */
+  LA.HOLLOW_PLAN = `step 1. their keys      (done. the night market sells anything: a copy
+                         of the keeper's key, and the operator's
+                         password, going cheap as a rumour.)
+step 2. their sweeper   (done. the operator built me a broom. how kind.)
+step 3. their memories  (in progress. homes first, then the archives,
+                         then the names.)
+step 4. their city      (a city that cannot remember cannot resist.)
+
+note: the operator is getting close.
+      if the operator gets close, point the broom at the void
+      and let the operator walk into it.
 `;
 
   LA.FRAGMENTS = {
     'frag_a.mem': '...the cron fires at three. I wrote it. I wrote it to protect them,\nnot this. Lethe was a broom. Somebody turned it into a river...\n',
-    'frag_b.mem': '...the config changed and the change came from my own account.\nhe has my key. he has my password. the diff does not lie...\n',
+    'frag_b.mem': '...the config changed and the change came from my own account.\nhe has my password. the diff does not lie...\n',
     'frag_c.mem': '...if I lose myself: the backups are under the city, in the\nUndercroft. the disk is sdb. Tux knows the way home...\n',
   };
 
@@ -158,43 +172,39 @@ large letters. I framed a copy.
 `,
       memory_08: R`MEMORY 08 — THE BRIDGE
 ----------------------
-02:30. Someone changed lethe.conf tonight. SAFE_MODE=no. QUARANTINE
+02:20. Someone changed lethe.conf tonight. SAFE_MODE=no. QUARANTINE
 pointed at /dev/null. TARGETS reaching into people's homes. He
 didn't break my broom — he picked it up and pointed it at all of us.
 
-He did it with MY account. My key. My password. The one on the
-sticky note. The one anybody who knew me could guess.
+He did it from MY account, with my password: the one on the sticky
+note, the one anybody who knew me could guess.
 
-There's no time to fix it properly. Lethe runs at three. So:
+02:22. I stopped Lethe. "inactive (dead)". I checked /etc/cron.d
+and /etc/crontab for anything that might start it again: nothing.
+Tomorrow I put the config right and find out how he keeps getting in.
 
-  1. back up my memories to the Undercroft (sdb1)        done, 02:35
+02:31. Mail, from Wren's account: "I know who Hollow is. The Docks,
+02:50. Come alone — he reads everything." Wren never writes like
+that. But if it IS her, and she's in trouble...
+
+  1. back up my memories to the Undercroft (sdb1)        doing it now
+     then pull the disk and give it to Juno. nothing on the
+     city can touch a disk sitting in a drawer.
   2. leave fragments in my pockets, in case             done
-  3. take the dock line to /dev, catch him in the act   going now
+  3. take the dock line to /dev and find out            next
 
-If you're reading this, me: it didn't work. You're starting over.
-That's alright. You've done it before. You were nineteen and Bea
-cracked her knuckles for you.
+If you're reading this, me: I didn't come back. So it was a trap —
+and stopping Lethe wasn't enough. Something I didn't check can start
+it again. Find it.
+
+You're starting over. That's alright. You've done it before. You
+were nineteen and Bea cracked her knuckles for you.
 
 Start with pwd.
 `,
-      memory_09: R`MEMORY 09 — THE VOID
---------------------
-I remember now. All of it.
-
-02:58. The Docks. The water at the edge of /dev/null was so still
-it looked like glass. Hollow wasn't there. Of course he wasn't. He
-was never anywhere; that's the whole trick of him.
-
-03:00. Lethe ran. I felt it go through the city like a cold wind,
-pulling things loose — names, dates, the smell of the Library, the
-sound of Mara laughing. And because I was standing at the edge of
-the Void, the wind pulled me in after them.
-
-The last thing I saw was Tux, grabbing my sleeve in his beak,
-refusing — absolutely refusing — to let go.
-
------------------------------------------------------------------
-Tucked behind the memory, in different handwriting, an old card:
+      bea_card: R`A plain card, soft with age, propped against the console in root's
+home. It has been here since the day Bea handed over the keys, waiting
+for whoever came to this room next.
 
     To whoever holds the keys next,
 
@@ -207,6 +217,26 @@ Tucked behind the memory, in different handwriting, an old card:
     };
   }
   LA.memoryTexts = memoryTexts;
+
+  /* the last memory is not a file: Bea's card pulls it back up */
+  LA.MEMORY_FLASH = {
+    memory_09: (g) => (g.state.ch >= 12
+      ? `:::art
+            ~  ~  ~   the Docks, 02:58   ~  ~  ~
+:::
+Bea's words pull the last missing night up from wherever Lethe put it.
+
+02:50. The Docks. Nobody waiting — no Wren, no Hollow. The water at the edge of «/dev/null» so still it looks like glass. You understand, much too late, that the message was the trap.
+
+02:58. Somewhere behind you, in the Clockworks, a crontab you never thought to check wakes up and starts Lethe again.
+
+03:00. The sweep goes through the city like a cold wind, pulling things loose — names, dates, the smell of the Library, the sound of Mara laughing. And because you are standing at the very edge of the Void, it pulls you in after them.
+
+The last thing you see is Tux, grabbing your sleeve in his beak, refusing — absolutely refusing — to let go.`
+      : `The words snag on something. Water as still as glass... a message that wasn't from Wren... and then it slips away again, like a name on the tip of your tongue.
+
+*(This memory will come back properly when you understand the night it belongs to.)*`),
+  };
 
   /* ---------- log generators ---------- */
   function doorsLog(u, inc) {
@@ -264,17 +294,17 @@ Tucked behind the memory, in different handwriting, an old card:
       if (base > LA.now()) continue;
       L(at(n, 0, 17, 1), `CRON[${1800 + n}]: (root) CMD (cd / && run-parts --report /etc/cron.hourly)`);
       if (n <= inc) {
-        L(at(n, 2, 58, 1), `CRON[${2211 + n}]: (hollow) CMD (/usr/bin/systemctl start lethe)`);
-        L(at(n, 3, 0, 0), `lethe[666]: sweep started (SAFE_MODE=no, QUARANTINE=/dev/null)`);
-        L(at(n, 3, 0, 1), `lethe[666]: TARGET /tmp/*: ${120 + n * 7} files quarantined`);
-        L(at(n, 3, 0, 1), `lethe[666]: TARGET /home/*/memories: ${180 + n * 13} files quarantined`);
-        L(at(n, 3, 0, 2), `lethe[666]: TARGET /usr/share/doc/archive/*: ${300 - n * 40} files quarantined`);
-        L(at(n, 3, 0, 2), `lethe[666]: quarantine -> /dev/null: done. nothing remains.`);
-        L(at(n, 3, 0, 3), `lethe[666]: sweep finished in 2.71s`);
+        L(at(n, 2, 58, 1), `CRON[${2211 + n}]: (hollow) CMD (sudo -n /usr/bin/systemctl start lethe)`);
+        L(at(n, 3, 0, 0), `lethe[451]: sweep started (SAFE_MODE=no, QUARANTINE=/dev/null)`);
+        L(at(n, 3, 0, 1), `lethe[451]: TARGET /tmp/*: ${120 + n * 7} files quarantined`);
+        L(at(n, 3, 0, 1), `lethe[451]: TARGET /home/*/memories: ${180 + n * 13} files quarantined`);
+        L(at(n, 3, 0, 2), `lethe[451]: TARGET /usr/share/doc/archive/*: ${300 - n * 40} files quarantined`);
+        L(at(n, 3, 0, 2), `lethe[451]: quarantine -> /dev/null: done. nothing remains.`);
+        L(at(n, 3, 0, 3), `lethe[451]: sweep finished in 2.71s`);
       } else {
-        L(at(n, 3, 0, 0), `lethe[666]: sweep started (SAFE_MODE=yes)`);
-        L(at(n, 3, 0, 1), `lethe[666]: TARGET /tmp/*: 96 files quarantined`);
-        L(at(n, 3, 0, 1), `lethe[666]: sweep finished in 0.31s`);
+        L(at(n, 3, 0, 0), `lethe[451]: sweep started (SAFE_MODE=yes)`);
+        L(at(n, 3, 0, 1), `lethe[451]: TARGET /tmp/*: 96 files quarantined`);
+        L(at(n, 3, 0, 1), `lethe[451]: sweep finished in 0.31s`);
       }
       if (n === inc) L(at(n, 3, 12, 0), `kernel: [ROOTFALL] St. Inode's: patient admitted from /dev (unconscious)`);
       L(at(n, 6, 25, 1), `CRON[${2400 + n}]: (root) CMD (test -x /usr/sbin/anacron || run-parts --report /etc/cron.daily)`);
@@ -297,13 +327,21 @@ Tucked behind the memory, in different handwriting, an old card:
     const L = [];
     const add = (t, s) => L.push({ t, s: `${U.syslogDate(t)} rootfall ${s}` });
     for (let k = 0; k < 7; k++) add(at(inc + 6 - k, 0, 40 + k, 11), `sshd[${900 + k}]: Failed password for invalid user hollow from 10.0.0.66 port ${51000 + k} ssh2`);
-    add(at(inc, 1, 44, 2), `sshd[1201]: Accepted publickey for ${u} from 10.0.0.66 port 51337 ssh2: ED25519 SHA256:H0ll0wN0b0dyH3r3`);
+    add(at(inc, 1, 44, 2), `sshd[1201]: Accepted password for ${u} from 10.0.0.66 port 51337 ssh2`);
     add(at(inc, 1, 44, 2), `sshd[1201]: pam_unix(sshd:session): session opened for user ${u}(uid=1000) by (uid=0)`);
-    add(at(inc, 1, 47, 12), `sudo:  ${u} : TTY=pts/3 ; PWD=/home/${u} ; USER=root ; COMMAND=/usr/sbin/useradd -o -u 0 -g 0 -d /var/.hollow -s /bin/bash hollow`);
-    add(at(inc, 1, 47, 12), `useradd[1207]: new user: name=hollow, UID=0, GID=0, home=/var/.hollow, shell=/bin/bash, from=/dev/pts/3`);
+    add(at(inc, 1, 47, 12), `sudo:  ${u} : TTY=pts/3 ; PWD=/home/${u} ; USER=root ; COMMAND=/usr/sbin/useradd -m -d /var/.hollow -s /bin/bash hollow`);
+    add(at(inc, 1, 47, 12), `useradd[1207]: new group: name=hollow, GID=1009`);
+    add(at(inc, 1, 47, 12), `useradd[1207]: new user: name=hollow, UID=1009, GID=1009, home=/var/.hollow, shell=/bin/bash, from=/dev/pts/3`);
+    add(at(inc, 1, 48, 3), `sudo:  ${u} : TTY=pts/3 ; PWD=/home/${u} ; USER=root ; COMMAND=/usr/sbin/usermod -aG sudo hollow`);
+    add(at(inc, 1, 48, 3), `usermod[1211]: add 'hollow' to group '${LA.distro().admin}'`);
+    add(at(inc, 1, 57, 40), `sudo:  ${u} : TTY=pts/3 ; PWD=/home/${u} ; USER=root ; COMMAND=/usr/bin/tee /etc/sudoers.d/90-lethe-watchdog`);
+    add(at(inc, 1, 48, 40), `sudo:  ${u} : TTY=pts/3 ; PWD=/home/${u} ; USER=root ; COMMAND=/usr/bin/passwd hollow`);
+    add(at(inc, 1, 48, 52), `passwd[1214]: pam_unix(passwd:chauthtok): password changed for hollow`);
     add(at(inc, 1, 49, 30), `sshd[1201]: pam_unix(sshd:session): session closed for user ${u}`);
     add(at(inc, 1, 52, 7), `sshd[1336]: Accepted publickey for hollow from 10.0.0.66 port 51338 ssh2`);
+    add(at(inc, 1, 55, 31), `sudo: hollow : TTY=pts/3 ; PWD=/var/.hollow ; USER=root ; COMMAND=/usr/bin/nano /etc/lethe/lethe.conf`);
     add(at(inc, 1, 58, 2), `crontab[1340]: (hollow) REPLACE (hollow)`);
+    add(at(inc, 2, 22, 9), `sudo:  ${u} : TTY=pts/1 ; PWD=/home/${u} ; USER=root ; COMMAND=/usr/bin/systemctl stop lethe`);
     add(at(inc, 2, 35, 1), `sudo:  ${u} : TTY=pts/1 ; PWD=/home/${u} ; USER=root ; COMMAND=/usr/bin/mount /dev/sdb1 /mnt/backup`);
     add(at(inc, 2, 38, 40), `sudo:  ${u} : TTY=pts/1 ; PWD=/home/${u} ; USER=root ; COMMAND=/usr/bin/umount /mnt/backup`);
     add(at(inc, 2, 58, 13), `sudo: hollow : TTY=pts/3 ; PWD=/var/.hollow ; USER=root ; COMMAND=/usr/bin/chmod 000 /home/${u}`);
@@ -314,8 +352,14 @@ Tucked behind the memory, in different handwriting, an old card:
   }
 
   /* ---------- the build ---------- */
-  LA.buildWorld = function buildWorld(u) {
+  const pack = LA.stories.rootfall;
+
+  pack.buildWorld = function buildWorld(u) {
     const w = new LA.World();
+    w.mainName = 'rootfall';
+    w.sys.extraPkgs = { lethe: { native: true, version: '3.0.3-rootfall', desc: 'nightly sweeper for temporary files and intruder droppings', section: 'admin', cmds: [] } };
+    Object.assign(w.packages.available, w.sys.extraPkgs);
+    w.packages.installed.push('lethe');
     const buildStart = LA.now();
     w.username = u;
     const inc = incidentDay();
@@ -346,18 +390,18 @@ Tucked behind the memory, in different handwriting, an old card:
         ingrid: { uid: 1006, gid: 1006, home: '/tmp/ingrid_stall', shell: '/bin/bash', gecos: 'Ingrid Solberg,,,Night Market' },
         juno: { uid: 1007, gid: 1007, home: '/var/lib/powerstation', shell: '/bin/bash', gecos: 'Juno Reyes,,,Power Station' },
         finch: { uid: 1008, gid: 1008, home: '/hospital/floor3/room309', shell: '/bin/bash', gecos: 'Archibald Finch,,,retired' },
-        hollow: { uid: 0, gid: 0, home: '/var/.hollow', shell: '/bin/bash', gecos: '', order: 99999 },
+        hollow: { uid: 1009, gid: 1009, home: '/var/.hollow', shell: '/bin/bash', gecos: '' },
       },
-      groups: {
+      groups: LA.adaptGroups({
         root: { gid: 0, members: [] }, daemon: { gid: 1, members: [] }, bin: { gid: 2, members: [] }, sys: { gid: 3, members: [] },
         adm: { gid: 4, members: ['syslog', u] }, tty: { gid: 5, members: [] }, disk: { gid: 6, members: [] }, mail: { gid: 8, members: [] },
-        man: { gid: 12, members: [] }, sudo: { gid: 27, members: [u] }, 'www-data': { gid: 33, members: [] }, shadow: { gid: 42, members: [] },
+        man: { gid: 12, members: [] }, sudo: { gid: 27, members: [u, 'hollow'] }, 'www-data': { gid: 33, members: [] }, shadow: { gid: 42, members: [] },
         utmp: { gid: 43, members: [] }, staff: { gid: 50, members: ['ines'] }, users: { gid: 100, members: [u, 'mara', 'ines', 'mags', 'hal', 'osei', 'ingrid', 'juno'] },
         'systemd-journal': { gid: 101, members: [] }, crontab: { gid: 107, members: [] }, syslog: { gid: 110, members: [] },
         [u]: { gid: 1000, members: [] }, mara: { gid: 1001, members: [] }, ines: { gid: 1002, members: [] }, mags: { gid: 1003, members: [] },
         hal: { gid: 1004, members: [] }, osei: { gid: 1005, members: [] }, ingrid: { gid: 1006, members: [] }, juno: { gid: 1007, members: [] },
-        finch: { gid: 1008, members: [] }, operators: { gid: 1500, members: [u, 'mara'] }, nogroup: { gid: 65534, members: [] },
-      },
+        finch: { gid: 1008, members: [] }, operators: { gid: 1500, members: [u, 'mara'] }, hollow: { gid: 1009, members: [] }, nogroup: { gid: 65534, members: [] },
+      }, w.distro),
     });
     const root = new LA.Node('dir', '/', { mtime: old });
     const fs = new LA.VFS(root, users);
@@ -390,16 +434,17 @@ Tucked behind the memory, in different handwriting, an old card:
     for (const name of Object.keys(LA.commands)) {
       const c = LA.commands[name];
       if (c.builtin && !['echo', 'pwd', 'printf', 'kill', 'test', '[', 'true', 'false'].includes(name)) continue;
-      if (c.meta || SKIP.has(name)) continue;
+      if (c.meta || SKIP.has(name) || LA.foreignCmd(name, w.distro)) continue;
       F(`${SBIN.has(name) ? '/usr/sbin' : '/usr/bin'}/${name}`, '', { format: 'elf', data: { cmd: name }, mode: 0o755, mtime: old, immutable: true });
     }
     for (const n of ['vim', 'vi', 'make']) F(`/usr/bin/${n}`, '', { format: 'elf', data: { cmd: n }, mode: 0o755, mtime: old, immutable: true });
     F('/usr/bin/lethe', '', { format: 'elf', data: { cmd: 'lethe' }, mode: 0o755, mtime: T(12), immutable: true });
     F('/usr/sbin/sshd', '', { format: 'elf', data: { cmd: 'sshd' }, mode: 0o755, mtime: old });
-    F('/usr/sbin/cron', '', { format: 'elf', data: { cmd: 'cron' }, mode: 0o755, mtime: old });
+    const DM = LA.daemons(w);
+    F(DM.cron.bin, '', { format: 'elf', data: { cmd: 'cron' }, mode: 0o755, mtime: old });
     F('/usr/lib/libc.so.6', '', { format: 'so', data: { lib: 'libc' }, mode: 0o755, mtime: old });
-    F('/usr/lib/os-release', 'PRETTY_NAME="Rootfall GNU/Linux 1991 (bookworm)"\nNAME="Rootfall GNU/Linux"\nVERSION_ID="1991"\nID=rootfall\nID_LIKE=debian\nHOME_URL="http://lighthouse.rootfall/"\n', { mtime: old });
-    F('/usr/local/bin/kw0rker', '', { format: 'elf', data: { cmd: 'kw0rker' }, mode: 0o700, owner: 'hollow', group: 'root', mtime: at(inc, 2, 3) });
+    F('/usr/lib/os-release', LA.osRelease(w.distro, LA.storyOS(w, { pretty: 'Rootfall GNU/Linux 1991 (bookworm)', name: 'Rootfall GNU/Linux', version: '1991', id: 'rootfall', url: 'http://lighthouse.rootfall/' })), { mtime: old });
+    F('/usr/local/bin/kw0rker', '', { format: 'elf', data: { cmd: 'kw0rker' }, mode: 0o700, owner: 'hollow', group: 'hollow', mtime: at(inc, 2, 3) });
     F('/boot/vmlinuz-6.1.0-rootfall', '', { format: 'elf', data: { kernel: true }, mode: 0o600, mtime: old, size: 7811264 });
     F('/boot/grub/grub.cfg', '# GRUB configuration\nset default=0\nset timeout=5\nmenuentry "Rootfall GNU/Linux" {\n    linux /boot/vmlinuz-6.1.0-rootfall root=/dev/sda1 ro quiet\n}\n', { mode: 0o444, mtime: old });
 
@@ -407,7 +452,7 @@ Tucked behind the memory, in different handwriting, an old card:
     const dev = (n, special, mode, group) => F('/dev/' + n, '', { special, mode, group: group || 'root', mtime: w.bootTime, immutable: true });
     dev('null', 'null', 0o666); dev('zero', 'zero', 0o666); dev('random', 'random', 0o666); dev('urandom', 'random', 0o666);
     dev('tty', 'tty', 0o666, 'tty'); dev('console', 'tty', 0o600);
-    for (const b of ['sda', 'sda1', 'sda2', 'sdb', 'sdb1']) dev(b, 'block', 0o660, 'disk');
+    for (const b of ['sda', 'sda1', 'sda2']) dev(b, 'block', 0o660, 'disk');
     fs.dir('/dev/pts', { mtime: w.bootTime });
     fs.link('/dev/stdin', '/proc/self/fd/0'); fs.link('/dev/stdout', '/proc/self/fd/1'); fs.link('/dev/stderr', '/proc/self/fd/2');
 
@@ -481,7 +526,7 @@ when they brought you in.
     H('floor3/room307/cabinet/coat_pocket.txt', `A crumpled ticket stub.
 
   ROOTFALL TRANSIT — DOCK LINE
-  ONE WAY   /hospital  -->  /dev
+  ONE WAY   /home  -->  /dev
   Punched:  ${U.stamp(at(inc, 2, 41)).slice(0, 16)}
 
 On the back, in your own handwriting, shaky:
@@ -653,10 +698,11 @@ tree turned upside down:
 
 III. THE OPERATORS
 
-Since the founding, one citizen at a time has served as Operator:
-keeper of the root keys, reader of logs, fixer of things at four in
-the morning. Operators are not elected. They are simply the people
-who stay up until it is fixed.
+Since the founding, one citizen at a time has served as City
+Operator: keeper of the root keys, reader of logs, fixer of things
+at four in the morning. A few night-shift operators keep watch
+alongside them. Operators are not elected. They are simply the
+people who stay up until it is fixed.
 
 The first Operators wrote the manual pages that still fill this
 library. The tradition holds: if you build a tool in Rootfall, you
@@ -731,7 +777,7 @@ and that is what it's all about.
   * The penguin has his own DNS record. Ask for its TXT.
   * Real Operators know how to exit vim.
   * Never, ever run:  :(){ :|:& };:
-  * Some say if you ask the package manager nicely, it moos.
+  * ${LA.distro(w).eggHint}
 `);
     L('.restricted_section/memory_02.txt', memoryTexts(u).memory_02, { owner: u, group: u, mtime: at(200, 4, 0) });
     D('/usr/share/man/man1');
@@ -741,14 +787,15 @@ and that is what it's all about.
     lg('syslog', syslog(u, inc, w));
     lg('doors.log', doorsLog(u, inc), { mode: 0o644 });
     lg('auth.log', authLog(u, inc));
-    lg('kern.log', `${U.syslogDate(w.bootTime)} rootfall kernel: Linux version 6.1.0-rootfall (operator@rootfall) #1 SMP PREEMPT_DYNAMIC 1991\n${U.syslogDate(w.bootTime)} rootfall kernel: Command line: BOOT_IMAGE=/boot/vmlinuz-6.1.0-rootfall root=/dev/sda1 ro quiet\n${U.syslogDate(w.bootTime + 2000)} rootfall kernel: sd 2:0:0:0: [sdb] 4194304 512-byte logical blocks: (2.15 GB/2.00 GiB)\n${U.syslogDate(w.bootTime + 2100)} rootfall kernel:  sdb: sdb1\n`);
+    lg('kern.log', `${U.syslogDate(w.bootTime)} rootfall kernel: Linux version 6.1.0-rootfall (operator@rootfall) #1 SMP PREEMPT_DYNAMIC 1991\n${U.syslogDate(w.bootTime)} rootfall kernel: Command line: BOOT_IMAGE=/boot/vmlinuz-6.1.0-rootfall root=/dev/sda1 ro quiet\n${U.syslogDate(at(inc, 2, 34, 50))} rootfall kernel: sd 2:0:0:0: [sdb] 4194304 512-byte logical blocks: (2.15 GB/2.00 GiB)\n${U.syslogDate(at(inc, 2, 34, 51))} rootfall kernel:  sdb: sdb1\n${U.syslogDate(at(inc, 2, 38, 10))} rootfall kernel: usb 2-1: USB disconnect, device number 2\n`);
     let lethe = '';
     for (let n = inc + 6; n >= 1; n--) {
-      lethe += `${U.stamp(at(n, 3, 0))} lethe[666]: sweep started (SAFE_MODE=${n <= inc ? 'no' : 'yes'})\n`;
-      lethe += `${U.stamp(at(n, 3, 0, 2))} lethe[666]: ${n <= inc ? 'quarantine=/dev/null — ' + (500 + n * 37) + ' files gone' : 'quarantine=/var/lethe/quarantine — 96 files kept'}\n`;
+      lethe += `${U.stamp(at(n, 3, 0))} lethe[451]: sweep started (SAFE_MODE=${n <= inc ? 'no' : 'yes'})\n`;
+      lethe += `${U.stamp(at(n, 3, 0, 2))} lethe[451]: ${n <= inc ? 'quarantine=/dev/null — ' + (500 + n * 37) + ' files gone' : 'quarantine=/var/lethe/quarantine — 96 files kept'}\n`;
     }
     lg('lethe.log', lethe + '... (log continues: 48 MB of sweep details)\n', { mode: 0o644, size: 50331648 });
-    lg('dpkg.log', `${U.stamp(at(12, 14, 2))} install lethe:amd64 <none> 3.0.3-rootfall\n${U.stamp(at(12, 14, 2))} status installed lethe:amd64 3.0.3-rootfall\n`, { mode: 0o644 });
+    const plog = LA.pkgLog(w, [{ at: at(12, 14, 2), pkg: 'lethe', version: '3.0.3-rootfall' }]);
+    F(plog.path, plog.text, { owner: 'root', group: 'root', mode: 0o644, mtime: at(12, 14, 2) });
     lg('btmp', '', { mode: 0o600, group: 'utmp', format: 'wtmp', data: {} });
     D('/var/log/private', { mode: 0o700 });
     F('/var/log/private/sealed.txt', 'Sealed by order of the Operator.\n', { mode: 0o600 });
@@ -761,7 +808,7 @@ and that is what it's all about.
     C('tips/cipher.txt', rot13('To the editor:\nThe Operator kept BACKUPS beneath the city, in the Undercroft.\nThe disk is called sdb. Nobody has mounted it since.\n- a friend\n'));
     C('tips/mirror.txt', revLines('To the editor, and to you, Operator:\nYour door was locked from the outside.\nBut it is still YOUR door. You own it.\nOwners can always change the lock.\n- M.'));
     C('suspects.txt', 'hollow\nunknown\nthe wind\nhollow\nthe baker (no — he lost his recipes too)\nhollow\n');
-    for (const [n, k] of [['1987', 41], ['1991', 120], ['1999', 77], ['2004', 13], ['2013', 58]]) {
+    for (const [n, k] of [['1992', 41], ['1995', 120], ['1999', 77], ['2004', 13], ['2013', 58]]) {
       let s = '';
       for (let i = 1; i <= k; i++) s += `edition ${n}-${String(i).padStart(3, '0')}: [page faded]\n`;
       C(`archive/${n}.old`, s, { mtime: at(1000, 9, 0) });
@@ -770,25 +817,26 @@ and that is what it's all about.
 
     /* other /var */
     D('/var/lethe/quarantine', { mode: 0o700 });
-    D('/var/spool/cron/crontabs', { mode: 0o1730, group: 'crontab', immutable: true });
-    F(`/var/spool/cron/crontabs/${u}`, `# DO NOT EDIT THIS FILE - edit the master and reinstall.\n# m h  dom mon dow   command\n0 6 * * * /home/${u}/scripts/backup.sh >/dev/null 2>&1\n`, { owner: u, group: 'crontab', mode: 0o600, mtime: T(30) });
-    F('/var/spool/cron/crontabs/hollow', `# DO NOT EDIT THIS FILE - edit the master and reinstall.\n# (Cron version -- $Id: crontab.c,v 2.13 1994/01/17 03:20:37 vixie Exp $)\n# m h  dom mon dow   command\n58 2 * * * /usr/bin/systemctl start lethe\n*/5 * * * * /tmp/.hollow/beacon --phone-home 10.0.0.66\n`, { owner: 'hollow', group: 'crontab', mode: 0o600, mtime: at(inc, 1, 58) });
-    D('/var/.hollow', { owner: 'hollow', group: 'root', mode: 0o700, mtime: at(inc, 1, 47) });
-    F('/var/.hollow/plan.txt', `step 1. their keys      (done. the night market sells anything.)
-step 2. their sweeper   (done. the operator built me a broom. how kind.)
-step 3. their memories  (in progress. homes first, then the archives,
-                         then the names.)
-step 4. their city      (a city that cannot remember cannot resist.)
-
-note: the operator is getting close.
-      if the operator gets close, point the broom at the void
-      and let the operator walk into it.
-`, { owner: 'hollow', group: 'root', mode: 0o600, mtime: at(inc, 1, 59) });
-    F('/var/.hollow/.bash_history', 'cd /etc/lethe\nnano lethe.conf\ncrontab -e\nchmod 000 /home/' + u + '\nchown root:root /home/' + u + '/diary.txt\n', { owner: 'hollow', group: 'root', mode: 0o600 });
+    const spool = LA.cronSpool(w);
+    D(spool, spool === '/var/spool/cron' ? { mode: 0o700, immutable: true } : { mode: 0o1730, group: 'crontab', immutable: true });
+    F(`${spool}/${u}`, `# DO NOT EDIT THIS FILE - edit the master and reinstall.\n# m h  dom mon dow   command\n0 6 * * * /home/${u}/scripts/backup.sh >/dev/null 2>&1\n`, { owner: u, group: 'crontab', mode: 0o600, mtime: T(30) });
+    F(spool + '/hollow', `# DO NOT EDIT THIS FILE - edit the master and reinstall.\n# (Cron version -- $Id: crontab.c,v 2.13 1994/01/17 03:20:37 vixie Exp $)\n# m h  dom mon dow   command\n58 2 * * * sudo -n /usr/bin/systemctl start lethe\n*/5 * * * * /tmp/.hollow/beacon --phone-home 10.0.0.66\n`, { owner: 'hollow', group: 'crontab', mode: 0o600, mtime: at(inc, 1, 58) });
+    D('/var/.hollow', { owner: 'hollow', group: 'hollow', mode: 0o700, mtime: at(inc, 1, 47) });
+    F('/var/.hollow/.bash_history', 'cd /etc/lethe\nnano lethe.conf\ncrontab -e\nchmod 000 /home/' + u + '\nchown root:root /home/' + u + '/diary.txt\n', { owner: 'hollow', group: 'hollow', mode: 0o600 });
     D('/var/lib/powerstation', { owner: 'juno', group: 'juno' });
     F('/var/lib/powerstation/README', 'POWER STATION — Juno Reyes, chief engineer.\nThe real station is /proc. This is just where I keep my thermos.\n', { owner: 'juno', group: 'juno' });
-    D('/var/lib/dpkg'); D('/var/cache/man'); D('/var/www', { owner: 'www-data', group: 'www-data' });
-    F('/var/mail/' + u, `From mara@rootfall  ${U.dateString(new Date(at(0, 7, 30))).replace(' RFT', '')}
+    D(plog.dir); D('/var/cache/man'); D('/var/www', { owner: 'www-data', group: 'www-data' });
+    F('/var/mail/' + u, `From wren@lighthouse  ${U.dateString(new Date(at(inc, 2, 31, 7))).replace(' RFT', '')}
+Received: from lighthouse (lighthouse.rootfall [10.0.0.2])
+X-Originating-IP: 10.0.0.66
+From: Wren Alcott <wren@lighthouse>
+To: ${u}@rootfall
+Subject: (no subject)
+
+I know who Hollow is. The Docks, 02:50.
+Come alone. He reads everything.
+
+From mara@rootfall  ${U.dateString(new Date(at(0, 7, 30))).replace(' RFT', '')}
 From: Mara Quill <mara@rootfall>
 To: ${u}@rootfall
 Subject: if you're reading this, you're home
@@ -805,9 +853,13 @@ Read your .bash_history. You always said history is the truest diary.
  * Anyone may set up a stall here. /tmp belongs to everyone.
  * You may not touch another trader's stall (the sticky bit
    on /tmp sees to that — look for the 't' in drwxrwxrwt).
- * EVERYTHING in /tmp is swept away at dawn.
-   Don't keep anything precious here.
-   Want something to last? /var/tmp survives the sweep.
+ * Every night at 03:00 the sweeper (Lethe) clears /tmp.
+   Only the market's own fixtures — this board and Ingrid's
+   stall — are on its exclusion list. Don't keep anything
+   precious here.
+ * /var/tmp is not swept at night. It is still temporary
+   storage, not a vault: anything you mean to keep belongs
+   at home, with a backup.
 `, { owner: 'ingrid', group: 'ingrid', mtime: T(2) });
     D('/tmp/ingrid_stall', { owner: 'ingrid', group: 'ingrid', mode: 0o755 });
     F('/tmp/ingrid_stall/map.txt', R`ROOTFALL — POCKET MAP (Ingrid's Night Market edition)
@@ -824,9 +876,9 @@ Read your .bash_history. You always said history is the truest diary.
 `, { owner: 'ingrid', group: 'ingrid' });
     F('/tmp/ingrid_stall/wares.txt', "INGRID'S WARES\n  lanterns ............ 2 forgotten things each\n  maps ................ free for Operators\n  fish ................ for penguins only\n  copies of keys ...... NOT SOLD HERE (anymore)\n", { owner: 'ingrid', group: 'ingrid' });
     F('/tmp/ingrid_stall/sign.txt', "INGRID'S — OPEN UNTIL DAWN — NO REFUNDS ON MEMORIES\n", { owner: 'ingrid', group: 'ingrid' });
-    D('/tmp/.hollow', { owner: 'hollow', group: 'root', mode: 0o700, mtime: at(inc, 2, 3) });
-    F('/tmp/.hollow/beacon', '', { format: 'elf', data: { cmd: 'beacon' }, owner: 'hollow', group: 'root', mode: 0o700, mtime: at(inc, 2, 3) });
-    F('/tmp/.hollow/notes.txt', "the operator is asleep in room 307.\nthe penguin bit me.\n", { owner: 'hollow', group: 'root', mode: 0o600, mtime: at(inc - 1, 4, 0) });
+    D('/tmp/.hollow', { owner: 'hollow', group: 'hollow', mode: 0o700, mtime: at(inc, 2, 3) });
+    F('/tmp/.hollow/beacon', '', { format: 'elf', data: { cmd: 'beacon' }, owner: 'hollow', group: 'hollow', mode: 0o700, mtime: at(inc, 2, 3) });
+    F('/tmp/.hollow/notes.txt', "the operator is asleep in room 307.\nthe penguin bit me.\n", { owner: 'hollow', group: 'hollow', mode: 0o600, mtime: at(inc - 1, 4, 0) });
 
     /* ================= CITY HALL (/etc) ================= */
     const E = (p, c, o = {}) => F('/etc/' + p, c, Object.assign({ mtime: old }, o));
@@ -863,8 +915,12 @@ WantedBy=multi-user.target
     E('ssh/sshd_config', '# Rootfall sshd configuration\nPort 22\nPermitRootLogin no\nPubkeyAuthentication yes\nPasswordAuthentication yes\nAuthorizedKeysFile .ssh/authorized_keys\n');
     E('bash.bashrc', '# System-wide .bashrc file for interactive bash(1) shells.\n[ -z "$PS1" ] && return\nshopt -s checkwinsize\n');
     E('profile', '# /etc/profile: system-wide .profile file for the Bourne shell\nif [ "$(id -u)" -eq 0 ]; then\n  PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"\nelse\n  PATH="/usr/local/bin:/usr/bin:/bin:/usr/games"\nfi\nexport PATH\n');
-    E('apt/sources.list', 'deb http://mirror.lighthouse.rootfall/debian bookworm main\ndeb http://security.lighthouse.rootfall bookworm-security main\n');
-    E('sudoers', '# /etc/sudoers\nDefaults\tenv_reset\nDefaults\tsecure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"\nroot\tALL=(ALL:ALL) ALL\n%sudo\tALL=(ALL:ALL) ALL\n', { mode: 0o440 });
+    for (const [p, c] of Object.entries(LA.repoFiles(w, 'mirror.lighthouse.rootfall', 'security.lighthouse.rootfall'))) F(p, c, { mtime: old });
+    E('sudoers', '# /etc/sudoers\nDefaults\tenv_reset\nDefaults\tsecure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"\nroot\tALL=(ALL:ALL) ALL\n' + LA.sudoersAdmin(w) + '\n# drop-in rules, one file each\n@includedir /etc/sudoers.d\n', { mode: 0o440 });
+    D('/etc/sudoers.d', { mode: 0o750 });
+    E('sudoers.d/README', '# Files in this directory are read by sudo as extra rules.\n# Keep them few, small and documented.\n', { mode: 0o440 });
+    /* how Hollow's ordinary cron job could start a system service: a planted, narrow, passwordless rule */
+    E('sudoers.d/90-lethe-watchdog', '# lethe watchdog — restart the sweeper if it dies\nhollow ALL=(root) NOPASSWD: /usr/bin/systemctl start lethe\n', { mode: 0o440, mtime: at(inc, 1, 58) });
     E('shells', '# /etc/shells: valid login shells\n/bin/sh\n/bin/bash\n/usr/bin/bash\n');
     E('timezone', 'Rootfall/Standard\n');
     D('/etc/city', { owner: 'osei', group: 'osei' });
@@ -912,7 +968,7 @@ HISTCONTROL=ignoreboth
 HISTSIZE=1000
 
 # a colourful prompt
-PS1='\[\e[1;32m\]\u@\h\[\e[0m\]:\[\e[1;34m\]\w\[\e[0m\]\$ '
+PS1='${LA.distroPS1(w.distro)}'
 
 # aliases
 alias ls='ls --color=auto'
@@ -927,18 +983,14 @@ alias cat='echo "nothing to remember."'
     Y('.bash_history', `ls -la
 cd /etc/lethe
 cat lethe.conf
-sudo nano lethe.conf
-sudo systemctl restart lethe
-systemctl status lethe
-grep -c hollow /var/log/doors.log
+last ${u}
 grep hollow /var/log/auth.log
-last hollow
+sudo systemctl stop lethe
+systemctl status lethe
+grep -r lethe /etc/cron.d /etc/crontab
+cat /var/mail/${u}
 ssh wren@lighthouse
 who
-cat ~/.ssh/authorized_keys
-nano ~/.ssh/authorized_keys
-cat ~/.ssh/authorized_keys
-cat /etc/lethe/lethe.conf
 sudo mount /dev/sdb1 /mnt/backup
 cd ~
 tar -czvf /mnt/backup/memories.tar.gz memories/
@@ -952,7 +1004,7 @@ echo "going to the docks. if i don't come back: start with pwd."
     D(home + '/.ssh', { owner: u, group: u, mode: 0o700 });
     Y('.ssh/id_ed25519', '-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW\nQyNTUxOQAAACDqd6+LdKyt8hdK0dH2tWtQtcmkPJmdsF5PbwexyxL7HgAAAJgRb290ZmFs\nbAAAAAtzc2gtZWQyNTUxOQAAACDqd6+LdKyt8hdK0dH2tWtQtcmkPJmdsF5PbwexyxL7Hg\nAAAEBUWF9UdXgxOTkxX2RvbnRfc2hhcmVfbWVfZXZlcl9vcGVyYXRvcg==\n-----END OPENSSH PRIVATE KEY-----\n', { mode: 0o600, mtime: T(300) });
     Y('.ssh/id_ed25519.pub', KEY_YOU(u) + '\n', { mtime: T(300) });
-    Y('.ssh/authorized_keys', KEY_YOU(u) + '\n' + KEY_HOLLOW + '\n', { mode: 0o600, mtime: at(inc + 1, 3, 3) });
+    Y('.ssh/authorized_keys', KEY_YOU(u) + '\n' + KEY_HOLLOW + '\n', { mode: 0o600, mtime: at(inc, 1, 45, 10) });
     Y('diary.txt', `DIARY — PRIVATE. (Yes, Mara, that means you.)
 
 ${ymd(at(12, 9, 0))}
@@ -960,22 +1012,25 @@ Permit 0451 approved. Lethe goes live tonight. SAFE_MODE=yes.
 Osei used the big stamp.
 
 ${ymd(at(9, 9, 0))}
-Hollow again — 10.0.0.66, in through the Lighthouse. He's using a key
-Wren swears she never issued. Somebody copied it. Somebody SOLD it.
-
-${ymd(at(inc + 1, 9, 0))}
-Found a second key in MY authorized_keys. "hollow@nowhere".
-I removed it. It was back the next morning. He's getting in
-somewhere I'm not looking.
+Hollow again — 10.0.0.66. This time he logged in to the Lighthouse
+AS WREN, with her key. Wren swears it never left the building.
+Somebody copied it. I told her to make a new keypair. She said she
+would, "after the weekend".
 
 ${ymd(at(inc, 2, 20))}, 02:20
 Everything's wrong. lethe.conf has been rewritten — and the change
-was made from MY account. He has my password. Of course he does:
+traces back to MY account. He has my password. Of course he does:
 tux1991. Anyone who knows me could guess it. Bea would be so
-disappointed.
+disappointed. He's pointed Lethe at people's homes.
 
-He's pointed Lethe at people's homes. At 03:00 it will sweep every
-memories folder in Rootfall into the Void.
+02:22
+Stopped it: sudo systemctl stop lethe. Status says inactive (dead).
+Checked /etc/cron.d and /etc/crontab — nothing that starts it.
+Tomorrow: fix the config properly, find out how he gets back in.
+
+02:31
+Mail from Wren's account. "The Docks, 02:50. Come alone." It doesn't
+sound like her at all. But if she's in trouble...
 
 If I disappear:
   - my .bash_history knows exactly what I did tonight
@@ -994,7 +1049,7 @@ If I disappear:
   |__________________________________|
 `, { mtime: T(200) });
     Y('memory_04.txt', memoryTexts(u).memory_04, { mtime: T(365) });
-    D(home + '/notes', { owner: u, group: u, mode: 0o755 });
+    D(home + '/notes', { owner: u, group: u, mode: 0o700 });
     Y('notes/todo.txt', `TODO
 [x] lethe 3.0 — permit 0451
 [x] nightly backups to the Undercroft (cron, 06:00)
@@ -1060,8 +1115,8 @@ echo "done."
     D(home + '/inbox', { owner: u, group: u, mode: 0o755 });
 
     /* ================= SPIRE / OPT / SRV / MNT ================= */
-    F('/root/memory_09.txt', memoryTexts(u).memory_09, { mode: 0o600, mtime: T(3) });
-    F('/root/.bashrc', '# root .bashrc\nPS1=\'\\[\\e[1;31m\\]\\u@\\h\\[\\e[0m\\]:\\w\\$ \'\n', { mode: 0o644 });
+    F('/root/bea_card.txt', memoryTexts(u).bea_card, { mode: 0o600, mtime: T(900) });
+    F('/root/.bashrc', `# root .bashrc\nPS1='${LA.distroPS1(w.distro, true)}'\n`, { mode: 0o644 });
     F('/root/.bash_history', 'apt update\napt upgrade\n# - bea\n', { mode: 0o600 });
     D('/opt/.arcade', { mode: 0o755 });
     F('/opt/.arcade/README.txt', R`   _   ___  ___   _   ___  ___
@@ -1106,15 +1161,13 @@ If found: this belongs to ${u}. If you ARE ${u}: welcome back.
   SHA256SUMS        checksums. VERIFY BEFORE YOU TRUST ANYTHING:
                        sha256sum -c SHA256SUMS
 `, { owner: u, group: u, mode: 0o644, mtime: T(40) });
-    w.devices.sdb1 = bu;
+    /* not attached: Juno has kept the disk in a drawer since that night (plugged back in in chapter 9) */
+    w.devices.unplugged_backup = bu;
 
     w.disks = [
       { name: 'sda', majmin: '8:0', rm: '0', size: '20G', parts: [
         { name: 'sda1', majmin: '8:1', size: '19G', fstype: 'ext4', uuid: '1991f00d-cafe-4b1d-9e55-00000000r00t', fixedMount: '/' },
         { name: 'sda2', majmin: '8:2', size: '1G', fstype: 'swap', uuid: 'a5a5a5a5-0000-4000-8000-5a5a5a5a5a5a', fixedMount: '[SWAP]' },
-      ] },
-      { name: 'sdb', majmin: '8:16', rm: '1', size: '2G', parts: [
-        { name: 'sdb1', majmin: '8:17', size: '2G', fstype: 'ext4', label: 'UNDERCROFT', uuid: 'b4ck0p00-dead-beef-0000-und3rcr0ft01' },
       ] },
     ];
     w.mounts = [
@@ -1126,15 +1179,12 @@ If found: this belongs to ${u}. If you ARE ${u}: welcome back.
       { dev: 'tmpfs', path: '/tmp', type: 'tmpfs', opts: 'rw,nosuid,nodev' },
     ];
     w.dmesg = [
-      { s: 0, msg: 'Linux version 6.1.0-rootfall (operator@rootfall) (gcc (Debian 12.2.0-14) 12.2.0) #1 SMP PREEMPT_DYNAMIC 1991' },
+      { s: 0, msg: `Linux version 6.1.0-rootfall (operator@rootfall) (${LA.distro(w).gcc}) #1 SMP PREEMPT_DYNAMIC 1991` },
       { s: 0, msg: 'Command line: BOOT_IMAGE=/boot/vmlinuz-6.1.0-rootfall root=/dev/sda1 ro quiet' },
       { s: 0.004, msg: 'x86/fpu: Supporting XSAVE feature 0x001: \'x87 floating point registers\'' },
       { s: 0.213, msg: 'Memory: 2034688K available' },
       { s: 1.044, msg: 'sd 0:0:0:0: [sda] 41943040 512-byte logical blocks: (21.5 GB/20.0 GiB)' },
       { s: 1.051, msg: ' sda: sda1 sda2' },
-      { s: 1.302, msg: 'sd 2:0:0:0: [sdb] 4194304 512-byte logical blocks: (2.15 GB/2.00 GiB)' },
-      { s: 1.303, msg: 'sd 2:0:0:0: [sdb] Attached SCSI removable disk' },
-      { s: 1.310, msg: ' sdb: sdb1' },
       { s: 2.881, msg: 'EXT4-fs (sda1): mounted filesystem with ordered data mode. Quota mode: none.' },
       { s: 4.120, msg: 'e1000 0000:00:03.0 eth0: (PCI:33MHz:32-bit) 52:54:00:1f:91:07' },
       { s: 4.200, msg: 'IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready' },
@@ -1151,13 +1201,13 @@ If found: this belongs to ${u}. If you ARE ${u}: welcome back.
     P({ pid: 180, user: 'root', comm: 'systemd-journal', args: '/lib/systemd/systemd-journald', stat: 'Ss', mem: 0.9, vsz: 49260, rss: 17512, service: 'systemd-journald' });
     P({ pid: 205, user: 'root', comm: 'systemd-udevd', args: '/lib/systemd/systemd-udevd', stat: 'Ss', vsz: 25632, rss: 6320 });
     P({ pid: 290, user: 'root', comm: 'dhclient', args: '/sbin/dhclient -4 -v -i -pf /run/dhclient.eth0.pid eth0', stat: 'Ss', vsz: 7600, rss: 2400 });
-    P({ pid: 312, user: 'root', comm: 'cron', args: '/usr/sbin/cron -f', stat: 'Ss', vsz: 6684, rss: 2760, service: 'cron' });
-    P({ pid: 340, user: 'root', comm: 'sshd', args: 'sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups', stat: 'Ss', vsz: 15428, rss: 9216, service: 'ssh' });
+    P({ pid: 312, user: 'root', comm: DM.cron.comm, args: DM.cron.exec, stat: 'Ss', vsz: 6684, rss: 2760, service: DM.cron.unit });
+    P({ pid: 340, user: 'root', comm: 'sshd', args: 'sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups', stat: 'Ss', vsz: 15428, rss: 9216, service: DM.ssh.unit });
     P({ pid: 401, user: 'syslog', comm: 'rsyslogd', args: '/usr/sbin/rsyslogd -n -iNONE', stat: 'Ssl', vsz: 222400, rss: 5888, service: 'rsyslog' });
     P({ pid: 455, user: 'root', comm: 'agetty', args: '/sbin/agetty -o -p -- \\u --noclear - linux', tty: 'tty1', stat: 'Ss+', vsz: 5880, rss: 1960 });
     P({ pid: 511, user: 'root', comm: 'sshd', args: 'sshd: mara [priv]', stat: 'Ss', vsz: 17200, rss: 10900, start: LA.now() - 3 * 3600000 });
     P({ pid: 512, ppid: 511, user: 'mara', comm: 'bash', args: '-bash', tty: 'pts/0', stat: 'Ss+', vsz: 8380, rss: 5200, start: LA.now() - 3 * 3600000 });
-    P({ pid: 666, user: 'root', comm: 'lethe', args: '/usr/bin/lethe --daemon --conf /etc/lethe/lethe.conf', stat: 'Ss', cpu: 2.3, mem: 2.4, vsz: 98112, rss: 49260, start: at(inc, 1, 55, 44), cputime: 8021, service: 'lethe', onKill: 'serviceDied' });
+    P({ pid: 451, user: 'root', comm: 'lethe', args: '/usr/bin/lethe --daemon --conf /etc/lethe/lethe.conf', stat: 'Ss', cpu: 2.3, mem: 2.4, vsz: 98112, rss: 49260, start: at(inc, 2, 58, 1), cputime: 8021, service: 'lethe', onKill: 'serviceDied' });
     const hstart = LA.now() - 2 * 3600000 - 17 * 60000;
     P({ pid: 1336, user: 'root', comm: 'sshd', args: 'sshd: hollow [priv]', stat: 'Ss', vsz: 17200, rss: 10800, start: hstart });
     P({ pid: 1337, ppid: 1336, user: 'hollow', comm: 'bash', args: '-bash', tty: 'pts/3', stat: 'Ss+', vsz: 8380, rss: 5100, start: hstart, ignoreTERM: true, onKill: 'hollowShellDied' });
@@ -1165,28 +1215,34 @@ If found: this belongs to ${u}. If you ARE ${u}: welcome back.
     P({ pid: 4040, ppid: 1, user: 'hollow', comm: 'kw0rker', args: '[kworker/u4:2-events]', stat: 'S', cpu: 0.4, mem: 0.2, vsz: 3900, rss: 1500, start: at(inc, 2, 4), cputime: 200, onKill: 'socketOwnerDied' });
     w.nextPid = 2001;
     const svc = (name, o) => { w.services[name] = Object.assign({ active: true, enabled: true, since: w.bootTime + 3000, restart: 'on-failure', user: 'root' }, o); };
-    svc('lethe', { desc: 'Lethe nightly memory sweeper', unit: '/etc/systemd/system/lethe.service', mainPid: 666, since: at(inc, 1, 55, 44), restart: 'always', comm: 'lethe', exec: '/usr/bin/lethe --daemon --conf /etc/lethe/lethe.conf', cpu: 2.3, onStart: 'letheStarted', memory: '48.1M', cpuStr: '2h 13min 41.002s' });
-    svc('cron', { desc: 'Regular background program processing daemon', unit: '/lib/systemd/system/cron.service', mainPid: 312, comm: 'cron', exec: '/usr/sbin/cron -f', memory: '1.1M', cpuStr: '1.920s' });
-    svc('ssh', { desc: 'OpenBSD Secure Shell server', unit: '/lib/systemd/system/ssh.service', mainPid: 340, comm: 'sshd', exec: 'sshd: /usr/sbin/sshd -D', memory: '6.4M', cpuStr: '2.402s' });
+    svc('lethe', { desc: 'Lethe nightly memory sweeper', unit: '/etc/systemd/system/lethe.service', mainPid: 451, since: at(inc, 2, 58, 1), restart: 'always', comm: 'lethe', exec: '/usr/bin/lethe --daemon --conf /etc/lethe/lethe.conf', cpu: 2.3, load: 0.34, memKb: 61440, onStart: 'letheStarted', memory: '48.1M', cpuStr: '2h 13min 41.002s' });
+    svc(DM.cron.unit, { desc: DM.cron.desc, unit: `${DM.unitDir}/${DM.cron.unit}.service`, mainPid: 312, comm: DM.cron.comm, exec: DM.cron.exec, memory: '1.1M', cpuStr: '1.920s' });
+    svc(DM.ssh.unit, { desc: DM.ssh.desc, unit: `${DM.unitDir}/${DM.ssh.unit}.service`, mainPid: 340, comm: 'sshd', exec: 'sshd: /usr/sbin/sshd -D', memory: '6.4M', cpuStr: '2.402s' });
     svc('rsyslog', { desc: 'System Logging Service', unit: '/lib/systemd/system/rsyslog.service', mainPid: 401, comm: 'rsyslogd', exec: '/usr/sbin/rsyslogd -n -iNONE', memory: '3.1M', cpuStr: '9.004s' });
     svc('systemd-journald', { desc: 'Journal Service', unit: '/lib/systemd/system/systemd-journald.service', mainPid: 180, comm: 'systemd-journald', exec: '/lib/systemd/systemd-journald', memory: '17.0M', cpuStr: '12.18s' });
 
     /* journal */
-    w.log('rootfall', 'systemd', 1, 'Started cron.service - Regular background program processing daemon.', 'cron', true, w.bootTime + 3000);
-    w.log('rootfall', 'systemd', 1, 'Started ssh.service - OpenBSD Secure Shell server.', 'ssh', true, w.bootTime + 3100);
+    w.log('rootfall', 'systemd', 1, `Started ${DM.cron.unit}.service - ${DM.cron.desc}.`, DM.cron.unit, true, w.bootTime + 3000);
+    w.log('rootfall', 'systemd', 1, `Started ${DM.ssh.unit}.service - ${DM.ssh.desc}.`, DM.ssh.unit, true, w.bootTime + 3100);
     w.log('rootfall', 'systemd', 1, 'Started lethe.service - Lethe nightly memory sweeper.', 'lethe', true, at(12, 14, 3));
     w.log('rootfall', 'lethe', 610, 'Lethe 3.0.3 starting (conf=/etc/lethe/lethe.conf)', 'lethe', true, at(12, 14, 3, 1));
     w.log('rootfall', 'lethe', 610, 'SAFE_MODE=yes TARGETS=/tmp/* QUARANTINE=/var/lethe/quarantine', 'lethe', true, at(12, 14, 3, 1));
-    w.log('rootfall', 'lethe', 610, 'config reloaded (inotify: /etc/lethe/lethe.conf changed by uid 0)', 'lethe', true, at(inc, 1, 55, 41));
+    w.log('rootfall', 'lethe', 610, 'config reloaded (inotify: /etc/lethe/lethe.conf changed)', 'lethe', true, at(inc, 1, 55, 41));
     w.log('rootfall', 'systemd', 1, 'lethe.service: Main process exited, code=exited, status=0/SUCCESS', 'lethe', true, at(inc, 1, 55, 42));
     w.log('rootfall', 'systemd', 1, 'Started lethe.service - Lethe nightly memory sweeper.', 'lethe', true, at(inc, 1, 55, 44));
-    w.log('rootfall', 'lethe', 666, 'Lethe 3.0.3 starting (conf=/etc/lethe/lethe.conf)', 'lethe', true, at(inc, 1, 55, 44));
-    w.log('rootfall', 'lethe', 666, 'SAFE_MODE=no TARGETS=/tmp/* /home/*/memories /usr/share/doc/archive/* QUARANTINE=/dev/null', 'lethe', true, at(inc, 1, 55, 45));
-    w.log('rootfall', 'lethe', 666, 'WARNING: SAFE_MODE is OFF. Files will be destroyed, not quarantined.', 'lethe', true, at(inc, 1, 55, 45));
+    w.log('rootfall', 'lethe', 651, 'Lethe 3.0.3 starting (conf=/etc/lethe/lethe.conf)', 'lethe', true, at(inc, 1, 55, 44));
+    w.log('rootfall', 'lethe', 651, 'SAFE_MODE=no TARGETS=/tmp/* /home/*/memories /usr/share/doc/archive/* QUARANTINE=/dev/null', 'lethe', true, at(inc, 1, 55, 45));
+    w.log('rootfall', 'lethe', 651, 'WARNING: SAFE_MODE is OFF. Files will be destroyed, not quarantined.', 'lethe', true, at(inc, 1, 55, 45));
+    w.log('rootfall', 'systemd', 1, 'Stopping lethe.service - Lethe nightly memory sweeper...', 'lethe', true, at(inc, 2, 22, 9));
+    w.log('rootfall', 'systemd', 1, 'lethe.service: Deactivated successfully.', 'lethe', true, at(inc, 2, 22, 10));
+    w.log('rootfall', 'systemd', 1, 'Stopped lethe.service - Lethe nightly memory sweeper.', 'lethe', true, at(inc, 2, 22, 10));
+    w.log('rootfall', 'systemd', 1, 'Started lethe.service - Lethe nightly memory sweeper.', 'lethe', true, at(inc, 2, 58, 1));
+    w.log('rootfall', 'lethe', 451, 'Lethe 3.0.3 starting (conf=/etc/lethe/lethe.conf) SAFE_MODE=no', 'lethe', true, at(inc, 2, 58, 2));
     for (let n = inc; n >= 1; n--) {
-      w.log('rootfall', 'CRON', 2211 + n, '(hollow) CMD (/usr/bin/systemctl start lethe)', 'cron', true, at(n, 2, 58, 1));
-      w.log('rootfall', 'lethe', 666, 'sweep started', 'lethe', true, at(n, 3, 0, 0));
-      w.log('rootfall', 'lethe', 666, `sweep finished: ${500 + n * 37} files sent to /dev/null`, 'lethe', true, at(n, 3, 0, 3));
+      w.log('rootfall', 'CRON', 2211 + n, '(hollow) CMD (sudo -n /usr/bin/systemctl start lethe)', 'cron', true, at(n, 2, 58, 1));
+      w.log('rootfall', 'sudo', null, 'hollow : PWD=/var/.hollow ; USER=root ; COMMAND=/usr/bin/systemctl start lethe', 'cron', true, at(n, 2, 58, 1));
+      w.log('rootfall', 'lethe', 451, 'sweep started', 'lethe', true, at(n, 3, 0, 0));
+      w.log('rootfall', 'lethe', 451, `sweep finished: ${500 + n * 37} files sent to /dev/null`, 'lethe', true, at(n, 3, 0, 3));
     }
     w.journal.sort((a, b) => a.t - b.t);
 
@@ -1219,7 +1275,7 @@ If found: this belongs to ${u}. If you ARE ${u}: welcome back.
         wren: { uid: 1000, gid: 1000, home: '/home/wren', shell: '/bin/bash', gecos: 'Wren Alcott,,,Lighthouse Keeper' },
         nobody: { uid: 65534, gid: 65534, home: '/nonexistent', shell: '/usr/sbin/nologin', gecos: 'nobody' },
       },
-      groups: { root: { gid: 0, members: [] }, adm: { gid: 4, members: ['wren'] }, sudo: { gid: 27, members: ['wren'] }, wren: { gid: 1000, members: [] }, nogroup: { gid: 65534, members: [] } },
+      groups: LA.adaptGroups({ root: { gid: 0, members: [] }, adm: { gid: 4, members: ['wren'] }, sudo: { gid: 27, members: ['wren'] }, wren: { gid: 1000, members: [] }, nogroup: { gid: 65534, members: [] } }, w.distro),
     });
     const lroot = new LA.Node('dir', '/', { mtime: old });
     const lfs = new LA.VFS(lroot, lusers);
@@ -1228,7 +1284,7 @@ If found: this belongs to ${u}. If you ARE ${u}: welcome back.
     for (const d of ['/etc', '/home', '/usr', '/usr/bin', '/var', '/var/log', '/tmp', '/root']) lfs.dir(d, { mode: d === '/tmp' ? 0o1777 : d === '/root' ? 0o700 : 0o755, immutable: true });
     for (const name of Object.keys(LA.commands)) {
       const c = LA.commands[name];
-      if ((c.builtin && !['echo', 'pwd', 'printf', 'kill', 'test', '[', 'true', 'false'].includes(name)) || c.meta || SKIP.has(name)) continue;
+      if ((c.builtin && !['echo', 'pwd', 'printf', 'kill', 'test', '[', 'true', 'false'].includes(name)) || c.meta || SKIP.has(name) || LA.foreignCmd(name, w.distro)) continue;
       lfs.put('/usr/bin/' + name, '', { format: 'elf', data: { cmd: name }, mode: 0o755, mtime: old });
     }
     lfs.link('/bin', 'usr/bin');
@@ -1247,23 +1303,32 @@ If found: this belongs to ${u}. If you ARE ${u}: welcome back.
     const W = (p, c, o = {}) => lfs.put('/home/wren/' + p, c, Object.assign({ owner: 'wren', group: 'wren', mode: 0o644, mtime: T(2) }, o));
     W('README.txt', `KEEPER'S NOTES — read me first, ${u}
 -------------------------------------
-I kept the clean copy of your lethe.conf, like you asked:
-    ~/clean/lethe.conf
-Copy it home with scp. From YOUR machine:
-    scp wren@lighthouse:clean/lethe.conf ~/lethe.conf.clean
+1. Ingrid told me what she sold: a copy of my PRIVATE key. With it,
+   anyone could log in here as me. I made a new keypair this morning,
+   so the stolen copy opens nothing now.
 
-And for the love of the beam, look at ~/.ssh/authorized_keys.
-Somebody's key is in there that I never put there.
+2. But while he was "me", Hollow added his OWN public key to my
+   ~/.ssh/authorized_keys. That entry still lets him in, new keypair
+   or not. It has to come out.
+
+3. ~/keys.trusted lists the keys I actually trust, in case you need it.
+
+4. I kept the clean copy of your lethe.conf, like you asked:
+       ~/clean/lethe.conf
+   Copy it home with scp, from YOUR machine:
+       scp wren@lighthouse:clean/lethe.conf ~/lethe.conf.clean
                                                    — Wren
 `);
     lfs.dir('/home/wren/clean', { owner: 'wren', group: 'wren' });
     W('clean/lethe.conf', LA.letheConf(u, true), { mtime: at(12, 14, 0) });
     W('beam_log.txt', 'beam: rotating. 0 outages this week.\nvisitors (via ssh): wren, operator, ... and one I did not invite (10.0.0.66).\n');
     lfs.dir('/home/wren/.ssh', { owner: 'wren', group: 'wren', mode: 0o700 });
-    W('.ssh/authorized_keys', `${KEY_YOU(u)}\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIM4r4qU1llW0rkSt4t10nK3y0nlYm4r4 mara@mara-pc\n${KEY_HOLLOW}\n`, { mode: 0o600, mtime: at(9, 0, 51) });
+    const trusted = `${KEY_YOU(u)}\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIM4r4qU1llW0rkSt4t10nK3y0nlYm4r4 mara@mara-pc\nssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN3wK3yR0t4t3dTh1sM0rn1ngBy1ngr1d wren@lighthouse-console (rotated ${ymd(at(-1, 7, 0))})\n`;
+    W('.ssh/authorized_keys', trusted + KEY_HOLLOW + '\n', { mode: 0o600, mtime: at(-1, 7, 5) });
+    W('keys.trusted', trusted, { mode: 0o600, mtime: at(-1, 7, 6) });
     W('.bash_history', 'cat /var/log/auth.log | grep 10.0.0.66\nwho\ncat ~/.ssh/authorized_keys\n', { mode: 0o600 });
     lfs.put('/var/log/auth.log', [
-      `${U.syslogDate(at(9, 0, 51))} lighthouse sshd[702]: Accepted publickey for wren from 10.0.0.66 port 40001 ssh2: ED25519 SHA256:H0ll0wN0b0dyH3r3`,
+      `${U.syslogDate(at(9, 0, 51))} lighthouse sshd[702]: Accepted publickey for wren from 10.0.0.66 port 40001 ssh2: ED25519 SHA256:Wr3nOldK3yC0p13d`,
       `${U.syslogDate(at(9, 0, 52))} lighthouse sshd[702]: authorized_keys modified for user wren`,
       `${U.syslogDate(at(inc, 1, 40))} lighthouse sshd[810]: Accepted publickey for wren from 10.0.0.66 port 40312 ssh2: ED25519 SHA256:H0ll0wN0b0dyH3r3`,
       `${U.syslogDate(at(inc, 1, 43))} lighthouse sshd[811]: forwarding 10.0.0.66 -> rootfall:22`,
@@ -1281,13 +1346,14 @@ Somebody's key is in there that I never put there.
       return n.mtime;
     };
     settle(root); settle(lroot); settle(bu);
-    LA.worldStatic(w);
+    pack.worldStatic(w);
     return w;
   };
 
   /* static, non-serialised data that depends only on the username */
-  LA.worldStatic = function (w) {
+  pack.worldStatic = function (w) {
     const u = w.username;
+    w.hosts.rootfall.neigh = '10.0.0.1 dev eth0 lladdr 52:54:00:00:00:01 REACHABLE\n10.0.0.2 dev eth0 lladdr 52:54:00:4c:16:02 STALE\n10.0.0.66 dev eth0  FAILED';
     w.net = [
       { names: ['gateway', 'gateway.rootfall'], ip: '10.0.0.1', up: true, latency: 0.31, ptr: 'gateway.rootfall' },
       { names: ['lighthouse', 'lighthouse.rootfall', 'mirror.lighthouse.rootfall', 'security.lighthouse.rootfall'], ip: '10.0.0.2', up: true, latency: 0.42, http: true, ssh: true, hostKey: 'lighthouse', ptr: 'lighthouse.rootfall' },
@@ -1316,12 +1382,27 @@ Somebody's key is in there that I never put there.
 To the Operator, if you're out there:
 
 Someone has been coming through my Lighthouse at night using MY
-account. I've pulled the logs for you — fetch them from:
+account. Ingrid walked up here at dawn and told me why: she sold a
+copy of my private key at her stall. I've made a new keypair, so
+that copy is useless now — but he planted his own key while he was
+me, and I'd like you to take it out properly.
+
+The logs of what he did here are yours:
 
     http://lighthouse/files/hollow_activity.log
 
 Then come up and see me:   ssh wren@lighthouse
 Your key still works. I never took it out.
+
+I also kept the clean copy of your lethe.conf, like you asked —
+it's in my home, clean/lethe.conf. scp it home when you're done.
+
+Before you type "yes" to ssh's question, check you're really talking
+to my machine. The Lighthouse's host key fingerprint is:
+
+    ${LA.hostFingerprint('10.0.0.2')}
+
+If ssh shows you anything else, answer "no" and call me.
 
                                               — Wren
 ` },
@@ -1340,5 +1421,26 @@ Your key still works. I never took it out.
         '/keeper-only': { body: `KEEPER ONLY. If you are reading this, you are not a robot.\n\nThe beam has turned every night since 1991. I have never once\nlet it stop. Some nights that's the only thing I'm sure of.\n\nThank you for coming back, ${u}.\n\n— W.\n` },
       },
     };
+  };
+
+  /* things that happen in Rootfall when its processes die or its services start */
+  pack.worldHooks = {
+    hollowShellDied(p) {
+      this.reap(1336);
+      this.removeSession((s) => s.user === 'hollow');
+      this.sockets = this.sockets.filter((s) => !(s.peer && s.peer.startsWith('10.0.0.66') && s.comm === 'sshd'));
+      const w = this.wtmp.find((x) => x.user === 'hollow' && !x.out);
+      if (w) w.out = `- ${U.strftime('%H:%M', new Date(LA.now()))}  (killed)`;
+      this.syncSockets();
+    },
+    letheStarted(s, pid) {
+      const fs = this.main.fs;
+      const conf = fs.tryGet('/etc/lethe/lethe.conf');
+      const text = conf ? fs.contentOf(conf) : '';
+      const get = (k) => { const m = text.match(new RegExp('^' + k + '=(.*)$', 'm')); return m ? m[1] : '?'; };
+      this.log(this.mainName, 'lethe', pid, `Lethe 3.0.3 starting (conf=/etc/lethe/lethe.conf)`, 'lethe');
+      this.log(this.mainName, 'lethe', pid, `SAFE_MODE=${get('SAFE_MODE')} TARGETS=${get('TARGETS')} QUARANTINE=${get('QUARANTINE')}`, 'lethe');
+      this.log(this.mainName, 'lethe', pid, `next sweep scheduled for ${get('SCHEDULE')}`, 'lethe');
+    },
   };
 })();

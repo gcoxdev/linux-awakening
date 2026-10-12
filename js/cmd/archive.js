@@ -250,7 +250,7 @@
   def('unzip', {
     async run(ctx) {
       const { o, operands } = U.getopt(ctx.args, { flags: 'lonqv', params: 'd' });
-      if (!operands.length) { ctx.err.write('UnZip 6.00 of 20 April 2009, by Debian.\nUsage: unzip [-Z] [-opts[modifiers]] file[.zip] [list] [-x xlist] [-d exdir]\n'); return 0; }
+      if (!operands.length) { ctx.err.write((ctx.world.distro === 'debian' ? 'UnZip 6.00 of 20 April 2009, by Debian.' : 'UnZip 6.00 of 20 April 2009, by Info-ZIP.') + '\nUsage: unzip [-Z] [-opts[modifiers]] file[.zip] [list] [-x xlist] [-d exdir]\n'); return 0; }
       let name = operands[0];
       let abs = ctx.abs(name);
       let node = ctx.fs.tryGet(abs, ctx.user);

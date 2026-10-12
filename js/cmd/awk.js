@@ -350,7 +350,7 @@
         if (isOp('[')) { p++; const subs = exprList(); expectOp(']'); return { k: 'idx', name: t.v, subs }; }
         return { k: 'var', name: t.v };
       }
-      if (isKw('getline')) throw new AwkErr('getline is not supported in Rootfall awk');
+      if (isKw('getline')) throw new AwkErr('getline is not supported in this awk');
       fail();
     }
     return program();

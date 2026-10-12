@@ -53,7 +53,11 @@
   LA.ansiToHtml = ansiToHtml;
 
   /* ---------- story markup ---------- */
-  const SPEAKERS = ['ines', 'tux', 'mags', 'hal', 'ingrid', 'osei', 'mara', 'juno', 'wren', 'you', 'bea', 'hollow'];
+  /* each story gives its cast their own colours */
+  const speakerColor = (who) => {
+    const g = LA.game;
+    return (g && g.pack && g.pack.speakers[who.toLowerCase()]) || null;
+  };
   function inline(s) {
     const codes = [];
     let h = esc(s).replace(/«([^»]*)»/g, (m, c) => { codes.push(c); return `\u0000${codes.length - 1}\u0000`; });
@@ -75,8 +79,8 @@
       if (say) {
         flush();
         const who = say[1];
-        const cls = SPEAKERS.includes(who.toLowerCase()) ? who.toLowerCase() : 'other';
-        html += `<p class="say"><span class="who who-${cls}">${esc(who)}${say[2] ? `<span class="aside">${esc(say[2])}</span>` : ''}</span><span class="line">${inline(say[3])}</span></p>`;
+        const col = speakerColor(who);
+        html += `<p class="say"><span class="who${col ? '' : ' who-other'}"${col ? ` style="color:${col}"` : ''}>${esc(who)}${say[2] ? `<span class="aside">${esc(say[2])}</span>` : ''}</span><span class="line">${inline(say[3])}</span></p>`;
         continue;
       }
       if (/^\s*$/.test(line)) { flush(); continue; }
@@ -103,9 +107,11 @@
         if (kind === 'art') html += `<pre class="art">${esc(body.join('\n'))}</pre>`;
         else if (kind === 'goal') html += `<div class="box goal"><span class="tag">Goal</span><div>${inline(body.join(' '))}</div></div>`;
         else if (kind === 'lesson') html += `<div class="box lesson"><span class="tag">Lesson</span>${paragraphs(body)}</div>`;
-        else if (kind === 'memory') html += `<div class="box memory"><span class="tag">✦ Memory</span><div>${inline(body.join(' '))}</div></div>`;
+        else if (kind === 'memory') html += `<div class="box memory"><span class="tag">${esc((LA.game && LA.game.pack.collect.tag) || '✦')}</span><div>${inline(body.join(' '))}</div></div>`;
         else if (kind === 'secret') html += `<div class="box secret"><span class="tag">★ Secret</span>${body.map((l) => `<div>${inline(l)}</div>`).join('')}</div>`;
         else if (kind === 'complete') html += `<div class="box complete">${body.filter(Boolean).map((l, k) => `<div class="${k === 0 ? 'big' : ''}">${inline(l)}</div>`).join('')}</div>`;
+        else if (kind === 'task') html += `<div class="box task"><span class="tag">Task</span><div class="task-head">${inline(body[0] || '')}</div>${body.slice(1).map((l) => (/^[✓○] /.test(l) ? `<div class="task-part${l[0] === '✓' ? ' done' : ''}">${inline(l)}</div>` : `<div class="task-body">${inline(l)}</div>`)).join('')}</div>`;
+        else if (kind === 'badge') html += `<div class="box badge"><span class="tag">🏅 Badge earned</span><div class="big">${inline(body[0] || '')}</div>${body.slice(1).map((l) => `<div>${inline(l)}</div>`).join('')}</div>`;
         else if (kind === 'resume') html += `<div class="box resume">${body.map((l) => `<div>${inline(l)}</div>`).join('')}</div>`;
         else if (kind === 'certificate') html += `<div class="box certificate">${body.map((l) => `<div>${l ? inline(l) : '&nbsp;'}</div>`).join('')}</div>`;
         else html += paragraphs(body);
@@ -120,16 +126,32 @@
 
   /* ---------- title banner (FIGlet "standard", unsmushed) ---------- */
   const FONT = {
-    L: [' _     ', '| |    ', '| |    ', '| |___ ', '|_____|'],
-    I: [' ___ ', '|_ _|', ' | | ', ' | | ', '|___|'],
-    N: [' _   _ ', '| \\ | |', '|  \\| |', '| |\\  |', '|_| \\_|'],
-    U: [' _   _ ', '| | | |', '| | | |', '| |_| |', ' \\___/ '],
-    X: ['__  __', '\\ \\/ /', ' \\  / ', ' /  \\ ', '/_/\\_\\'],
     A: ['    _    ', '   / \\   ', '  / _ \\  ', ' / ___ \\ ', '/_/   \\_\\'],
-    W: ['__        __', '\\ \\      / /', ' \\ \\ /\\ / / ', '  \\ V  V /  ', '   \\_/\\_/   '],
-    K: [' _  __', '| |/ /', "| ' / ", '| . \\ ', '|_|\\_\\'],
+    B: [' ____  ', '| __ ) ', '|  _ \\ ', '| |_) |', '|____/ '],
+    C: ['  ____ ', ' / ___|', '| |    ', '| |___ ', ' \\____|'],
+    D: [' ____  ', '|  _ \\ ', '| | | |', '| |_| |', '|____/ '],
     E: [' _____ ', '| ____|', '|  _|  ', '| |___ ', '|_____|'],
+    F: [' _____ ', '|  ___|', '| |_   ', '|  _|  ', '|_|    '],
     G: ['  ____ ', ' / ___|', '| |  _ ', '| |_| |', ' \\____|'],
+    H: [' _   _ ', '| | | |', '| |_| |', '|  _  |', '|_| |_|'],
+    I: [' ___ ', '|_ _|', ' | | ', ' | | ', '|___|'],
+    J: ['     _ ', '    | |', ' _  | |', '| |_| |', ' \\___/ '],
+    K: [' _  __', '| |/ /', '| \' / ', '| . \\ ', '|_|\\_\\'],
+    L: [' _     ', '| |    ', '| |    ', '| |___ ', '|_____|'],
+    M: [' __  __ ', '|  \\/  |', '| |\\/| |', '| |  | |', '|_|  |_|'],
+    N: [' _   _ ', '| \\ | |', '|  \\| |', '| |\\  |', '|_| \\_|'],
+    O: ['  ___  ', ' / _ \\ ', '| | | |', '| |_| |', ' \\___/ '],
+    P: [' ____  ', '|  _ \\ ', '| |_) |', '|  __/ ', '|_|    '],
+    Q: ['  ___  ', ' / _ \\ ', '| | | |', '| |_| |', ' \\__\\_\\'],
+    R: [' ____  ', '|  _ \\ ', '| |_) |', '|  _ < ', '|_| \\_\\'],
+    S: [' ____  ', '/ ___| ', '\\___ \\ ', ' ___) |', '|____/ '],
+    T: [' _____ ', '|_   _|', '  | |  ', '  | |  ', '  |_|  '],
+    U: [' _   _ ', '| | | |', '| | | |', '| |_| |', ' \\___/ '],
+    V: ['__     __', '\\ \\   / /', ' \\ \\ / / ', '  \\ V /  ', '   \\_/   '],
+    W: ['__        __', '\\ \\      / /', ' \\ \\ /\\ / / ', '  \\ V  V /  ', '   \\_/\\_/   '],
+    X: ['__  __', '\\ \\/ /', ' \\  / ', ' /  \\ ', '/_/\\_\\'],
+    Y: ['__   __', '\\ \\ / /', ' \\ V / ', '  | |  ', '  |_|  '],
+    Z: [' _____', '|__  /', '  / / ', ' / /_ ', '/____|'],
     ' ': ['  ', '  ', '  ', '  ', '  '],
   };
   LA.banner = (text) => {

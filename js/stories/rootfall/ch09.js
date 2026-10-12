@@ -5,13 +5,8 @@
   const N = String.raw;
 
   LA.story.add({
-    n: 9, id: 'clockworks', title: 'The Clockworks', place: '/etc/systemd & /var/spool/cron',
-    unlocks: ['systemctl', 'journalctl', 'crontab', 'lsblk', 'mount', 'umount', 'dmesg', 'watch'],
-    onStart(g) {
-      const s = g.world.services.lethe;
-      if (s && !s.active) g.world.startService('lethe');
-      if (s) s.enabled = true;
-    },
+    n: 9, id: 'clockworks', title: 'The Clockworks', place: '/etc/systemd & /var/spool/cron', clock: [1, 18, 45],
+    unlocks: ['systemctl', 'journalctl', 'crontab', 'lsblk', 'mount'],
     intro: N`The Clockworks fill the attic of City Hall: a cathedral of gears, chains and pendulums, all ticking out of step with one another.
 
 :::art
@@ -27,10 +22,17 @@
 Every service in Rootfall is wound and minded here. And Lethe's gear is turning faster than all the rest.`,
     steps: [
       {
+        goal: 'Climb up to the Clockworks: «cd /etc/systemd/system»',
+        hints: ['Type: «cd /etc/systemd/system»'],
+        check: (e) => e.cwd === '/etc/systemd/system',
+        solve: ['cd /etc/systemd/system'],
+        done: N`Unit files hang from the gears like tags on keys: one per service the city runs. One of them is «lethe.service».`,
+      },
+      {
         say: N`Ask the service manager about Lethe: «systemctl status lethe».`,
         goal: 'Inspect the Lethe service: «systemctl status lethe»',
         hints: ['Type: «systemctl status lethe»'],
-        check: (e) => !!e.tried('systemctl', (r) => r.args.includes('status') && r.args.some((a) => /^lethe/.test(a))),
+        check: (e) => !!e.tried('systemctl', (r) => r.args.includes('status') && r.args.some((a) => /^lethe/.test(a)) && /Loaded:/.test(r.out)),
         solve: ['systemctl status lethe'],
         done: N`«Loaded: loaded (/etc/systemd/system/lethe.service; **enabled**)»
 «Active: **active (running)**»
@@ -55,7 +57,7 @@ Reliable.`,
         say: N`systemd keeps a diary of everything its services say — the **journal**. Read Lethe's last twenty entries: «journalctl -u lethe -n 20».`,
         goal: 'Read Lethe\'s journal: «journalctl -u lethe -n 20»',
         hints: ['«-u» picks the unit (service), «-n» the number of lines.', 'Type: «journalctl -u lethe -n 20»'],
-        check: (e) => !!e.ran('journalctl', (r) => r.args.some((a) => /lethe/.test(a))),
+        check: (e) => !!e.ran('journalctl', (r) => r.args.some((a) => /lethe/.test(a)) && /lethe/.test(r.out)),
         solve: ['journalctl -u lethe -n 20'],
         done: N`«config reloaded (inotify: /etc/lethe/lethe.conf changed by uid 0)»
 «WARNING: SAFE_MODE is OFF. Files will be destroyed, not quarantined.»
@@ -109,18 +111,50 @@ Every morning at 06:00, your backup script. «*» means *every*. So that's how y
         say: N`Juno's question: what keeps *restarting* Lethe at night, even if someone stops it? Look at Hollow's crontab. Reading another user's crontab is root-only — and needs «-u».`,
         goal: 'Read hollow\'s crontab: «sudo crontab -l -u hollow»',
         hints: ['Type: «sudo crontab -l -u hollow»'],
-        check: (e) => !!e.ran('crontab', (r) => e.has(r, 'l') && r.args.includes('hollow')),
+        check: (e) => !!e.ran('crontab', (r) => e.has(r, 'l') && r.args.includes('hollow') && /systemctl start lethe/.test(r.out)),
         solve: ['sudo crontab -l -u hollow', '$PW'],
-        done: N`«58 2 * * * /usr/bin/systemctl start lethe»
+        done: N`«58 2 * * * sudo -n /usr/bin/systemctl start lethe»
 «*/5 * * * * /tmp/.hollow/beacon --phone-home 10.0.0.66»
 
-Two minutes before three, every night, Hollow's alarm clock starts Lethe — even if someone stopped it. And every five minutes («*/5»), the beacon you killed would have been reborn.`,
+Two minutes before three, every night, Hollow's alarm clock starts Lethe — even if someone stopped it. And every five minutes («*/5»), the beacon you killed would have been reborn.
+
+The three o'clock sweep was yours: you wrote Lethe to clear «/tmp» at 03:00. This line never was. Someone else's alarm, set two minutes earlier, to wake your broom after you'd put it away.
+
+That's it. That's what happened that night. You stopped Lethe at 02:22 and searched «/etc/cron.d» and «/etc/crontab» — the *system's* schedules. You never looked at the *users'* crontabs in «/var/spool/cron». At 02:58, this line started Lethe again while you stood at the Docks.
+
+:::lesson
+Cron jobs live in two places: system-wide («/etc/crontab», «/etc/cron.d/») and per user («crontab -l», stored under «/var/spool/cron/»). When something keeps coming back, check both.
+:::`,
+      },
+      {
+        say: N`@Juno: Hang on. A user's cron job runs *as that user*. Hollow's an ordinary account — he can't start a system service on his own, and cron can't type a sudo password for him. Look at that line again: «sudo -n». *Non-interactive*: run as root, and fail rather than ask for a password. That only works if a sudo rule says he needs none.
+Extra sudo rules usually live as small files in «/etc/sudoers.d». Only root may read them.`,
+        goal: 'Find the rule that lets him: «sudo grep -r hollow /etc/sudoers.d»',
+        hints: ['Type: «sudo grep -r hollow /etc/sudoers.d»'],
+        check: (e) => !!e.ran('grep', (r) => /NOPASSWD/.test(r.out)),
+        solve: ['sudo grep -r hollow /etc/sudoers.d', '$PW'],
+        done: N`«/etc/sudoers.d/90-lethe-watchdog: hollow ALL=(root) NOPASSWD: /usr/bin/systemctl start lethe»
+
+Named like housekeeping. Narrow enough that nobody would look twice: one command, as root, no password. That's all he needed — that one line, and the crontab entry that used it.
+@Juno: And «auth.log» will say who wrote it. (It does: your account, at 01:57 that night.)`,
+      },
+      {
+        say: N`Remove it. A sudo rule is just a file.`,
+        goal: 'Delete the rule: «sudo rm /etc/sudoers.d/90-lethe-watchdog»',
+        hints: ['Type: «sudo rm /etc/sudoers.d/90-lethe-watchdog»'],
+        check: (e) => !e.exists('/etc/sudoers.d/90-lethe-watchdog'),
+        solve: ['sudo rm /etc/sudoers.d/90-lethe-watchdog', '$PW'],
+        done: N`Now even if someone puts the crontab back, it would fail at 02:58 with «sudo: a password is required».
+
+:::lesson
+«sudo -l» lists what *you* may run as root; «sudo -l -U NAME» does it for another user. When someone ordinary can do something extraordinary, look for a rule in «/etc/sudoers» or «/etc/sudoers.d/». Edit those with «visudo», which refuses to save a broken file.
+:::`,
       },
       {
         say: N`Remove it. «crontab -r» deletes a crontab entirely.`,
         goal: 'Delete hollow\'s crontab: «sudo crontab -r -u hollow»',
         hints: ['Type: «sudo crontab -r -u hollow»'],
-        check: (e) => !e.exists('/var/spool/cron/crontabs/hollow'),
+        check: (e) => !e.exists(LA.cronSpool(e.world) + '/hollow'),
         solve: ['sudo crontab -r -u hollow', '$PW'],
         done: N`One gear in the Clockworks stops forever.
 
@@ -129,7 +163,11 @@ Two minutes before three, every night, Hollow's alarm clock starts Lethe — eve
 :::`,
       },
       {
-        say: N`Now — your backups. The tip said the Undercroft disk is called **sdb**. «lsblk» lists every disk and partition attached to the city.`,
+        setup: (g) => LA.stories.rootfall.plugBackup(g),
+        say: N`Now — your backups. The tip said the Undercroft disk is called **sdb**. But it isn't in the city at all.
+
+@Juno: (holding up a grey disk in an anti-static bag) You gave me this at twenty to three that night. Said *keep it in your drawer, off the city, whatever happens*. Then you walked off toward the Docks.
+She plugs it in. «lsblk» lists every disk and partition attached to the city.`,
         goal: 'List the city\'s disks: «lsblk»',
         hints: ['Type: «lsblk»'],
         check: (e) => !!e.ran('lsblk'),
@@ -137,14 +175,16 @@ Two minutes before three, every night, Hollow's alarm clock starts Lethe — eve
         done: N`«sda» — 20G, the city itself, mounted at «/».
 «sdb» — 2G, with one partition, «sdb1»... and nothing in the MOUNTPOINTS column.
 
-The Undercroft is attached, but nobody has opened the door.`,
+The Undercroft is attached again for the first time in three nights. Nobody has opened the door.`,
       },
       {
-        say: N`A disk's files only appear once it's **mounted** — attached to a directory somewhere in the tree. Your history showed the exact incantation. Mounting is root's business.`,
-        goal: 'Open the Undercroft: «sudo mount /dev/sdb1 /mnt/backup»',
-        hints: ['«mount DEVICE DIRECTORY». The device is /dev/sdb1, the mount point /mnt/backup.', 'Type: «sudo mount /dev/sdb1 /mnt/backup»'],
-        check: (e) => e.world.mounts.some((m) => m.dev === '/dev/sdb1'),
-        solve: ['sudo mount /dev/sdb1 /mnt/backup', '$PW'],
+        say: N`A disk's files only appear once it's **mounted** — attached to a directory somewhere in the tree. Your history showed the incantation. Mounting is root's business.
+@Juno: Read-only, though. If that disk is your evidence, nothing on this city gets to write to it — not even you. «-o ro».`,
+        goal: 'Open the Undercroft, read-only: «sudo mount -o ro /dev/sdb1 /mnt/backup»',
+        hints: ['«mount -o ro DEVICE DIRECTORY». The device is /dev/sdb1, the mount point /mnt/backup.', 'Type: «sudo mount -o ro /dev/sdb1 /mnt/backup»'],
+        check: (e) => e.world.mounts.some((m) => m.dev === '/dev/sdb1' && /^ro\b/.test(m.opts)),
+        nudge: (e) => (e.world.mounts.some((m) => m.dev === '/dev/sdb1' && !/^ro\b/.test(m.opts)) ? '@Juno: That\'s read-*write*. «sudo umount /mnt/backup» and mount it again with «-o ro».' : null),
+        solve: ['sudo mount -o ro /dev/sdb1 /mnt/backup', '$PW'],
         done: N`Far below the city, something heavy turns over and settles. A door you had forgotten swings open.
 
 :::lesson
@@ -161,10 +201,10 @@ The Undercroft is attached, but nobody has opened the door.`,
 Tux presses his beak against the screen at the last one.`,
       },
     ],
-    outro: N`Lethe is asleep, and it will stay asleep. Tonight, at three o'clock, for the first time in days, nothing in Rootfall will be forgotten.
+    outro: N`Lethe is stopped, disabled, and its alarm clock is gone. Unless Hollow has another way back in, three o'clock tonight will pass without a sweep.
 
-But your memories are still packed away below the city, and your «~/scripts» folder holds something you never finished: «restore.sh».
+That *unless* sits in your stomach. Juno is watching the Power Station; Mara is combing the logs for any login she doesn't recognise. For now, the city is safe enough to breathe.
 
-You've got some spellwork to do.`,
+And below the city, the Undercroft door stands open. Whatever you saved down there that night is waiting.`,
   });
 })();

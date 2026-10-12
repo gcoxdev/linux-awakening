@@ -6,8 +6,17 @@
   const VFS = LA.VFS;
   const def = LA.def;
 
+  /* the host key fingerprint ssh shows on first contact */
+  LA.hostFingerprint = (ip) => 'SHA256:' + U.b64encode(U.sha256(ip)).slice(0, 43);
+
   const OUTSIDE = /\.(com|org|net|io|dev|edu|gov|uk|de)$|^(www\.)?(google|github|example|wikipedia)/;
 
+  /* the DNS server this host asks: the first nameserver line of /etc/resolv.conf */
+  const nameserver = (ctx) => {
+    const n = ctx.fs.tryGet('/etc/resolv.conf');
+    const m = n && ctx.fs.contentOf(n).match(/^nameserver\s+(\S+)/m);
+    return m ? m[1] : '127.0.0.53';
+  };
   def('ping', {
     interruptible: true,
     async run(ctx) {
@@ -127,7 +136,7 @@
         ctx.err.write(`*   Trying ${h.ip}:80...\n* Connected to ${u.host} (${h.ip}) port 80 (#0)\n> GET ${u.path} HTTP/1.1\n> Host: ${u.host}\n> User-Agent: curl/7.88.1\n> Accept: */*\n>\n< HTTP/1.1 ${res.status} ${res.status === 200 ? 'OK' : 'Not Found'}\n`);
       }
       const len = res.binary ? 2048 : U.utf8len(res.body);
-      const headers = `HTTP/1.1 ${res.status} ${res.status === 200 ? 'OK' : 'Not Found'}\r\nServer: lighthouse/1.0\r\nDate: ${new Date(LA.now()).toUTCString()}\r\nContent-Type: ${res.type || 'text/plain'}; charset=utf-8\r\nContent-Length: ${len}\r\n\r\n`;
+      const headers = `HTTP/1.1 ${res.status} ${res.status === 200 ? 'OK' : 'Not Found'}\r\nServer: ${ctx.world.sys.web}\r\nDate: ${new Date(LA.now()).toUTCString()}\r\nContent-Type: ${res.type || 'text/plain'}; charset=utf-8\r\nContent-Length: ${len}\r\n\r\n`;
       if (head) { ctx.print(headers.replace(/\r/g, '')); return 0; }
       if (fail && res.status >= 400) { if (!silent || showErr) ctx.err.write(`curl: (22) The requested URL returned error: ${res.status}\n`); return 22; }
       if (remoteName && !outFile) outFile = VFS.basename(u.path) || 'index.html';
@@ -213,16 +222,34 @@
     const kh = VFS.join(home, '.ssh/known_hosts');
     const known = ctx.fs.tryGet(kh, ctx.user);
     const knownText = known ? ctx.fs.contentOf(known) : '';
-    if (!knownText.split('\n').some((l) => l.split(/[ ,]/)[0] === hostName || l.split(' ')[0].split(',').includes(hostName))) {
-      if (!opts.quiet || true) {
-        ctx.err.write(`The authenticity of host '${hostName} (${h.ip})' can't be established.\nED25519 key fingerprint is SHA256:${U.b64encode(U.sha256(h.ip)).slice(0, 43)}.\nThis key is not known by any other names.\n`);
-      }
+    /* the key this host presents; known_hosts remembers it per name */
+    const hostKey = `ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI${U.b64encode(h.ip + ':' + (h.hostKey || '')).replace(/=/g, '')}`;
+    const entry = knownText.split('\n').find((l) => l.split(' ')[0].split(',').includes(hostName));
+    /* (saves from older versions remembered keys in a shorter form; accept those for the same address) */
+    const legacy = entry && (entry.split(' ')[2] || '').startsWith('AAAAC3NzaC1lZDI1NTE5AAAAI' + U.b64encode(h.ip).replace(/=/g, ''));
+    if (entry && !legacy && entry.split(' ').slice(1, 3).join(' ') !== hostKey) {
+      ctx.err.write(`@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
+Someone could be eavesdropping on you right now (man-in-the-middle attack)!
+It is also possible that a host key has just been changed.
+The fingerprint for the ED25519 key sent by the remote host is
+${LA.hostFingerprint(h.ip)}.
+Offending ED25519 key in ${kh}
+Host key for ${hostName} has changed and you have requested strict checking.
+Host key verification failed.
+`);
+      return { code: 255 };
+    }
+    if (!entry) {
+      ctx.err.write(`The authenticity of host '${hostName} (${h.ip})' can't be established.\nED25519 key fingerprint is ${LA.hostFingerprint(h.ip)}.\nThis key is not known by any other names.\n`);
       let ans = await ctx.ui.prompt('Are you sure you want to continue connecting (yes/no/[fingerprint])? ', { signal: ctx.signal });
-      while (ans !== null && !/^(yes|no)$/i.test(ans.trim())) ans = await ctx.ui.prompt("Please type 'yes', 'no' or the fingerprint: ", { signal: ctx.signal });
+      while (ans !== null && !/^(yes|no)$/i.test(ans.trim()) && ans.trim() !== LA.hostFingerprint(h.ip)) ans = await ctx.ui.prompt("Please type 'yes', 'no' or the fingerprint: ", { signal: ctx.signal });
       if (ans === null || /^no$/i.test(ans.trim())) { ctx.err.write('Host key verification failed.\n'); return { code: 255 }; }
       try {
         if (!ctx.fs.tryGet(VFS.join(home, '.ssh'), ctx.user)) ctx.fs.mkdir(VFS.join(home, '.ssh'), { user: ctx.user, mode: 0o700, umask: 0 });
-        ctx.fs.writeFile(kh, `${hostName} ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI${U.b64encode(h.ip).replace(/=/g, '')}lighthouse\n`, { user: ctx.user, append: true, umask: 0o077 });
+        ctx.fs.writeFile(kh, `${hostName} ${hostKey}\n`, { user: ctx.user, append: true, umask: 0o077 });
       } catch (e) { /* ignore */ }
       ctx.err.write(`Warning: Permanently added '${hostName}' (ED25519) to the list of known hosts.\n`);
     }
@@ -232,7 +259,8 @@
       const pubNode = ctx.fs.tryGet(VFS.join(home, '.ssh/id_ed25519.pub'), ctx.user);
       const privNode = ctx.fs.tryGet(VFS.join(home, '.ssh/id_ed25519'), ctx.user);
       const ak = remote.fs.tryGet(VFS.join(ru.home, '.ssh/authorized_keys'));
-      if (pubNode && privNode && ak && !ru.locked) {
+      /* a locked password («usermod -L», «passwd -l») doesn't stop a key login — that needs the key removed */
+      if (pubNode && privNode && ak) {
         const key = ctx.fs.contentOf(pubNode).trim().split(/\s+/).slice(0, 2).join(' ');
         ok = remote.fs.contentOf(ak).split('\n').some((l) => l.trim().split(/\s+/).slice(0, 2).join(' ') === key);
       }
@@ -344,27 +372,46 @@
       const obj = args[0] || '';
       const ip = ctx.host.ip;
       const mac = ctx.host.mac || '52:54:00:1f:91:07';
+      /* a host may describe its own interfaces and routes; otherwise it has one eth0 on a /24 */
+      const net24 = ip.replace(/\.\d+$/, '');
+      const ifaces = ctx.host.ifaces || [{ name: 'eth0', ip, prefix: 24, mac, up: true, brd: net24 + '.255' }];
+      const routes = ctx.host.routes || [`default via ${net24}.1 dev eth0 proto dhcp src ${ip} metric 100 `, `${net24}.0/24 dev eth0 proto kernel scope link src ${ip} metric 100 `];
+      const v6 = (m) => 'fe80::' + m.split(':').slice(3).join('').replace(/^(..)(..)(..)$/, '$1ff:fe$2:$3').replace(/^0+/, '') + '/64';
       if (!obj) { ctx.err.write('Usage: ip [ OPTIONS ] OBJECT { COMMAND | help }\nwhere  OBJECT := { address | link | route | neigh | ... }\n'); return 1; }
+      const flags = (f) => (f.up ? (f.p2p ? '<POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP>' : '<BROADCAST,MULTICAST,UP,LOWER_UP>') : (f.p2p ? '<POINTOPOINT,MULTICAST,NOARP>' : '<BROADCAST,MULTICAST>'));
+      const state = (f) => (f.up ? 'UP' : 'DOWN');
       if ('address'.startsWith(obj) || obj === 'a' || obj === 'addr') {
-        if (brief) { ctx.println(`lo               UNKNOWN        127.0.0.1/8 ::1/128 \neth0             UP             ${ip}/24 fe80::5054:ff:fe1f:9107/64 `); return 0; }
-        ctx.println(`1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+        if (brief) {
+          ctx.println(`lo               UNKNOWN        127.0.0.1/8 ::1/128 `);
+          for (const f of ifaces) ctx.println(`${U.padR(f.name, 16)} ${U.padR(state(f), 14)} ${f.up || f.keepAddr ? `${f.ip}/${f.prefix}` : ''} `);
+          return 0;
+        }
+        let out = `1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
     inet 127.0.0.1/8 scope host lo
        valid_lft forever preferred_lft forever
     inet6 ::1/128 scope host noprefixroute
-       valid_lft forever preferred_lft forever
-2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
-    link/ether ${mac} brd ff:ff:ff:ff:ff:ff
-    inet ${ip}/24 brd 10.0.0.255 scope global dynamic eth0
-       valid_lft 85974sec preferred_lft 85974sec
-    inet6 fe80::5054:ff:fe1f:9107/64 scope link
-       valid_lft forever preferred_lft forever`);
+       valid_lft forever preferred_lft forever`;
+        ifaces.forEach((f, i) => {
+          out += `\n${i + 2}: ${f.name}: ${flags(f)} mtu ${f.mtu || 1500} qdisc ${f.up ? 'fq_codel' : 'noop'} state ${state(f)} group default qlen ${f.p2p ? 500 : 1000}`;
+          out += f.p2p ? `\n    link/none ` : `\n    link/ether ${f.mac} brd ff:ff:ff:ff:ff:ff`;
+          if (f.up || f.keepAddr) {
+            out += `\n    inet ${f.ip}/${f.prefix} ${f.brd ? `brd ${f.brd} ` : ''}scope global ${f.p2p ? '' : 'dynamic '}${f.name}\n       valid_lft ${f.p2p ? 'forever' : '85974sec'} preferred_lft ${f.p2p ? 'forever' : '85974sec'}`;
+            if (!f.p2p) out += `\n    inet6 ${v6(f.mac)} scope link\n       valid_lft forever preferred_lft forever`;
+          }
+        });
+        ctx.println(out);
         if (ctx.game) ctx.game.noteIp();
         return 0;
       }
-      if ('route'.startsWith(obj) || obj === 'r') { ctx.println(`default via 10.0.0.1 dev eth0 proto dhcp src ${ip} metric 100 \n10.0.0.0/24 dev eth0 proto kernel scope link src ${ip} metric 100 `); return 0; }
-      if ('link'.startsWith(obj) || obj === 'l') { ctx.println(`1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000\n    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00\n2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000\n    link/ether ${mac} brd ff:ff:ff:ff:ff:ff`); return 0; }
-      if ('neighbour'.startsWith(obj) || obj === 'n') { ctx.println('10.0.0.1 dev eth0 lladdr 52:54:00:00:00:01 REACHABLE\n10.0.0.2 dev eth0 lladdr 52:54:00:4c:16:02 STALE\n10.0.0.66 dev eth0  FAILED'); return 0; }
+      if ('route'.startsWith(obj) || obj === 'r') { ctx.println(routes.join('\n')); if (ctx.game) ctx.game.note('route', {}); return 0; }
+      if ('link'.startsWith(obj) || obj === 'l') {
+        let out = `1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000\n    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00`;
+        ifaces.forEach((f, i) => { out += `\n${i + 2}: ${f.name}: ${flags(f)} mtu ${f.mtu || 1500} qdisc ${f.up ? 'fq_codel' : 'noop'} state ${state(f)} mode DEFAULT group default qlen 1000\n    ${f.p2p ? 'link/none ' : `link/ether ${f.mac} brd ff:ff:ff:ff:ff:ff`}`; });
+        ctx.println(out);
+        return 0;
+      }
+      if ('neighbour'.startsWith(obj) || obj === 'n') { ctx.println(ctx.host.neigh || `${net24}.1 dev eth0 lladdr 52:54:00:00:00:01 REACHABLE`); return 0; }
       ctx.err.write(`Object "${obj}" is unknown, try "ip help".\n`);
       return 1;
     },
@@ -452,13 +499,13 @@ lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
       if (ctx.game) ctx.game.onDns(name, answers);
       if (short) { for (const a of answers) ctx.println(a.data); return 0; }
       const status = answers.length ? 'NOERROR' : 'NXDOMAIN';
-      let s = `\n; <<>> DiG 9.18.19-1~deb12u1-Debian <<>> ${ctx.args.join(' ')}\n;; global options: +cmd\n;; Got answer:\n;; ->>HEADER<<- opcode: QUERY, status: ${status}, id: ${4000 + Math.floor(Math.random() * 999)}\n;; flags: qr aa rd ra; QUERY: 1, ANSWER: ${answers.length}, AUTHORITY: ${answers.length ? 0 : 1}, ADDITIONAL: 1\n\n;; QUESTION SECTION:\n;${fq}\t\t\tIN\t${reverse ? 'PTR' : type}\n\n`;
+      let s = `\n; <<>> DiG ${LA.distro(ctx.world).dig} <<>> ${ctx.args.join(' ')}\n;; global options: +cmd\n;; Got answer:\n;; ->>HEADER<<- opcode: QUERY, status: ${status}, id: ${4000 + Math.floor(Math.random() * 999)}\n;; flags: qr aa rd ra; QUERY: 1, ANSWER: ${answers.length}, AUTHORITY: ${answers.length ? 0 : 1}, ADDITIONAL: 1\n\n;; QUESTION SECTION:\n;${fq}\t\t\tIN\t${reverse ? 'PTR' : type}\n\n`;
       if (answers.length) {
         s += ';; ANSWER SECTION:\n';
         for (const a of answers) s += `${fq}\t3600\tIN\t${a.type}\t${a.data}\n`;
         s += '\n';
-      } else s += ';; AUTHORITY SECTION:\nrootfall.\t\t3600\tIN\tSOA\tns.rootfall. operator.rootfall. 1991 3600 600 86400 3600\n\n';
-      s += `;; Query time: ${Math.floor(Math.random() * 3) + 1} msec\n;; SERVER: 10.0.0.1#53(10.0.0.1) (UDP)\n;; WHEN: ${U.dateString(new Date(LA.now()))}\n;; MSG SIZE  rcvd: ${48 + answers.length * 16}\n`;
+      } else { const dm = ctx.world.sys.domain; s += `;; AUTHORITY SECTION:\n${dm}.\t\t3600\tIN\tSOA\tns.${dm}. admin.${dm}. ${ctx.world.sys.build} 3600 600 86400 3600\n\n`; }
+      s += `;; Query time: ${Math.floor(Math.random() * 3) + 1} msec\n;; SERVER: ${nameserver(ctx)}#53(${nameserver(ctx)}) (UDP)\n;; WHEN: ${U.dateString(new Date(LA.now()))}\n;; MSG SIZE  rcvd: ${48 + answers.length * 16}\n`;
       ctx.print(s);
       return 0;
     },
@@ -480,9 +527,9 @@ lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
   def('nslookup', {
     run(ctx) {
       const name = ctx.args.find((a) => !a.startsWith('-'));
-      if (!name) { ctx.err.write('> (interactive mode is not supported in Rootfall; try: nslookup lighthouse)\n'); return 1; }
+      if (!name) { ctx.err.write('> (interactive mode is not supported here; try: nslookup HOSTNAME)\n'); return 1; }
       const ans = ctx.world.dns(name, 'A');
-      ctx.println('Server:\t\t10.0.0.1\nAddress:\t10.0.0.1#53\n');
+      ctx.println(`Server:\t\t${nameserver(ctx)}\nAddress:\t${nameserver(ctx)}#53\n`);
       if (!ans.length) { ctx.println(`** server can't find ${name}: NXDOMAIN\n`); return 1; }
       for (const a of ans) ctx.println(`Name:\t${a.name || name}\nAddress: ${a.data}\n`);
       if (ctx.game) ctx.game.onDns(name, ans);

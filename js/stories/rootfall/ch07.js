@@ -6,8 +6,8 @@
   const BAD = `alias cat='echo "nothing to remember."'`;
 
   LA.story.add({
-    n: 7, id: 'home', title: 'Home', place: '~',
-    unlocks: ['history', 'alias', 'unalias', 'env', 'printenv', 'export', 'unset', 'source', 'ln', 'who', 'w', 'hostname', 'last'],
+    n: 7, id: 'home', title: 'Home', place: '~', clock: [1, 14, 0],
+    unlocks: ['history', 'alias', 'unalias', 'env', 'export', 'source', 'ln', 'who'],
     intro: N`The house settles around you. The radiator ticks. Tux snores, very quietly, in a tone you suspect he would deny.
 
 Mara pulls a chair up beside yours.
@@ -34,15 +34,32 @@ Press **↑** and **↓** to scroll through previous commands. «!!» re-runs th
         solve: ['cat ~/.bash_history'],
         done: N`You read your own last night like a stranger's.
 
-  «sudo nano lethe.conf» — you checked the config.
+  «cat lethe.conf» — you found the rewritten config.
   «grep hollow /var/log/auth.log» — you went hunting.
-  «ssh wren@lighthouse» — you went to see the keeper.
+  «sudo systemctl stop lethe» — **you stopped it.** So why did it run at three?
+  «grep -r lethe /etc/cron.d /etc/crontab» — you looked for anything that would start it again, and found nothing.
+  «cat /var/mail/{user}» — you read your mail. Then everything speeds up:
   «sudo mount /dev/sdb1 /mnt/backup» — the Undercroft.
   «tar -czvf /mnt/backup/memories.tar.gz memories/» — **you backed up your memories.**
   «cd /dev» — the Docks.
-  «echo "going to the docks. if i don't come back: start with pwd."»
 
-@Mara: You *knew*. You knew it might take you, and you went anyway — and you left yourself a trail of breadcrumbs.`,
+@Mara: You stopped Lethe and it ran anyway. And something in that mail sent you to the Docks in the middle of the night.`,
+      },
+      {
+        say: N`@Mara: The mail is still there. Mailboxes live in «/var/mail», one file per person.`,
+        goal: 'Read the mail you read that night: «cat /var/mail/{user}»',
+        hints: ['Type: «cat /var/mail/{user}»'],
+        check: (e) => e.didRead('/var/mail/' + e.game.user),
+        solve: ['cat /var/mail/{user}'],
+        done: N`*I know who Hollow is. The Docks, 02:50. Come alone. He reads everything.*
+
+Signed with Wren's name, sent from Wren's account at the Lighthouse. But look at the headers: «X-Originating-IP: 10.0.0.66».
+
+@Mara: That's not Wren. That's the address in every one of Hollow's logins. He used her account to write to you — and you went.
+
+:::lesson
+Mail headers record where a message really came from. The «From:» line is just text anyone can type; the «Received:» and originating-address lines are added by the machines that carried it.
+:::`,
       },
       {
         say: N`@Mara: Your shell carries a backpack of settings called **environment variables**: your name, your home, where to look for commands... «env» shows them all.`,
@@ -84,26 +101,30 @@ Press **↑** and **↓** to scroll through previous commands. «!!» re-runs th
       },
       {
         setup: (g) => {
-          const p = g.home + '/.bashrc';
-          const n = g.fs.tryGet(p);
-          if (!n) g.fs.put(p, `# ~/.bashrc\nalias ls='ls --color=auto'\n\n# --- added 02:58 ---\n${BAD}\n`, { owner: g.user, group: g.user });
-          else if (!g.fs.contentOf(n).includes('nothing to remember')) n.content += `\n# --- added 02:58 ---\n${BAD}\n`;
+          const t = g.fs.tryGet(g.home + '/.bashrc');
+          g.state.flags.poisonFixedEarly = !t || !g.fs.contentOf(t).includes('nothing to remember');
         },
-        say: N`@Mara: But aliases vanish when the shell closes. To keep one forever, add it to «~/.bashrc» — the script bash runs every time it starts — then load the file into this shell with «source».
+        say: N`@Mara: But aliases vanish when the shell closes. To keep one, add it to «~/.bashrc» — the script bash runs whenever it starts an interactive shell — then load the file into this shell with «source».
 «echo "alias ll='ls -la'" >> ~/.bashrc»
 «source ~/.bashrc»`,
         goal: 'Make ll permanent: append it to ~/.bashrc, then «source ~/.bashrc»',
         hints: ['Use «>>» to append, not «>» (which would wipe the file!).', `Type: «echo "alias ll='ls -la'" >> ~/.bashrc»`, 'Then: «source ~/.bashrc»'],
         check: (e) => /alias ll=/.test(e.read(e.home + '/.bashrc') || '') && !!e.stepEvent('source', (ev) => ev.path === e.home + '/.bashrc'),
         solve: [`echo "alias ll='ls -la'" >> ~/.bashrc`, 'source ~/.bashrc'],
-        done: N`Done. Your old prompt colours flicker back on, exactly as you once set them.
+        done: (g) => (g.state.flags.poisonFixedEarly
+          ? N`Done. Your old prompt colours flicker back on, exactly as you once set them — and «ll» will be there in every new shell.`
+          : N`Done. Your old prompt colours flicker back on, exactly as you once set them.
 
-Then Tux wakes with a start, scrambles out of his bed, and starts pecking urgently at the keyboard. He wants you to read something. Anything.`,
+Then Tux wakes with a start, scrambles out of his bed, and starts pecking urgently at the keyboard. He wants you to read something. Anything.`),
       },
       {
+        skip: (g) => !!g.state.flags.poisonFixedEarly,
+        skipSay: N`Tux sniffs at the screen, suspicious of something... then relaxes. Your «.bashrc» is clean.
+
+@Mara: Wait — there should be a line in there Hollow planted. An alias that makes «cat» lie. You already found it and took it out? ...Of course you did. You always read your startup files.`,
         say: N`@Mara: Read your sticky note again. Humour the penguin.`,
         goal: 'Read a file — any file — with «cat», for instance «cat sticky_note.txt»',
-        hints: ['Type: «cat sticky_note.txt»', 'If cat behaves normally, your shell hasn\'t loaded the poisoned file — run «source ~/.bashrc» and try again.'],
+        hints: ['Type: «cat sticky_note.txt»', 'If cat behaves normally, your shell hasn\'t loaded the file yet — run «source ~/.bashrc» and try again.'],
         check: (e) => /^\s*cat\b/.test(e.line) && !!e.ran('echo', (r) => r.args.join(' ').includes('nothing to remember')),
         solve: ['cat sticky_note.txt'],
         done: N`«nothing to remember.»
@@ -113,34 +134,48 @@ That is not what your sticky note says.
 @Mara: ...That's not right. «cat» doesn't *say* things. Something has got into «cat».`,
       },
       {
+        skip: (g) => !!g.state.flags.poisonFixedEarly,
         say: N`@Mara: When a command misbehaves, ask the shell what it really is. «type cat».`,
         goal: 'Find out what cat really is: «type cat»',
         hints: ['Type: «type cat»'],
-        check: (e) => !!e.ran('type', (r) => r.args.includes('cat')),
+        check: (e) => !!e.ran('type', (r) => r.args.includes('cat') && /aliased/.test(r.out)),
         solve: ['type cat'],
         done: N`«cat is aliased to 'echo "nothing to remember."'»
 
 @Mara: He planted an alias in your .bashrc! Every shell you start, «cat» lies to you. It's a little thing. That's what makes it so nasty.`,
       },
       {
+        skip: (g) => !!g.state.flags.poisonFixedEarly,
         say: N`@Mara: Remove the alias from this shell: «unalias cat».`,
         goal: 'Remove the poisoned alias: «unalias cat»',
         hints: ['Type: «unalias cat»'],
         check: (e) => !e.game.shell.aliases.cat,
         solve: ['unalias cat'],
-        done: N`«cat» is «cat» again. For now. The poison is still sitting in «.bashrc», waiting for the next shell.`,
+        done: N`«cat» is «cat» again — in this shell. The poison is still sitting in «.bashrc», waiting for the next one.`,
       },
       {
+        skip: (g) => !!g.state.flags.poisonFixedEarly,
         say: N`@Mara: Now cut it out at the root. Open «~/.bashrc» in nano and delete the line that starts «alias cat=» (and its "added 02:58" comment, if you like).
 @Mara: In nano, **Ctrl+K** cuts the whole line the cursor is on. Then Ctrl+O, Enter, Ctrl+X.`,
         goal: 'Delete the poisoned alias line from ~/.bashrc and save',
-        hints: ['Type «nano ~/.bashrc». Arrow down to the «alias cat=» line.', 'Press Ctrl+K to cut that line, then Ctrl+O, Enter to save, Ctrl+X to exit.', "Alternatively, without an editor: «grep -v 'nothing to remember' ~/.bashrc > /tmp/clean && mv /tmp/clean ~/.bashrc»"],
+        hints: ['Type «nano ~/.bashrc». Arrow down to the «alias cat=» line.', 'Press Ctrl+K to cut that line, then Ctrl+O, Enter to save, Ctrl+X to exit.', "Alternatively, without an editor: «grep -v 'nothing to remember' ~/.bashrc > ~/bashrc.clean && mv ~/bashrc.clean ~/.bashrc»"],
         check: (e) => { const t = e.read(e.home + '/.bashrc'); return t !== null && !t.includes('nothing to remember'); },
         solve: [{ edit: (c) => c.split('\n').filter((l) => !l.includes('nothing to remember') && !l.includes('added 02:58')).join('\n') }, 'nano ~/.bashrc'],
-        done: N`Gone.
+        done: N`Gone from the file, at least.`,
+      },
+      {
+        skip: (g) => !!g.state.flags.poisonFixedEarly,
+        say: N`@Mara: Don't take my word for it — or your editor's. Load the file again the way a new shell would, and ask what «cat» is now:
+«source ~/.bashrc»
+«type cat»`,
+        goal: 'Verify the repair: «source ~/.bashrc», then «type cat»',
+        hints: ['Two commands: «source ~/.bashrc» then «type cat». You want to see a file path, not an alias.'],
+        check: (e) => !!e.stepEvent('source', (ev) => ev.path === e.home + '/.bashrc') && !!e.ran('type', (r) => r.args.includes('cat') && /\/usr\/bin\/cat/.test(r.out)),
+        solve: ['source ~/.bashrc', 'type cat'],
+        done: N`«cat is /usr/bin/cat». The real thing, loaded fresh from a clean file.
 
 :::lesson
-Startup files like «~/.bashrc» and «~/.profile» run automatically, every time — which makes them a favourite hiding place for mischief. Read yours now and then. Trust, but verify.
+Startup files run automatically — «~/.bashrc» for every interactive shell, «~/.profile» at login — which makes them a favourite hiding place for mischief. After any fix, **verify**: load the file again and check the result, rather than trusting that the edit worked.
 :::`,
       },
       {

@@ -16,7 +16,7 @@
   }
 
   LA.story.add({
-    n: 3, id: 'market', title: 'The Night Market', place: '/tmp',
+    n: 3, id: 'market', title: 'The Night Market', place: '/tmp', clock: [0, 23, 20],
     unlocks: ['mkdir', 'touch', 'cp', 'mv', 'rm', 'rmdir', 'nano'],
     intro: N`By the time you reach «/tmp», the Night Market is in full swing.
 
@@ -31,7 +31,7 @@ A broad woman in a fisherman's sweater waves you over to an empty patch of cobbl
         hints: ['Type: «cd /tmp»'],
         check: (e) => e.cwd === '/tmp',
         solve: ['cd /tmp'],
-        done: N`@Ingrid: Anyone can set up here. /tmp belongs to everybody. But read the notice board — at dawn the sweepers come, and everything goes.
+        done: N`@Ingrid: Anyone can set up here. /tmp belongs to everybody. But read the notice board — at three o'clock the sweeper comes through, and everything that isn't a market fixture goes.
 
 :::lesson
 **/tmp** is the city's scratch space: every user may create files there, and it is wiped clean regularly (often at every reboot).
@@ -108,8 +108,9 @@ A broad woman in a fisherman's sweater waves you over to an empty patch of cobbl
           drop(g, 'receipt.txt', `NIGHT MARKET — STALL 9 — RECEIPT
 --------------------------------
 Sold to:  "H."  (wore a hood; paid in other people's memories)
-Items:    1 x copy of a key   (marked: wren@lighthouse)
-          1 x copy of a key   (marked: operator)
+Items:    1 x copy of a private key file  (marked: wren@lighthouse)
+          1 x rumour: "the Operator's password is the penguin's
+              name and the year the city was founded"
           1 x tin of blank paint
 Note from the stallholder, added later, underlined twice:
           never selling keys again.  — I.
@@ -162,8 +163,13 @@ So «mv *.mem dir/» really runs «mv frag_a.mem frag_b.mem frag_c.mem dir/».
         solve: ['cat clue.txt'],
         done: N`Ingrid has gone very still.
 
-@Ingrid: That's my handwriting. Stall 9 was mine. He paid well, and I didn't ask what the keys opened. I've been sick about it ever since.
-@Ingrid: Copies of the Lighthouse key — and *yours*. Whoever "H." is, he walked out of my stall with the keys to your life.`,
+@Ingrid: That's my handwriting. Stall 9 was mine. He paid well, and I didn't ask what the key opened. I've been sick about it ever since.
+@Ingrid: A copy of the Lighthouse keeper's private key — and *your* password, sold to him as gossip. Whoever "H." is, he walked out of my stall able to log in as Wren, and as you.
+@Ingrid: I'll put it right. I don't know how yet. But I will.
+
+:::lesson
+An SSH **private key** is like a physical key: whoever holds a copy can open every door that trusts it. A **password** anyone can guess is a key left under the mat.
+:::`,
       },
       {
         say: N`@Ingrid: Read your fragments. All of them at once — «cat» understands wildcards too.`,
@@ -171,7 +177,7 @@ So «mv *.mem dir/» really runs «mv frag_a.mem frag_b.mem frag_c.mem dir/».
         hints: ['The wildcard «*» matches every file in the folder.', 'Type: «cat memories/fragments/*»'],
         check: (e) => ['frag_a', 'frag_b', 'frag_c'].every((f) => e.didRead(new RegExp('/fragments/' + f + '\\.mem$'))),
         solve: ['cat memories/fragments/*'],
-        done: N`The words swim. *The cron fires at three.* *He has my key.* *The Undercroft.*
+        done: N`The words swim. *The cron fires at three.* *He has my password.* *The Undercroft.*
 
 For a moment you're somewhere else: a cold stone room, a disk humming, your own hands typing very fast...
 
@@ -186,7 +192,7 @@ For a moment you're somewhere else: a cold stone room, a disk humming, your own 
           fs.put(CAMP + '/old_tent/poles.txt', 'four tent poles, one bent\n', { owner: g.user, group: g.user });
           fs.put(CAMP + '/old_tent/canvas.txt', 'a patched canvas that smells of rain\n', { owner: g.user, group: g.user });
         },
-        say: N`@Ingrid: Dawn's coming. Pack up what you don't need. That empty crate first — «rmdir» removes an *empty* directory.`,
+        say: N`@Ingrid: Three o'clock is coming. Pack up what you don't need. That empty crate first — «rmdir» removes an *empty* directory.`,
         goal: 'Remove the empty crate: «rmdir crate»',
         hints: ['Type: «rmdir crate»'],
         check: (e) => !e.node(CAMP + '/crate'),
@@ -204,33 +210,54 @@ For a moment you're somewhere else: a cold stone room, a disk humming, your own 
 :::`,
       },
       {
-        say: N`@Ingrid: Now listen to me. At dawn, the sweepers clear *all* of /tmp. If you want your memories to survive, put a copy somewhere the sweepers never go: «/var/tmp».
-@Ingrid: To copy a whole directory, «cp» needs «-r» as well.`,
-        goal: 'Save your memories somewhere safe: «cp -r memories /var/tmp/»',
-        hints: ['«cp -r» copies directories with everything inside.', 'Type: «cp -r memories /var/tmp/»'],
-        check: (e) => Object.keys(LA.FRAGMENTS).every((f) => e.node('/var/tmp/memories/fragments/' + f)),
-        solve: ['cp -r memories /var/tmp/'],
-        done: N`@Ingrid: Good. /var/tmp survives the sweep. You're learning.`,
+        say: N`@Ingrid: Now listen to me. At three, the sweeper clears /tmp — everything except the market's own fixtures. If you want your camp to survive, copy the *whole* thing somewhere the sweeper doesn't go tonight: «/var/tmp».
+@Ingrid: To copy a whole directory, «cp» needs «-r». And use the full path, so it doesn't matter where you're standing.`,
+        goal: 'Save your whole camp before three: «cp -r /tmp/camp /var/tmp/»',
+        hints: ['«cp -r» copies a directory with everything inside it.', 'Type: «cp -r /tmp/camp /var/tmp/»'],
+        check: (e) => Object.keys(LA.FRAGMENTS).every((f) => e.node('/var/tmp/camp/memories/fragments/' + f)) && !!e.node('/var/tmp/camp/journal.txt'),
+        nudge: (e) => (e.ran('cp') && !e.node('/var/tmp/camp/journal.txt') ? '@Ingrid: Not just the fragments — the whole camp. Your journal, the map, the receipt. «cp -r /tmp/camp /var/tmp/»' : null),
+        solve: ['cp -r /tmp/camp /var/tmp/'],
+        done: N`@Ingrid: Good. /var/tmp isn't swept at night.
+
+:::lesson
+**/tmp** is cleared often — on many systems at every reboot. **/var/tmp** is kept across reboots, but it is still *temporary*: systems are allowed to clean it out eventually. Things you mean to keep belong in your home directory, with a backup.
+:::`,
       },
     ],
     onEnd(g) {
-      // the dawn sweep: Lethe clears the player's things out of /tmp
+      // 03:00: Lethe's nightly sweep, following whatever its live config says
+      g.advanceClock(1, 3, 0);
       const fs = g.fs;
+      const conf = fs.contentOf(fs.get('/etc/lethe/lethe.conf'));
+      const val = (k) => ((conf.match(new RegExp('^' + k + '=(.*)$', 'm')) || [])[1] || '').trim();
+      const exclude = val('EXCLUDE').split(/\s+/).filter(Boolean);
       const tmp = fs.get('/tmp');
-      for (const [name, node] of [...tmp.children]) {
-        if (node.owner === g.user) { tmp.children.delete(name); }
+      let swept = 0;
+      for (const [name] of [...tmp.children]) {
+        if (exclude.includes('/tmp/' + name)) continue;
+        tmp.children.delete(name);
+        swept++;
+      }
+      if (val('TARGETS').includes('/home/*/memories')) {
+        for (const [, h] of fs.get('/home').children) if (h.type === 'dir' && h.children.has('memories')) { h.children.delete('memories'); swept++; }
       }
       for (const sh of g.console.stack) {
         if (sh.cwd === '/tmp' || sh.cwd.startsWith('/tmp/')) { sh.cwd = '/tmp'; sh.setVar('PWD', '/tmp'); }
       }
+      const pid = g.world.services.lethe.mainPid;
+      const syslog = fs.get('/var/log/syslog');
+      const stamp = LA.util.syslogDate(LA.now());
+      syslog.content += `${stamp} rootfall lethe[${pid}]: sweep started (SAFE_MODE=${val('SAFE_MODE')}, QUARANTINE=${val('QUARANTINE')})\n${stamp} rootfall lethe[${pid}]: TARGET /tmp/*: ${swept} entries removed (excluded: ${exclude.join(' ')})\n`;
+      g.world.log('rootfall', 'lethe', pid, 'sweep started', 'lethe');
+      g.world.log('rootfall', 'lethe', pid, `sweep finished: ${swept} entries sent to ${val('QUARANTINE')}`, 'lethe');
     },
     outro: N`You sleep curled around Tux under a borrowed blanket.
 
-At 03:00 the lanterns gutter all at once. A cold wind moves through the market — not a real wind; something *underneath* the wind — and when you wake, your camp is gone. The journal, the map, the cobbles with your name on them: swept into nothing.
+At 03:00 the lanterns gutter all at once. A cold wind moves through the market — not a real wind; something *underneath* the wind. When you wake, the cobbles where your camp stood are bare. Ingrid's stall and the notice board are untouched, exactly as the board promised.
 
 Ingrid presses a mug of something hot into your hands.
 
-@Ingrid: Told you. But /var/tmp still has your fragments — the sweepers never go there.
+@Ingrid: Told you. But your copy in /var/tmp is all there — journal, map, receipt, fragments.
 @Ingrid: Morning, Operator. City Hall's open. Go and find out who you are.`,
   });
 })();

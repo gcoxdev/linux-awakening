@@ -154,12 +154,13 @@ async function main() {
   game.newGame('kit');
   await game.start();
   game.setFreeplay(true);
+  LA.stories.rootfall.plugBackup(game); // the Undercroft disk is only attached from chapter 9 on
   const con = game.console;
   let fails = 0;
   const run = async (cmd) => {
     const before = view.out.length;
     for (const line of cmd.split('\n').length > 1 && !cmd.includes('<<') ? cmd.split('\n') : [cmd]) await con.submit(line);
-    if (con.pending) { await con.submit(game.world.passwords.rootfall.kit); }
+    if (con.pending) { await con.submit(game.password()); }
     return LA.util.stripAnsi(view.out.slice(before));
   };
   for (const [cmd, exp] of CASES) {
@@ -172,13 +173,14 @@ async function main() {
   // sudo-gated secrets
   for (const s of SECRETS) await run(s);
   await run('sudo make me a sandwich');
+  game.chapters.find((c) => c.id === 'root').onStart(game); // the plan only appears in the last chapter
   await run('sudo cat /var/.hollow/plan.txt');
   await run('sudo apt install neofetch cmatrix');
   await run('neofetch');
   await run('cmatrix');
-  const missing = Object.keys(LA.SECRETS).filter((k) => !game.state.secrets.includes(k));
+  const missing = Object.keys(game.pack.secrets).filter((k) => !game.state.secrets.includes(k));
   if (missing.length) { fails++; console.log('✗ secrets not triggered: ' + missing.join(', ')); }
-  console.log(`${CASES.length - (fails - (missing.length ? 1 : 0))}/${CASES.length} command checks passed · secrets ${game.state.secrets.length}/${Object.keys(LA.SECRETS).length}`);
+  console.log(`${CASES.length - (fails - (missing.length ? 1 : 0))}/${CASES.length} command checks passed · secrets ${game.state.secrets.length}/${Object.keys(game.pack.secrets).length}`);
   process.exit(fails ? 1 : 0);
 }
 main().catch((e) => { console.error(e); process.exit(1); });

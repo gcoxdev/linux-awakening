@@ -6,8 +6,8 @@
   const on = (e, r, suffix) => e.targets(r).some((t) => t.endsWith(suffix));
 
   LA.story.add({
-    n: 4, id: 'cityhall', title: 'City Hall', place: '/etc',
-    unlocks: ['grep', 'find', 'wc', 'sort', 'uniq', 'which', 'whereis', 'type', 'locate'],
+    n: 4, id: 'cityhall', title: 'City Hall', place: '/etc', clock: [1, 8, 30],
+    unlocks: ['grep', 'find', 'wc', 'sort', 'uniq', 'which', 'type'],
     intro: N`City Hall squats at the top of «/etc» behind a row of columns that have seen better centuries.
 
 :::art
@@ -68,7 +68,7 @@ Inside, a clerk in half-moon spectacles is stamping documents with real enthusia
         say: N`@Osei: Lethe, you say? Every daemon in Rootfall needs a permit. The register is «city/permits.txt». Mind you, my predecessors were sloppy with capital letters — use «-i» to ignore case.`,
         goal: 'Search the permits for lethe, ignoring case: «grep -i lethe city/permits.txt»',
         hints: ['«-i» makes grep ignore upper/lower case.', 'Type: «grep -i lethe city/permits.txt»'],
-        check: (e) => !!e.ran('grep', (r) => e.has(r, 'i') && /lethe/i.test(r.args.join(' ')) && on(e, r, 'permits.txt')),
+        check: (e) => !!e.ran('grep', (r) => e.has(r, 'i') && /lethe/i.test(r.args.join(' ')) && on(e, r, 'permits.txt') && r.out.includes('0451')),
         solve: ['grep -i lethe city/permits.txt'],
         done: N`*PERMIT 0451 — Lethe nightly sweeper — filed by: {user} — APPROVED.*
 
@@ -80,17 +80,17 @@ You built Lethe.
         say: N`@Osei: Which lines exactly mention permit 0451? «-n» prints line numbers alongside each match.`,
         goal: 'Find permit 0451 with line numbers: «grep -n 0451 city/permits.txt»',
         hints: ['Type: «grep -n 0451 city/permits.txt»'],
-        check: (e) => !!e.ran('grep', (r) => e.has(r, 'n') && r.args.includes('0451')),
+        check: (e) => !!e.ran('grep', (r) => e.has(r, 'n') && r.args.includes('0451') && /^\d+:.*hollow/m.test(r.out)),
         solve: ['grep -n 0451 city/permits.txt'],
         done: N`*AMENDMENT 0451-B — LETHE: expand TARGETS — filed by: hollow — NOT REVIEWED, filed after hours.*
 
-@Osei: Hollow. There's no citizen called Hollow. I'd know — I stamped every one of them.`,
+@Osei: Hollow. There's no *citizen* called Hollow — I'd know, I stamped every one of them. If the machine has an account by that name, nobody at City Hall approved it.`,
       },
       {
         say: N`@Osei: Then let's search *every* drawer in City Hall for the word lethe. «grep -r» searches recursively, through a whole directory tree. Some drawers are locked; ignore their complaints.`,
         goal: 'Search all of /etc for lethe: «grep -r lethe /etc»',
         hints: ['«-r» = recursive. Give grep a directory instead of a file.', 'Type: «grep -r lethe /etc»'],
-        check: (e) => !!e.tried('grep', (r) => (e.has(r, 'r') || e.has(r, 'R')) && /lethe/i.test(r.args.join(' '))),
+        check: (e) => !!e.tried('grep', (r) => (e.has(r, 'r') || e.has(r, 'R')) && /lethe/i.test(r.args.join(' ')) && r.out.includes('/etc/lethe/lethe.conf')),
         solve: ['grep -r lethe /etc'],
         done: N`Hits in «/etc/lethe/lethe.conf» and «/etc/systemd/system/lethe.service» — plus a few angry *Permission denied* lines from drawers only root may open. (The permit itself says «Lethe» with a capital L, so it slipped through; «grep -ri» would have caught it too.)
 
@@ -103,23 +103,24 @@ Useful grep flags: «-i» ignore case · «-n» line numbers · «-r» recursive
 @Osei: «find / -name 'memory_*'» will search the entire city. Quote the pattern, so the shell doesn't try to expand the star itself.`,
         goal: 'Search the whole city for memory files: «find / -name \'memory_*\'»',
         hints: ['«find WHERE -name PATTERN». WHERE is «/», the whole city.', "Type: «find / -name 'memory_*'»"],
-        check: (e) => !!e.tried('find', (r) => r.args.includes('-name') && r.args.some((a) => /memory/.test(a))),
+        check: (e) => !!e.tried('find', (r) => r.args.includes('-name') && r.args.some((a) => /memory/.test(a)) && /memory_0\d\.txt/.test(r.out)),
+        nudge: (e) => (e.tried('find', (r) => /memory/.test(r.args.join(' ')) && !/memory_0\d/.test(r.out)) ? "@Osei: Nothing turned up there. Search from the very top of the city — the root, «/» — so find walks every street." : null),
         solve: ["find / -name 'memory_*'", 'cat /hospital/basement/lost_and_found/memory_01.txt', 'cat /usr/share/doc/.restricted_section/memory_02.txt', 'cat /opt/.arcade/memory_03.txt'],
-        done: N`Memories. *Your* memories, scattered across the city like dropped coins: one in the hospital basement, one in the library's restricted section, one somewhere under «/opt» in a place that doesn't even appear on maps...
+        done: N`Memories. *Your* memories, scattered across the city like dropped coins: one in the hospital basement, one in the library's restricted section, one somewhere under «/opt» in a place that doesn't even appear on maps.
 
-...and more behind doors that wouldn't open for find.
+Copies, you realise. You must have hidden them yourself, loose, outside any folder called «memories» — out of reach of a sweeper aimed at «/home/*/memories». Insurance.
 
-@Tux: (Tux looks at the list, then at you, then at the list again. He seems to think you should go and collect them. Reading one with «cat» brings it back.)
+@Tux: (Tux looks at the list, then at you, then at the list again. He clearly thinks you should go and collect them. Reading one with «cat» brings it back.)
 
 :::lesson
-Those «Permission denied» lines are noise printed on a separate channel. In the next chapter you'll learn to silence them.
+The «Permission denied» lines arrive on a separate channel (you'll meet it properly next chapter). They aren't just noise: they're a list of doors you can't open *yet* — including «/home/{user}». There may be more of you behind them.
 :::`,
       },
       {
         say: N`@Osei: find can filter by type, too: «-type f» for regular files, «-type d» for directories. What actually lives in «/etc/lethe»?`,
         goal: 'List only the files in /etc/lethe: «find /etc/lethe -type f»',
         hints: ['Type: «find /etc/lethe -type f»'],
-        check: (e) => !!e.tried('find', (r) => r.args.includes('-type')),
+        check: (e) => !!e.tried('find', (r) => r.args.includes('-type') && r.out.includes('lethe.conf')),
         solve: ['find /etc/lethe -type f'],
         done: N`One file: «lethe.conf». The thing that tells Lethe what to sweep.
 
@@ -142,7 +143,7 @@ find can test almost anything: «-name», «-iname», «-type», «-size +1M», 
 «uniq -c city/desk/sorted.txt»`,
         goal: 'Count each visitor: sort into city/desk/sorted.txt, then «uniq -c» it',
         hints: ['Two commands. First: «sort city/visitors.log > city/desk/sorted.txt»', 'Then: «uniq -c city/desk/sorted.txt»'],
-        check: (e) => !!e.ran('uniq', (r) => e.has(r, 'c')),
+        check: (e) => !!e.ran('uniq', (r) => e.has(r, 'c') && /\d+ hollow/.test(r.out)),
         solve: ['sort city/visitors.log > city/desk/sorted.txt', 'uniq -c city/desk/sorted.txt'],
         done: N`*7 hollow.*
 
@@ -153,7 +154,7 @@ find can test almost anything: «-name», «-iname», «-type», «-size +1M», 
 :::`,
       },
       {
-        say: N`@Osei: One last lesson, free of charge. Commands are files too — they have to live *somewhere*. «which grep» tells you where.
+        say: N`@Osei: And a lesson, free of charge, while I file a complaint about that night guard. Commands are files too — they have to live *somewhere*. «which grep» tells you where.
 @Osei: But some commands aren't files at all; they're built right into the shell. «type cd» tells you what kind of thing a command really is.`,
         goal: 'Investigate commands themselves: «which grep» and «type cd»',
         hints: ['Two commands: «which grep» then «type cd».'],

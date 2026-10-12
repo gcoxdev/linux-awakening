@@ -55,7 +55,11 @@
     constructor(o) {
       this.users = o.users; // name -> {uid,gid,home,shell,gecos,locked}
       this.groups = o.groups; // name -> {gid, members:[]}
+      this.ghosts = o.ghosts || {}; // deleted user/group name -> numeric id (files keep the number)
     }
+    /* what ls shows: the name, or the bare number once the account is gone */
+    display(name) { return this.users[name] ? name : this.ghosts[name] !== undefined ? String(this.ghosts[name]) : name; }
+    displayGroup(name) { return this.groups[name] ? name : this.ghosts['g:' + name] !== undefined ? String(this.ghosts['g:' + name]) : name; }
     get(name) { return this.users[name] || null; }
     exists(name) { return !!this.users[name]; }
     uid(name) { return this.users[name] ? this.users[name].uid : null; }
@@ -73,7 +77,7 @@
       for (const [g, v] of Object.entries(this.groups)) if (v.members.includes(user) && !res.includes(g)) res.push(g);
       return res;
     }
-    toJSON() { return { users: this.users, groups: this.groups }; }
+    toJSON() { return { users: this.users, groups: this.groups, ghosts: this.ghosts }; }
   }
   LA.Users = Users;
 
@@ -194,7 +198,12 @@
       parent.mtime = LA.now();
     }
 
+    /* inside a filesystem mounted read-only? (mount roots carry the flag; even root can't write there) */
+    _ro(node, path) {
+      for (let p = node; p; p = p.parent) if (p.readonly) throw new FsError('EROFS', path);
+    }
     _checkCreate(parent, user, path) {
+      this._ro(parent, path);
       if (!this.can(parent, user, 2)) throw new FsError('EACCES', path);
       if (parent.immutable) throw new FsError('EPERM', path);
     }
@@ -206,6 +215,7 @@
         const n = w.node;
         if (n.type === 'dir') throw new FsError('EISDIR', path);
         if (n.special) return n;
+        this._ro(n, path);
         if (!this.can(n, user, 2)) throw new FsError('EACCES', path);
         if (n.immutable) throw new FsError('EPERM', path);
         if (o.binary) { n.format = o.binary.format; n.data = o.binary.data; n.content = ''; delete n.fixedSize; }
@@ -256,6 +266,7 @@
     }
 
     _checkDelete(parent, node, user, path) {
+      this._ro(parent, path);
       if (!this.can(parent, user, 2)) throw new FsError('EACCES', path);
       if (parent.immutable || node.immutable || node.pinned) throw new FsError('EPERM', path);
       if ((parent.mode & 0o1000) && user !== 'root' && node.owner !== user && parent.owner !== user) throw new FsError('EPERM', path);
@@ -340,6 +351,7 @@
     chmod(path, mode, o = {}) {
       const user = o.user || 'root';
       const n = this.get(path, user, true);
+      this._ro(n, path);
       if (user !== 'root' && n.owner !== user) throw new FsError('EPERM', path);
       if (n.immutable || n.pinned) throw new FsError('EPERM', path);
       n.mode = mode & 0o7777;
@@ -348,6 +360,7 @@
     chown(path, owner, group, o = {}) {
       const user = o.user || 'root';
       const n = this.get(path, user, !o.noFollow);
+      this._ro(n, path);
       if (n.immutable || n.pinned) throw new FsError('EPERM', path);
       if (user !== 'root') {
         if (owner && owner !== n.owner) throw new FsError('EPERM', path);
@@ -362,6 +375,7 @@
       const user = o.user || 'root';
       const n = this.tryGet(path, user);
       if (n) {
+        this._ro(n, path);
         if (user !== 'root' && n.owner !== user && !this.can(n, user, 2)) throw new FsError('EACCES', path);
         n.mtime = LA.now();
         return n;

@@ -5,8 +5,8 @@
   const N = String.raw;
 
   LA.story.add({
-    n: 6, id: 'keys', title: 'Locks & Keys', place: 'The Residential Quarter (/home)',
-    unlocks: ['chmod', 'chown', 'chgrp', 'sudo', 'id', 'groups', 'umask', 'stat', 'passwd', 'su'],
+    n: 6, id: 'keys', title: 'Locks & Keys', place: 'The Residential Quarter (/home)', clock: [1, 12, 30],
+    unlocks: ['chmod', 'chown', 'chgrp', 'sudo', 'id', 'stat', 'passwd'],
     intro: N`The Residential Quarter is a street of tall narrow houses, each with a name painted over the door.
 
 One of them is yours. Tux knows which one before you do: he waddles straight to it and stands on the step, waiting, as if he's done it a thousand times.`,
@@ -50,7 +50,7 @@ Permissions are checked in order: if you are the **owner**, the user bits apply;
         solve: ['stat {user}'],
         done: N`«Access: (0000/d---------)  Uid: ( 1000/ {user})»
 
-**You still own it.** Hollow changed the lock, but he couldn't take the house. And in Rootfall, the **owner** of a file can always change its permissions.`,
+**You still own it.** Hollow had root's power when he changed the lock — he could have taken the house too, but he left the ownership alone. Maybe he thought a door nobody can open was enough. And the **owner** of a file can always change its permissions.`,
       },
       {
         say: N`«chmod» changes permissions. In its *symbolic* form you say **who** («u» user, «g» group, «o» others, «a» all), then **+** or **-**, then **what** («r», «w», «x»).
@@ -104,7 +104,7 @@ A knock at the open door. A woman with a pencil behind her ear and a thermos und
 @Mara: Did you get my letters? The backwards one took me an hour.`,
       },
       {
-        say: N`@Mara: First things first. Your door's wide shut — that's no way to live. Set it so friends can look in but can't touch. Use the *numeric* form this time: «chmod 755 ~».
+        say: N`@Mara: First things first. Your door's wide shut — that's no way to live. Set it the usual way: you can do everything; anyone else may list it and step inside, but can't change anything in it. Use the *numeric* form this time: «chmod 755 ~».
 
 :::art
    7 = 4+2+1 = rwx   (you: everything)
@@ -120,7 +120,7 @@ Common modes: «755» for directories and programs, «644» for ordinary files (
 :::`,
       },
       {
-        say: N`@Mara: Your diary belongs to root now, so only root can open it. But you're in the **sudo** group — you can borrow root's power for a single command by putting «sudo» in front of it. It'll ask for *your* password.
+        say: N`@Mara: Your diary belongs to root now, so only root can open it. But you're in the **{admin}** group — you can borrow root's power for a single command by putting «sudo» in front of it. It'll ask for *your* password.
 @Mara: Your password? You always said you'd leave yourself a hint somewhere obvious. Very you.`,
         goal: 'Read your diary as root: «sudo cat diary.txt» (find your password hint first)',
         hints: ['There\'s a sticky note in your home: «cat sticky_note.txt»', 'Who never leaves your side? (He\'s asleep on the radiator.) And the city\'s founding year was in the library\'s history.', 'The password is «tux1991» — the penguin plus the year. Typing it shows nothing on screen; that\'s normal.', (g) => `If you've changed it since: Tux remembers it was «${g.world.passwords.rootfall[g.user]}».`],
@@ -160,14 +160,18 @@ When you type a password into sudo, **nothing appears** — not even dots. That'
 :::`,
       },
       {
-        say: N`@Mara: Will you share your notes with me again, like before? We're both in the **operators** group. Give the notes folder to that group, then let the group read and enter it:
+        say: N`@Mara: Will you share your notes with me again, like before? Right now your «notes» folder is «drwx------»: only you. We're both in the **operators** group, so give the folder to that group, then let the group read and enter it — and nobody else:
 «chgrp operators notes»
 «chmod g+rx notes»`,
         goal: 'Share your notes with the operators group (chgrp, then chmod g+rx)',
         hints: ['First: «chgrp operators notes»', 'Then: «chmod g+rx notes»'],
         check: (e) => { const n = e.node(e.home + '/notes'); return !!n && n.group === 'operators' && (n.mode & 0o050) === 0o050; },
         solve: ['chgrp operators notes', 'chmod g+rx notes'],
-        done: N`@Mara: Thank you. I missed being nosy.`,
+        done: N`«drwxr-x--- {user} operators notes»
+
+Mara types something on her own terminal and grins.
+
+@Mara: «ls ~{user}/notes» — I can see them. And Juno, who isn't in operators, still can't. Thank you. I missed being nosy.`,
       },
       {
         say: N`@Mara: One more thing, and I mean it this time. Hollow knows your password. Change it. Now. «passwd» asks for the current one, then the new one twice.

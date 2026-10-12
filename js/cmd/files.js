@@ -95,9 +95,11 @@
       const user = ctx.user;
       let status = 0;
 
+      /* like GNU ls on a terminal: names that a shell would split or expand are shown quoted */
+      const shown = (name) => (ctx.isTTY && /[\s'"$`\\*?&;|<>()]/.test(name) ? (name.includes("'") ? `"${name}"` : `'${name}'`) : name);
       const fmtName = (name, node, linkTarget) => {
-        let s = name;
-        if (useColor) { const c = colorFor(name, node, fs); if (c) s = c + name + '\x1b[0m'; }
+        let s = shown(name);
+        if (useColor) { const c = colorFor(name, node, fs); if (c) s = c + shown(name) + '\x1b[0m'; }
         if (o.F) s += classify(node);
         if (long && node.type === 'link') {
           const t = linkTarget !== undefined ? linkTarget : node.target;
@@ -127,8 +129,8 @@
             if (n.special === 'block') size = '8, ' + (e.name.endsWith('1') ? '1' : e.name.endsWith('2') ? '2' : '0');
             else if (n.special) size = '1, 3';
             else size = o.h ? U.human(n.size) : String(n.size);
-            const ownerName = o.n ? String(fs.users.uid(n.owner) ?? n.owner) : n.owner;
-            const groupName = o.n ? String(fs.users.gidOf(n.group) ?? n.group) : n.group;
+            const ownerName = o.n ? String(fs.users.uid(n.owner) ?? fs.users.display(n.owner)) : fs.users.display(n.owner);
+            const groupName = o.n ? String(fs.users.gidOf(n.group) ?? fs.users.displayGroup(n.group)) : fs.users.displayGroup(n.group);
             return { ino: String(n.ino), perm: LA.modeString(n), nlink: String(nlinkOf(n)), owner: ownerName, group: groupName, size, date: U.lsDate(n.mtime), name: fmtName(e.name, n) };
           });
           const w = (k) => Math.max(...rows.map((r) => r[k].length));
@@ -372,13 +374,22 @@
         ctx.err.write("rm: missing operand\nTry 'rm --help' for more information.\n");
         return 1;
       }
+      // the city's foundations: a recursive rm aimed at a top-level directory or anyone's home is stopped
+      // outright (before anything is deleted), or a curious «sudo rm -rf /*» would end the story
+      const foundation = (a) => a !== '/' && (/^\/[^/]+$/.test(a) || /^\/home\/[^/]+$/.test(a));
+      if (rec && !operands.includes('/') && operands.some((t) => foundation(ctx.abs(t)))) {
+        if (ctx.game) ctx.game.secret('nice_try');
+        const hit = operands.find((t) => foundation(ctx.abs(t)));
+        ctx.err.write(LA.paint(LA.ansi.byellow, LA.flavor('rmGuard', 'The system refuses.')) + `\nrm: not removing '${hit}': ${LA.flavor('rmGuardWhy', 'everything stands on it')}. (On a real machine nothing would stop you — and «rm -r» has no undo.)\n`);
+        return 1;
+      }
       let st = 0;
       for (const t of operands) {
         const abs = ctx.abs(t);
         if (abs === '/' && rec) {
           if (ctx.game) ctx.game.secret('nice_try');
           if (!o.N) ctx.err.write("rm: it is dangerous to operate recursively on '/'\nrm: use --no-preserve-root to override this failsafe\n");
-          else ctx.err.write(LA.paint(LA.ansi.byellow, 'Tux launches himself across the keyboard and the command dies mid-keystroke.') + '\nrm: operation cancelled by a very brave penguin\n');
+          else ctx.err.write(LA.paint(LA.ansi.byellow, LA.flavor('rmRoot', 'rm: operation cancelled. Not today.')) + '\n');
           st = 1;
           continue;
         }
@@ -590,6 +601,8 @@
       case 'tar': return 'POSIX tar archive (GNU)';
       case 'zip': return 'Zip archive data, at least v2.0 to extract, compression method=deflate';
       case 'png': return 'PNG image data, 640 x 480, 8-bit/color RGBA, non-interlaced';
+      case 'jpeg': return `JPEG image data, JFIF standard 1.01, resolution (DPI), density 72x72, segment length 16${node.data && node.data.comment ? `, comment: "${node.data.comment}"` : ''}, baseline, precision 8, ${(node.data && node.data.size) || '1280x720'}, components 3`;
+      case 'pdf': return `PDF document, version 1.7${node.data && node.data.pages ? `, ${node.data.pages} page(s)` : ''}`;
       case 'so': return 'ELF 64-bit LSB shared object, x86-64, version 1 (GNU/Linux), dynamically linked, stripped';
     }
     const c = node.content;

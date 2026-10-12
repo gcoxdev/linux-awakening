@@ -355,10 +355,12 @@
       this.setVar('TERM', 'xterm-256color', true);
       this.setVar('LANG', 'en_US.UTF-8', true);
       this.setVar('PWD', this.cwd, true);
-      this.setVar('PS1', '\\[\\e[1;32m\\]\\u@\\h\\[\\e[0m\\]:\\[\\e[1;34m\\]\\w\\[\\e[0m\\]\\$ ', false);
+      /* the distro's stock prompt, until a .bashrc says otherwise */
+      this.setVar('PS1', LA.distroPS1 ? LA.distroPS1(this.world && this.world.distro, this.user === 'root') : '\\u@\\h:\\w\\$ ', false);
       this.setVar('PS2', '> ', false);
       this.setVar('IFS', ' \t\n', false);
       this.setVar('HISTSIZE', '1000', false);
+      this.setVar('BASH_VERSION', '5.2.15(1)-release', false);
     }
 
     /* ---- variables ---- */
@@ -566,6 +568,22 @@
       }
     }
 
+    /* Read the startup files a real bash reads: a login shell runs the first of ~/.bash_profile,
+       ~/.bash_login and ~/.profile; any other interactive shell runs ~/.bashrc. Scripts read neither.
+       It runs quietly and isn't one of the player's commands, so the story doesn't see it. */
+    async startup(login) {
+      const names = login ? ['.bash_profile', '.bash_login', '.profile'] : ['.bashrc'];
+      for (const n of names) {
+        let src;
+        try { src = this.host.fs.readFile(VFS.join(this.home, n), this.user); } catch (e) { continue; }
+        const game = this.game;
+        const sink = { write() {} };
+        this.game = null;
+        try { await this.run(src, { io: { stdin: null, out: sink, err: sink }, noHistory: true }); } catch (e) { /* a broken startup file doesn't stop the shell */ } finally { this.game = game; }
+        return;
+      }
+    }
+
     async afterLine(line, opts) {
       if (this.game && this.interactive && opts.interactive !== false) {
         await this.game.afterLine({ line, recs: this.recs, status: this.lastStatus, shell: this });
@@ -665,7 +683,7 @@
             let guard = 0;
             for (;;) {
               await this.tick();
-              if (++guard > 100000) { rio.err.write('bash: loop stopped after 100000 iterations (Rootfall safety valve)\n'); return 1; }
+              if (++guard > 100000) { rio.err.write('bash: loop stopped after 100000 iterations (simulator safety valve)\n'); return 1; }
               const c = await this.execList(node.cond, rio);
               if (node.until ? c === 0 : c !== 0) break;
               try { st = await this.execList(node.body, rio); }
@@ -1224,7 +1242,7 @@
       ctx.print = (s) => outTee.write(s);
       ctx.println = (s = '') => outTee.write(s + '\n');
       ctx.error = (m) => errTee.write(`${argv[0]}: ${m}\n`);
-      const rec = { name: cmdName, argv, args: argv.slice(1), user: ctx.user, cwd: this.cwd, sudo: !!o.sudo, host: this.host.name, depth: this.depth, piped: io.stdin != null };
+      const rec = { name: cmdName, argv, args: argv.slice(1), user: ctx.user, cwd: this.cwd, sudo: !!o.sudo, host: this.host.name, depth: this.depth, piped: io.stdin != null, toTerm: !!this.ui && io.out === this.ui.stdout };
       let status;
       if (argv[1] === '--help' && !impl.builtin && !impl.ownHelp && LA.manHelp) {
         outTee.write(LA.manHelp(cmdName));

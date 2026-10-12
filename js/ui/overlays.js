@@ -353,7 +353,7 @@
       }
       switch (k) {
         case 'Escape':
-          if (++escapes >= 3) say('Tux whispers: type  :q  then Enter to quit (or :wq to save and quit)');
+          if (++escapes >= 3) say(`${LA.flavor('vimHelp', 'Psst')}: type  :q  then Enter to quit (or :wq to save and quit)`);
           break;
         case 'i': snapshot(); setMode('insert'); break;
         case 'a': snapshot(); setMode('insert'); setCaret(c.line, c.col + 1); break;

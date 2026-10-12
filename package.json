@@ -1,11 +1,11 @@
 {
   "name": "linux-awakening",
   "version": "1.0.0",
-  "description": "An interactive story that teaches the Linux command line in a simulated terminal.",
+  "description": "Interactive stories that teach the Linux command line in a simulated terminal.",
   "private": true,
   "scripts": {
     "start": "python3 -m http.server 8000",
-    "test": "node test/walkthrough.js && node test/walkthrough.js --noise && node test/commands.js"
+    "test": "node test/walkthrough.js && node test/walkthrough.js --noise && node test/walkthrough.js --story nighttrain && node test/walkthrough.js --story nighttrain --noise && node test/walkthrough.js --distro fedora && node test/walkthrough.js --distro arch && node test/walkthrough.js --distro opensuse && node test/walkthrough.js --story nighttrain --distro fedora && node test/walkthrough.js --story nighttrain --distro arch && node test/walkthrough.js --story nighttrain --distro opensuse && node test/commands.js && node test/regressions.js && node test/nighttrain.js && node test/practice.js --distro all && node test/distros.js"
   },
   "license": "MIT"
 }

@@ -175,17 +175,17 @@
       const info = [
         c(A.bcyan, `${ctx.user}`) + '@' + c(A.bcyan, ctx.host.name),
         '-'.repeat(ctx.user.length + ctx.host.name.length + 1),
-        `${c(A.bcyan, 'OS')}: Rootfall GNU/Linux 1991 x86_64`,
-        `${c(A.bcyan, 'Host')}: Kernel Works KW-1991`,
-        `${c(A.bcyan, 'Kernel')}: 6.1.0-rootfall`,
+        `${c(A.bcyan, 'OS')}: ${ctx.world.sys.os} x86_64`,
+        `${c(A.bcyan, 'Host')}: ${ctx.world.sys.cpu}`,
+        `${c(A.bcyan, 'Kernel')}: ${ctx.world.sys.kernel}`,
         `${c(A.bcyan, 'Uptime')}: ${Math.floor(up / 86400)} days, ${Math.floor((up % 86400) / 3600)} hours, ${Math.floor((up % 3600) / 60)} mins`,
-        `${c(A.bcyan, 'Packages')}: ${ctx.world.packages.installed.length + 412} (dpkg)`,
+        `${c(A.bcyan, 'Packages')}: ${ctx.world.packages.installed.length + 412} (${LA.distro(ctx.world).lowPm})`,
         `${c(A.bcyan, 'Shell')}: bash 5.2.15`,
         `${c(A.bcyan, 'Terminal')}: /dev/${ctx.shell.tty}`,
-        `${c(A.bcyan, 'CPU')}: Kernel Works KW-1991 (2) @ 2.40GHz`,
+        `${c(A.bcyan, 'CPU')}: ${ctx.world.sys.cpu} (2) @ 2.40GHz`,
         `${c(A.bcyan, 'Memory')}: ${Math.round(m.used / 1024)}MiB / ${Math.round(m.total / 1024)}MiB`,
-        `${c(A.bcyan, 'Penguin')}: Tux (present, judging you)`,
-      ];
+        LA.flavor('neofetchLine', null),
+      ].filter((x) => x !== null);
       for (let i = 0; i < art.length; i++) ctx.println(c(A.bwhite, art[i]) + (info[i] || ''));
       ctx.println('                    ' + ['\x1b[40m', '\x1b[41m', '\x1b[42m', '\x1b[43m', '\x1b[44m', '\x1b[45m', '\x1b[46m', '\x1b[47m'].map((x) => (ctx.isTTY ? x + '   ' + A.reset : '')).join(''));
       if (ctx.game) ctx.game.secret('neofetch');
@@ -283,4 +283,15 @@
   meta('story', 'replay the current scene', (ctx) => (ctx.game ? ctx.game.cmdStory(ctx) : 0));
   meta('progress', 'chapters, memories and secrets', (ctx) => (ctx.game ? ctx.game.cmdProgress(ctx) : 0));
   meta('notebook', 'the commands you have remembered', (ctx) => (ctx.game ? ctx.game.cmdNotebook(ctx) : 0));
+  /* the Practice Range's controls; in a story they just say where they belong */
+  const practice = (name, desc, method) => meta(name, desc, (ctx) => {
+    if (ctx.game && ctx.game[method]) return ctx.game[method](ctx);
+    ctx.err.write(`${name}: only in the Practice Range (choose it from the main menu)\n`);
+    return 1;
+  });
+  practice('task', 'show the current practice task', 'cmdGoal');
+  practice('skip', 'skip to a different practice task', 'cmdSkip');
+  practice('solution', 'show an answer to the practice task', 'cmdSolution');
+  practice('topic', 'choose a practice topic', 'cmdTopic');
+  practice('level', 'choose practice difficulty', 'cmdLevel');
 })();

@@ -38,13 +38,13 @@
     get main() { return this.stack[0]; }
 
     createMainShell(user, cwd, state) {
-      const host = this.world.rootfall;
+      const host = this.world.main;
       const sh = new LA.Shell({ host, user, ui: this.ui, game: this.game, world: this.world, cwd, interactive: true, login: true, tty: 'pts/1' });
       const p = this.world.proc(sh.pid);
       if (p) p.shell = true;
       if (state) this.restoreShell(sh, state);
       this.world.removeSession((s) => s.player);
-      this.world.sessions.unshift({ user, tty: 'pts/1', from: '', host: 'rootfall', at: LA.now(), player: true, what: '-bash' });
+      this.world.sessions.unshift({ user, tty: 'pts/1', from: '', host: this.world.mainName, at: LA.now(), player: true, what: '-bash' });
       this.stack = [sh];
       return sh;
     }
@@ -101,6 +101,7 @@
         return;
       }
       const sh = this.active;
+      if (sh && sh.ready) { const r = sh.ready; sh.ready = null; await r; }
       if (!sh || sh.busy) return;
       const src = this.source ? this.source + '\n' + line : line;
       this.view.write(line + '\n', 'echo');
@@ -184,7 +185,7 @@
 
     pushShell(o) {
       return new Promise((resolve) => {
-        const host = o.host || this.world.rootfall;
+        const host = o.host || this.world.main;
         const u = host.users.get(o.user);
         let cwd = o.cwd;
         if (!cwd) cwd = u && host.fs.tryGet(u.home, o.user) ? u.home : '/';
@@ -193,7 +194,8 @@
         if (o.from && !o.login) {
           for (const [k, v] of o.from.vars) if (v.x && !['HOME', 'USER', 'LOGNAME', 'PATH', 'SHELL'].includes(k)) sh.vars.set(k, Object.assign({}, v));
         }
-        if (o.user === 'root' && host === this.world.rootfall) sh.setVar('PS1', '\\[\\e[1;31m\\]\\u@\\h\\[\\e[0m\\]:\\[\\e[1;34m\\]\\w\\[\\e[0m\\]\\$ ');
+        if (o.user === 'root' && host === this.world.main) sh.setVar('PS1', '\\[\\e[1;31m\\]\\u@\\h\\[\\e[0m\\]:\\[\\e[1;34m\\]\\w\\[\\e[0m\\]\\$ ');
+        sh.ready = sh.startup(!!o.login);
         const session = { user: o.user, tty, from: o.fromIp || '', host: host.name, at: LA.now(), nested: true };
         if (o.remote) { this.world.addSession(session); }
         sh.onExit = (code) => {
