@@ -238,6 +238,13 @@ body.crt .terminal-wrap::after {
 .task-parts { list-style: none; margin: 6px 0 0; padding: 0; font-size: 13px; }
 .task-parts li.done { color: var(--green); }
 .task-note { margin-top: 6px; font-size: 12px; }
+.task-done { margin-top: 8px; font-size: 13px; color: var(--green); }
+.goal-actions .btn.primary { background: rgba(74, 222, 128, 0.15); border-color: rgba(74, 222, 128, 0.6); color: #dcfce7; font-weight: 600; }
+#chaptersHead { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.level-pick { font-size: 11px; color: var(--muted); text-transform: none; letter-spacing: 0; display: flex; gap: 6px; align-items: center; }
+.level-pick select { font-size: 12px; }
+.nb-filter { width: 90px; font-size: 12px; padding: 2px 6px; border-radius: 6px; border: 1px solid #1f2a38; background: #0d131c; color: #e2e8f0; }
+
 .chapters { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .chapters li { border-radius: 6px; color: #cbd5e1; }
 .chapters button { all: unset; box-sizing: border-box; width: 100%; display: flex; gap: 10px; align-items: center; padding: 5px 8px; border-radius: 6px; font-size: 13px; cursor: pointer; color: inherit; }

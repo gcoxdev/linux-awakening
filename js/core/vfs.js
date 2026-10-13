@@ -231,11 +231,14 @@
       if (parent.type !== 'dir') throw new FsError('ENOTDIR', path);
       this._checkCreate(parent, user, path);
       const mode = (o.mode != null ? o.mode : 0o666) & ~(o.umask != null ? o.umask : 0o022);
-      const n = new Node('file', w.name, { content: o.binary ? '' : content, owner: user, group: this.users.primaryGroup(user), mode });
+      const n = new Node('file', w.name, { content: o.binary ? '' : content, owner: user, group: this.groupFor(parent, user), mode });
       if (o.binary) { n.format = o.binary.format; n.data = o.binary.data; }
       this.attach(parent, n);
       return n;
     }
+
+    /* the group of something new: the directory's own group if it is setgid (shared team folders), else the creator's */
+    groupFor(parent, user) { return parent && parent.mode & 0o2000 ? parent.group : this.users.primaryGroup(user); }
 
     mkdir(path, o = {}) {
       const user = o.user || 'root';
@@ -260,7 +263,8 @@
       if (w.node) throw new FsError('EEXIST', path);
       if (w.parent.type !== 'dir') throw new FsError('ENOTDIR', path);
       this._checkCreate(w.parent, user, path);
-      const n = new Node('dir', w.name, { owner: user, group: this.users.primaryGroup(user), mode });
+      /* in a setgid directory, new directories take its group and stay setgid themselves */
+      const n = new Node('dir', w.name, { owner: user, group: this.groupFor(w.parent, user), mode: mode | (w.parent.mode & 0o2000) });
       this.attach(w.parent, n);
       return [path];
     }
@@ -330,7 +334,7 @@
       const w = this.walk(path, user, false, true);
       if (w.node) throw new FsError('EEXIST', path);
       this._checkCreate(w.parent, user, path);
-      const n = new Node('link', w.name, { target, owner: user, group: this.users.primaryGroup(user) });
+      const n = new Node('link', w.name, { target, owner: user, group: this.groupFor(w.parent, user) });
       this.attach(w.parent, n);
       return n;
     }

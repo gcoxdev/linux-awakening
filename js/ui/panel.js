@@ -20,7 +20,7 @@
       };
       $('hintBtn').addEventListener('click', () => run('hint'));
       $('storyBtn').addEventListener('click', () => run(game.isPractice ? 'skip' : 'story'));
-      if (game.pack.isPractice) this.initPractice();
+      if (game.pack.isPractice) this.initPractice(run);
       $('menuBtn').addEventListener('click', () => document.body.classList.toggle('panel-open'));
       document.querySelector('.stage').addEventListener('click', (ev) => {
         if (document.body.classList.contains('panel-open') && !ev.target.closest('.panel')) document.body.classList.remove('panel-open');
@@ -95,15 +95,38 @@
       this.view.charWidth = 0;
     },
     /* the Practice Range reuses the panel's cards for rank, task, score and topics */
-    initPractice() {
+    initPractice(run) {
       $('goalHead').textContent = 'Task';
       $('storyBtn').textContent = '⏭ Skip';
-      $('storyBtn').title = 'Skip to a different task (ends your streak)';
+      $('storyBtn').title = 'A different task (this one comes back later)';
+      /* the rest of the practice controls, next to Hint and Skip */
+      const actions = document.querySelector('.goal-actions');
+      const mk = (id, label, title, cmd, cls) => {
+        const b = document.createElement('button');
+        b.className = 'btn' + (cls ? ' ' + cls : '');
+        b.id = id; b.type = 'button'; b.textContent = label; b.title = title;
+        b.addEventListener('click', () => run(cmd));
+        actions.appendChild(b);
+        return b;
+      };
+      mk('nextBtn', '▶ Next task', 'A new task (the machine stays as it is until you click)', 'next', 'primary hidden');
+      mk('checkBtn', '✔ Check', 'What is done and what is missing', 'check', 'ghost');
+      mk('retryBtn', '↺ Retry', 'This task again on a clean machine', 'retry', 'ghost');
+      mk('solutionBtn', '👁 Answer', 'Show an answer (the task then earns no XP)', 'solution', 'ghost');
       $('collectHead').textContent = 'Score';
-      $('chaptersHead').textContent = 'Topics';
-      $('notebookNote').textContent = 'mastery · click for the manual';
+      $('chaptersHead').innerHTML = '<span>Topics</span> <label class="level-pick">Difficulty <select id="levelSel" aria-label="Difficulty"><option value="auto">Auto</option><option value="1">★</option><option value="2">★★</option><option value="3">★★★</option><option value="4">★★★★</option></select></label>';
+      $('levelSel').addEventListener('change', (ev) => run('level ' + ev.target.value));
+      $('notebookNote').innerHTML = '<input id="nbFilter" class="nb-filter" type="search" placeholder="filter" aria-label="Filter commands">';
+      $('nbFilter').addEventListener('input', () => this.filterNotebook());
+      /* topics are used far more often than the notebook: put them first */
+      const topicsCard = $('chapters').closest('.card'), notebookCard = $('notebook').closest('.card');
+      notebookCard.parentNode.insertBefore(topicsCard, notebookCard);
       $('freeplayRow').classList.add('hidden');
       $('panel').setAttribute('aria-label', 'Practice panel');
+    },
+    filterNotebook() {
+      const f = (($('nbFilter') || {}).value || '').trim().toLowerCase();
+      for (const b of $('notebook').querySelectorAll('.chip')) b.classList.toggle('hidden', !!f && !b.dataset.cmd.includes(f));
     },
     updatePractice(game) {
       const P = LA.practice, st = game.state;
@@ -120,29 +143,40 @@
         const tpl = T.tpl;
         const stars = '★'.repeat(tpl.level) + '☆'.repeat(4 - tpl.level);
         const parts = tpl.parts ? `<ul class="task-parts">${tpl.parts.map((p, i) => `<li class="${T.parts[i] ? 'done' : ''}">${T.parts[i] ? '✓' : '○'} ${LA.inlineMarkup(game.fmt(game.f(p.text)))}</li>`).join('')}</ul>` : '';
-        $('goalText').innerHTML = `<div class="task-meta"><span class="stars">${stars}</span> ${esc(tpl.title)}</div>${LA.inlineMarkup(game.fmt(game.f(tpl.prompt)))}${parts}${st.task && st.task.revealed ? '<div class="muted task-note">Solution shown — no XP for this one.</div>' : ''}`;
+        const note = T.solved ? '<div class="task-done">✓ Solved — look around, then <strong>Next task</strong>.</div>' : st.task && st.task.revealed ? '<div class="muted task-note">Answer shown — this one earns no XP.</div>' : '';
+        $('goalText').innerHTML = `<div class="task-meta"><span class="stars">${stars}</span> ${esc(tpl.title)}</div>${LA.inlineMarkup(game.fmt(game.f(tpl.prompt)))}${parts}${note}`;
       } else $('goalText').textContent = '—';
+      const solved = !!(T && T.solved);
+      $('nextBtn').classList.toggle('hidden', !solved);
+      for (const id of ['hintBtn', 'storyBtn', 'checkBtn', 'solutionBtn']) $(id).classList.toggle('hidden', solved);
+      $('levelSel').value = st.level ? String(st.level) : 'auto';
+      const have = game.levelsFor(st.topic);
+      for (const o of $('levelSel').options) if (o.value !== 'auto') o.disabled = !have.includes(+o.value);
       $('memCount').textContent = st.stats.solved;
       $('memLabel').textContent = 'solved';
       $('secretCount').textContent = st.badges.length;
       $('secretLabel').textContent = `badges /${Object.keys(P.BADGES).length}`;
       $('cmdCount').textContent = st.stats.commands;
       $('collectLabel').textContent = '';
-      const lv = ['not yet used', 'used', 'practised', 'mastered'];
+      const lv = ['not yet used', 'tried', 'practised: 3 times on your own', 'mastered: 6 times on your own, in 3+ tasks'];
       $('notebook').innerHTML = P.allCommands(game.distroId).map((name) => {
-        const m = P.masteryLevel(st.mastery[name] || 0);
+        const m = P.masteryLevel(st, name);
         return `<button class="chip m${m}" data-cmd="${esc(name)}" title="${esc((LA.man[name] ? LA.man[name].desc + ' — ' : '') + lv[m])}">${esc(name)}</button>`;
       }).join('');
+      this.filterNotebook();
       const topics = [['mix', 'Everything', 'a mix, favouring what you practise least']].concat(P.TOPICS);
+      /* the list is rebuilt after every command: keep keyboard focus where it was */
+      const focused = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.topic : null;
       $('chapters').innerHTML = topics.map(([id, label, ex]) => {
         const all = P.tasksFor(game.distroId).filter((t) => id === 'mix' || t.topic === id);
-        const done = all.filter((t) => st.solved[t.id]).length;
+        const done = all.filter((t) => st.independent[t.id]).length;
         const cur = st.topic === id;
-        return `<li class="${cur ? 'current' : done === all.length ? 'done' : 'reached'}"><button type="button" data-topic="${id}" title="${esc(ex)}" aria-label="${esc(label)}: ${done} of ${all.length} task types solved${cur ? ' (current topic)' : ''}"><span class="mark">${cur ? '▶' : done === all.length ? '✓' : '○'}</span><span class="t">${esc(label)}</span><span class="n">${done}/${all.length}</span></button></li>`;
+        return `<li class="${cur ? 'current' : done === all.length ? 'done' : 'reached'}"><button type="button" data-topic="${id}" title="${esc(ex)}" aria-label="${esc(label)}: ${done} of ${all.length} task types solved on your own${cur ? ' (current topic)' : ''}"><span class="mark">${cur ? '▶' : done === all.length ? '✓' : '○'}</span><span class="t">${esc(label)}</span><span class="n">${done}/${all.length}</span></button></li>`;
       }).join('');
+      if (focused) { const b = $('chapters').querySelector(`button[data-topic="${focused}"]`); if (b) b.focus(); }
       $('saveNote').innerHTML = game.saveOk === false
         ? '<strong class="warn">Progress is not being saved.</strong> This browser\'s storage is full or blocked.'
-        : 'Type <code>help</code> for the controls: <code>hint</code> <code>skip</code> <code>solution</code> <code>topic</code> <code>level</code> <code>progress</code>. Progress saves automatically.';
+        : 'Type <code>help</code> for every control, <code>task list</code> for the task library, <code>progress</code> for your stats. Your work saves automatically, machine and all.';
     },
     update(game) {
       game = game || this.game;

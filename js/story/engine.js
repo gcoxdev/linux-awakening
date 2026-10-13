@@ -165,6 +165,7 @@
       };
       this.world = this.pack.buildWorld(user);
       this.world.story = this.pack.id;
+      this.world.updatedb();
       LA.tz = this.world.sys.tz;
       this.console = new LA.Console(opts.view || this.view, this.world, this);
       this.console.createMainShell(user, this.pack.startCwd(user));

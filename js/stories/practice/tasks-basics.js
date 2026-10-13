@@ -12,7 +12,34 @@
   const sameSet = (a, b) => a.length === b.length && a.every((x) => b.includes(x));
   /* lines shown on screen, read as paths relative to where the command ran */
   const shownPaths = (e) => e.shownLines().map((l) => VFS.normalize(l.replace(/^\.\//, ''), e.cwd));
-  P.h = { sameSet, shownPaths };
+  /* every file under DIR, as { relative path: content } — taken at setup, so copies and moves can be checked against it */
+  const snap = (t, dir) => { const abs = t.p(dir); const out = {}; for (const [p, n] of t.fs.iterate(abs, 'root', {})) if (n.type === 'file') out[p.slice(abs.length + 1)] = t.fs.contentOf(n); return out; };
+  /* DIR holds all of those files with exactly those contents */
+  const hasTree = (e, dir, files) => Object.keys(files).length > 0 && Object.entries(files).every(([rel, c]) => e.text(`${dir}/${rel}`) === c);
+  /* the files inside a .tar, .tar.gz or .zip node, as { path without leading ./: content } */
+  const archived = (n) => {
+    if (!n || !n.format) return null;
+    let fmt = n.format, data = n.data;
+    if (fmt === 'gzip' && data && data.inner) { fmt = data.inner.format; data = data.inner.data; }
+    if ((fmt !== 'tar' && fmt !== 'zip') || !data || !data.entries) return null;
+    const out = {};
+    for (const x of data.entries) if (x.type !== 'dir' && !/\/$/.test(x.path)) out[x.path.replace(/^(\.\/)+/, '').replace(/^\/+/, '')] = x.content || '';
+    return out;
+  };
+  /* the text inside a gzip node (null if it isn't one, or holds an archive) */
+  const gunzipped = (n) => (n && n.format === 'gzip' && n.data && n.data.inner && !n.data.inner.format ? n.data.inner.content || '' : null);
+  /* a user's crontab, one { min, hour, dom, mon, dow, cmd } per job */
+  const cronJobs = (e, who) => (e.read(`${LA.cronSpool(e.world)}/${who || e.game.user}`) || '').split('\n').map((l) => l.trim())
+    .filter((l) => l && !l.startsWith('#') && !/^[A-Za-z_]+=/.test(l))
+    .map((l) => { const f = l.split(/\s+/); return { min: f[0], hour: f[1], dom: f[2], mon: f[3], dow: f[4], cmd: f.slice(5).join(' ') }; });
+  /* a job's command runs exactly SCRIPT — by any spelling of its path, directly or through bash/sh — and SCRIPT exists */
+  const runsScript = (e, cmd, script) => {
+    const abs = e.p(script);
+    const first = cmd.replace(/^(\/(usr\/)?bin\/)?(ba)?sh\s+/, '').trim().split(/\s+/)[0] || '';
+    return first.replace(/^(\$HOME|\$\{HOME\}|~)(?=\/)/, e.home) === abs && !!e.file(abs);
+  };
+  const num = (s) => (/^\d+$/.test(s) ? parseInt(s, 10) : NaN);
+  P.h = { sameSet, shownPaths, snap, hasTree, archived, gunzipped, cronJobs, runsScript, num };
 
   /* ===================== getting around ===================== */
   T({
@@ -23,6 +50,7 @@
       { text: 'print your username', check: (e) => !!e.ran(['whoami', 'id']) },
       { text: 'print your current directory', check: (e) => !!e.ran('pwd') },
     ],
+    hints: ['«whoami» names the user you are; «pwd» prints the working directory.'],
     solution: ['whoami', 'pwd'],
     why: 'Worth checking before anything destructive — especially after «sudo -i» or «su», when the answer may have changed.',
   });
@@ -43,6 +71,7 @@
       { text: 'cd to /etc', check: (e) => e.cwd === '/etc' },
       { text: 'jump back with «cd -»', check: (e) => e.cwd === '/var/log' && /^\s*cd\s+-\s*$/.test(e.line) },
     ],
+    hints: ['«cd» with a full path goes anywhere.', 'The shell remembers where you were last: there\'s a one-character argument to «cd» for it.'],
     solution: ['cd /var/log', 'cd /etc', 'cd -'],
     why: '«cd -» swaps you with your previous directory — handy when you bounce between two places.',
   });
@@ -87,7 +116,7 @@
     id: 'nav-head', topic: 'nav', level: 1, cmds: ['head'], title: 'Just the top',
     setup(t) { const n = t.int(3, 8); const lines = pack.gen.appLog(t, 40).map((l) => l.text); t.file('~/logs/server.log', lines); return { n, want: lines.slice(0, n) }; },
     prompt: (x) => `Show only the first ${x.n} lines of «~/logs/server.log».`,
-    check: (e, x) => sameSet(e.shownLines(), x.want) && e.shownLines().length === x.n,
+    check: (e, x) => { const l = e.shownLines(); return l.length === x.n && l.every((s, i) => s === x.want[i].trim()); },
     hints: ['«head -n N FILE».'],
     solution: (x) => [`head -n ${x.n} ~/logs/server.log`],
     why: '«head» shows the start of a file (10 lines by default); «head -c 100» shows the first 100 bytes.',
@@ -114,7 +143,7 @@
     id: 'nav-wc-lines', topic: 'nav', level: 1, cmds: ['wc'], title: 'How long is it?',
     setup(t) { const n = t.int(30, 400); t.file('~/data/records.csv', Array.from({ length: n }, () => `${t.int(1, 9999)},${t.word()},${t.int(1, 99)}`)); return { n }; },
     prompt: 'How many lines are in «~/data/records.csv»? Get the computer to count them.',
-    check: (e, x) => e.answer(x.n) && e.used('wc'),
+    check: (e, x) => e.answer(x.n),
     hints: ['«wc» counts lines, words and bytes; «-l» counts just lines.'],
     solution: ['wc -l ~/data/records.csv'],
     why: '«wc -l» counts lines, «-w» words, «-c» bytes. With «<» (wc -l < file) it prints just the number.',
@@ -123,7 +152,7 @@
     id: 'nav-wc-words', topic: 'nav', level: 1, cmds: ['wc'], title: 'Word count',
     setup(t) { const words = Array.from({ length: t.int(40, 160) }, () => t.word()); const lines = []; for (let i = 0; i < words.length; i += t.int(5, 12)) lines.push(words.slice(i, i + 9).join(' ')); const text = lines.join('\n') + '\n'; t.file('~/essay.txt', text); return { n: text.split(/\s+/).filter(Boolean).length }; },
     prompt: 'How many words are in «~/essay.txt»?',
-    check: (e, x) => e.answer(x.n) && e.used('wc'),
+    check: (e, x) => e.answer(x.n),
     hints: ['«wc -w».'],
     solution: ['wc -w ~/essay.txt'],
   });
@@ -164,7 +193,7 @@
     id: 'nav-tree', topic: 'nav', level: 1, cmds: ['tree'], title: 'The shape of things',
     setup(t) { for (const d of ['src/lib/util', 'src/app', 'docs/api', 'tests/unit/deep']) t.dir('~/site/' + d); t.file('~/site/src/app/main.js', '//\n'); },
     prompt: 'Draw the directory tree of «~/site», but only two levels deep.',
-    check: (e) => !!e.ran('tree', (r) => r.args.includes('-L') && r.args.includes('2')),
+    check: (e) => !!e.ran('tree', (r) => r.toTerm && (r.args.includes('-L2') || (r.args.includes('-L') && r.args[r.args.indexOf('-L') + 1] === '2')) && (r.args.filter((a, i) => !a.startsWith('-') && r.args[i - 1] !== '-L').map((a) => LA.VFS.normalize(e.p(a), r.cwd)).concat(r.args.some((a, i) => !a.startsWith('-') && r.args[i - 1] !== '-L') ? [] : [r.cwd])).every((p) => p === e.p('~/site'))),
     hints: ['«tree» draws directories; «-L N» limits the depth.'],
     solution: ['tree -L 2 ~/site'],
     why: '«tree -d» shows only directories; «tree -a» includes hidden ones.',
@@ -173,7 +202,7 @@
     id: 'nav-stat-octal', topic: 'nav', level: 2, cmds: ['stat'], title: 'Permissions as a number',
     setup(t) { const m = t.pick([0o640, 0o600, 0o755, 0o750, 0o644, 0o700]); t.file('~/secret.cfg', 'x=1\n', { mode: m }); return { m: m.toString(8) }; },
     prompt: 'What are the permissions of «~/secret.cfg» as an octal number (like «644»)? Print just that number.',
-    check: (e, x) => e.answer(x.m, { exact: true }) && e.used('stat'),
+    check: (e, x) => e.answer(x.m, { exact: true }),
     hints: ['«stat» shows everything about a file; «-c» picks one field.', '«stat -c %a ~/secret.cfg»'],
     solution: ['stat -c %a ~/secret.cfg'],
     why: '«stat -c» takes a format: %a octal mode, %U owner, %s size, %y modification time.',
@@ -203,7 +232,7 @@
   T({
     id: 'nav-date-fmt', topic: 'nav', level: 2, cmds: ['date'], title: 'A date for a filename',
     prompt: 'Print today\'s date in the format YYYY-MM-DD (for example 2026-03-14) — the format you\'d use in a filename.',
-    check: (e) => e.answer(U.strftime('%F', new Date(LA.now())), { exact: true }) && e.used('date'),
+    check: (e) => e.answer(U.strftime('%F', new Date(LA.now())), { exact: true }) ,
     hints: ['«date +FORMAT» — %Y year, %m month, %d day.', '«date +%F» is a shortcut for %Y-%m-%d.'],
     solution: ['date +%F'],
     why: '«tar -czf backup-$(date +%F).tar.gz dir» makes a dated backup in one go.',
@@ -214,7 +243,8 @@
     id: 'files-mkdir-p', topic: 'files', level: 1, cmds: ['mkdir'], title: 'Scaffolding',
     setup(t) { return { p: t.word() }; },
     prompt: (x) => `Create this structure in one command: «~/${x.p}/src», «~/${x.p}/docs» and «~/${x.p}/tests».`,
-    check: (e, x) => ['src', 'docs', 'tests'].every((d) => { const n = e.file(`~/${x.p}/${d}`); return n && n.type === 'dir'; }),
+    check: (e, x) => ['src', 'docs', 'tests'].every((d) => { const n = e.file(`~/${x.p}/${d}`); return n && n.type === 'dir'; }) && e.game.taskRecs.filter((r) => r.name === 'mkdir' && r.status === 0).length === 1,
+    nudge: (e, x) => (['src', 'docs', 'tests'].every((d) => e.file(`~/${x.p}/${d}`)) && e.game.taskRecs.filter((r) => r.name === 'mkdir' && r.status === 0).length > 1 ? 'They\'re all there — now try it as one command: «retry», then a single «mkdir -p» with all three paths (or braces: «{src,docs,tests}»).' : null),
     hints: ['«mkdir -p» creates missing parents.', (x) => `Brace expansion writes the three paths for you: «mkdir -p ~/${x.p}/{src,docs,tests}»`],
     solution: (x) => [`mkdir -p ~/${x.p}/{src,docs,tests}`],
     why: '«{a,b,c}» is brace expansion: the shell turns «x/{a,b}» into «x/a x/b» before the command runs.',
@@ -238,19 +268,21 @@
   });
   T({
     id: 'files-cp-r', topic: 'files', level: 1, cmds: ['cp'], title: 'Copy a whole tree',
-    setup(t) { const files = ['index.html', 'css/site.css', 'js/app.js', 'img/logo.png']; files.forEach((f) => t.file('~/site/' + f, `/* ${f} */\n`)); return { files }; },
-    prompt: 'Make a complete copy of the folder «~/site», subfolders and all, called «~/site-backup».',
-    check: (e, x) => x.files.every((f) => e.text('~/site-backup/' + f) === e.text('~/site/' + f)),
-    hints: ['Plain «cp» refuses directories; «-r» copies recursively.'],
+    setup(t) { ['index.html', 'css/site.css', 'js/app.js', 'img/logo.png'].forEach((f) => t.file('~/site/' + f, `/* ${f} ${t.word()} */\n`)); return { files: P.h.snap(t, '~/site') }; },
+    prompt: 'Make a complete copy of the folder «~/site», subfolders and all, called «~/site-backup». The original must stay where it is.',
+    check: (e, x) => P.h.hasTree(e, '~/site-backup', x.files) && P.h.hasTree(e, '~/site', x.files),
+    feedback: (e, x) => { const miss = Object.keys(x.files).filter((f) => e.text('~/site-backup/' + f) !== x.files[f]); const gone = Object.keys(x.files).filter((f) => e.text('~/site/' + f) !== x.files[f]); return gone.length ? `The original lost ${gone.length} file(s): ${gone.join(', ')} — «retry» gives you a clean copy.` : miss.length ? `The backup is missing ${miss.length} of ${Object.keys(x.files).length} files: ${miss.join(', ')}.` : null; },
+    hints: ['Plain «cp» refuses directories; «-r» copies recursively.', '«cp -r SOURCE DEST» — and if DEST doesn\'t exist yet, it becomes the copy.'],
     solution: ['cp -r ~/site ~/site-backup'],
     why: '«cp -a» also keeps permissions and timestamps — what you want for backups.',
   });
   T({
     id: 'files-mv-rename', topic: 'files', level: 1, cmds: ['mv'], title: 'Rename',
-    setup(t) { t.file('~/notes/todo.txt', '- buy milk\n'); },
-    prompt: 'Rename «~/notes/todo.txt» to «done.txt».',
-    check: (e) => !!e.file('~/notes/done.txt') && !e.file('~/notes/todo.txt'),
-    hints: ['Renaming is moving to a new name: «mv OLD NEW».'],
+    setup(t) { const body = `- ${t.word()}\n- ${t.word()}\n- ${t.word()}\n`; t.file('~/notes/todo.txt', body); return { body }; },
+    prompt: 'Rename «~/notes/todo.txt» to «done.txt» — same folder, same contents.',
+    check: (e, x) => e.text('~/notes/done.txt') === x.body && !e.file('~/notes/todo.txt'),
+    feedback: (e, x) => (e.file('~/notes/done.txt') && e.text('~/notes/done.txt') !== x.body ? '«done.txt» exists, but it doesn\'t hold the list that was in «todo.txt».' : null),
+    hints: ['Renaming is moving to a new name.', '«mv OLD NEW».'],
     solution: ['mv ~/notes/todo.txt ~/notes/done.txt'],
   });
   T({
@@ -348,6 +380,7 @@
       { text: (x) => `the file name («${x.base}»)`, check: (e, x) => !!e.ran('basename') && e.answer(x.base) },
       { text: 'the directory part', check: (e, x) => !!e.ran('dirname') && e.answer(x.dir) },
     ],
+    hints: ['Two commands named after exactly what they print: the base name, and the directory name.'],
     solution: (x) => [`basename ${x.p}`, `dirname ${x.p}`],
     why: '«basename file.txt .txt» also strips a suffix — handy for renaming in loops.',
   });
@@ -413,7 +446,7 @@
     id: 'find-empty-delete', topic: 'find', level: 2, cmds: ['find'], title: 'Sweep up empty files',
     setup(t) { const empty = [], full = []; for (let i = 0; i < 9; i++) { const p = `~/scratch/${t.pick(['a', 'b', 'c'])}/f${i}.txt`; const isEmpty = t.chance(0.5); t.file(p, isEmpty ? '' : 'data\n'); (isEmpty ? empty : full).push(p); } if (!empty.length) { t.file('~/scratch/z.txt', ''); empty.push('~/scratch/z.txt'); } return { empty, full }; },
     prompt: 'Delete every *empty file* under «~/scratch» — in one «find» command.',
-    check: (e, x) => x.empty.every((p) => !e.file(p)) && x.full.every((p) => e.file(p)) && e.used('find'),
+    check: (e, x) => x.empty.every((p) => !e.file(p)) && x.full.every((p) => e.file(p)) && e.used('find') && !e.used('rm'),
     hints: ['«-empty» matches empty files and directories; «-type f» keeps it to files; «-delete» deletes what matched.', 'Run it without «-delete» first to see the list.'],
     solution: ['find ~/scratch -type f -empty -delete'],
     why: 'Always run a find without «-delete» first and read the list. Then add «-delete».',
@@ -421,7 +454,7 @@
   T({
     id: 'find-exec-chmod', topic: 'find', level: 3, cmds: ['find', 'chmod'], title: 'Make every script executable',
     setup(t) { const sh = []; for (const d of ['', 'deploy/', 'tools/db/', 'ci/']) { const p = `~/scripts/${d}${t.word()}.sh`; t.file(p, '#!/bin/bash\necho hi\n', { mode: 0o644 }); sh.push(p); } t.file('~/scripts/README.md', '# scripts\n', { mode: 0o644 }); return { sh }; },
-    prompt: 'Every «.sh» file under «~/scripts» (in any subfolder) should be executable. Fix them all with one command. The README should stay non-executable.',
+    prompt: 'Every «.sh» file under «~/scripts» (in any subfolder) should be executable. Fix them all — with a single command if you can. The README should stay non-executable.',
     check: (e, x) => x.sh.every((p) => (e.mode(p) & 0o100) !== 0) && (e.mode('~/scripts/README.md') & 0o111) === 0,
     hints: ['find can run a command on each match: «-exec CMD {} \\;» (or «{} +» to batch them).', "«find ~/scripts -name '*.sh' -exec chmod +x {} +»"],
     solution: ["find ~/scripts -name '*.sh' -exec chmod +x {} +"],
@@ -439,7 +472,7 @@
     id: 'find-count-py', topic: 'find', level: 2, cmds: ['find', 'wc'], title: 'Count the source files',
     setup(t) { let n = 0; for (const d of ['', 'core/', 'core/util/', 'api/', 'tests/']) for (let i = 0; i < t.int(1, 5); i++) { const py = t.chance(0.7); t.file(`/opt/app/src/${d}${t.word()}${i}.${py ? 'py' : 'txt'}`, '#\n'); if (py) n++; } return { n }; },
     prompt: 'How many «.py» files are there under «/opt/app/src», counting all subfolders?',
-    check: (e, x) => e.answer(x.n) && e.used('find'),
+    check: (e, x) => e.answer(x.n),
     hints: ['find lists them, one per line — so count the lines.', "«find /opt/app/src -name '*.py' | wc -l»"],
     solution: ["find /opt/app/src -name '*.py' | wc -l"],
   });
@@ -461,10 +494,20 @@
     why: '«locate» is instant but can be out of date («sudo updatedb» refreshes it). «find» is slower but always current.',
   });
   T({
+    id: 'find-locate-stale', topic: 'find', level: 2, cmds: ['locate', 'updatedb', 'sudo'], title: 'Too new to be found',
+    setup(t) { const name = `${t.word()}-${t.int(100, 999)}.conf`; t.afterIndex = () => t.file('~/projects/' + name, 'x=1\n'); return { name }; },
+    prompt: (x) => `A file called «${x.name}» was created a moment ago, but «locate ${x.name}» can't find it. Make locate find it.`,
+    check: (e, x) => !!e.ran('locate', (r) => r.toTerm && r.out.includes('/projects/' + x.name)),
+    nudge: (e, x) => (e.ran('locate', (r) => !r.out.includes(x.name)) ? 'Nothing — locate only knows what its database knew at the last update.' : null),
+    hints: ['locate searches a database of names, rebuilt once a day — not the disk itself.', '«sudo updatedb» rebuilds it now. Then locate again.'],
+    solution: (x) => ['sudo updatedb', '$PW', `locate ${x.name}`],
+    why: '«find» always sees the disk as it is now; «locate» is instant but only as fresh as its last «updatedb».',
+  });
+  T({
     id: 'find-which', topic: 'find', level: 1, cmds: ['which'], title: 'Where is that program?',
     setup(t) { const c = t.pick(['tar', 'grep', 'ssh', 'curl', 'awk', 'sed']); return { c }; },
     prompt: (x) => `Which file actually runs when you type «${x.c}»? Print its full path.`,
-    check: (e, x) => e.answer('/usr/bin/' + x.c) && e.used(['which', 'type', 'command']),
+    check: (e, x) => e.answer('/usr/bin/' + x.c),
     hints: ['«which NAME» searches your $PATH.'],
     solution: (x) => [`which ${x.c}`],
   });

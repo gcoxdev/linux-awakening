@@ -502,7 +502,9 @@
         let snode;
         try { snode = fs.get(sabs, user); }
         catch (e) { ctx.err.write(`cp: cannot stat '${s}': ${e.message}\n`); st = 1; continue; }
-        const intoDir = dnode && dnode.type === 'dir';
+        /* «cp -r dir/. dest» copies what's inside dir, not dir itself */
+        const contents = /(^|\/)\.\/*$/.test(s) && snode.type === 'dir';
+        const intoDir = dnode && dnode.type === 'dir' && !contents;
         const target = intoDir ? VFS.join(dabs, VFS.basename(sabs)) : dabs;
         const tdisp = intoDir ? VFS.join(dst, VFS.basename(s.replace(/\/+$/, '') || s)) : dst;
         if (snode.type === 'dir') {
@@ -534,7 +536,9 @@
         const sabs = ctx.abs(s);
         try { fs.get(sabs, ctx.user, false); }
         catch (e) { ctx.err.write(`mv: cannot stat '${s}': ${e.message}\n`); st = 1; continue; }
-        const intoDir = dnode && dnode.type === 'dir';
+        /* «cp -r dir/. dest» copies what's inside dir, not dir itself */
+        const contents = /(^|\/)\.\/*$/.test(s) && snode.type === 'dir';
+        const intoDir = dnode && dnode.type === 'dir' && !contents;
         const target = intoDir ? VFS.join(dabs, VFS.basename(sabs)) : dabs;
         const tdisp = intoDir ? VFS.join(dst, VFS.basename(s.replace(/\/+$/, '') || s)) : dst;
         if (target === sabs) { ctx.err.write(`mv: '${s}' and '${tdisp}' are the same file\n`); st = 1; continue; }
@@ -983,10 +987,19 @@
     },
   });
 
-  /* ---------- locate ---------- */
+  /* ---------- locate / updatedb ---------- */
+  LA.UPDATEDB_PRUNE = ['/proc', '/sys', '/dev', '/run'];
+  def('updatedb', {
+    run(ctx) {
+      if (ctx.user !== 'root') { ctx.err.write('updatedb: can not open a temporary file for `/var/lib/plocate/plocate.db\'\n'); return 1; }
+      if (ctx.host !== ctx.world.main) return 0;
+      ctx.world.updatedb();
+      return 0;
+    },
+  });
   def('locate', {
     run(ctx) {
-      const { o, operands } = getopt(ctx.args, { flags: 'icbe', params: 'ln', long: { 'ignore-case': 'i', count: 'c', limit: 'l=', basename: 'b' } });
+      const { o, operands } = getopt(ctx.args, { flags: 'icbe', params: 'ln', long: { 'ignore-case': 'i', count: 'c', limit: 'l=', basename: 'b', existing: 'e' } });
       if (!operands.length) { ctx.err.write('locate: no pattern to search for specified\n'); return 1; }
       const limit = o.l || o.n ? parseInt(o.l || o.n, 10) : Infinity;
       const tests = operands.map((p) => {
@@ -994,11 +1007,16 @@
         const pl = o.i ? p.toLowerCase() : p;
         return (s) => (o.i ? (o.b ? VFS.basename(s) : s).toLowerCase() : (o.b ? VFS.basename(s) : s)).includes(pl);
       });
+      /* locate searches the database «updatedb» last built — not the disk. New files are missing until the
+         next updatedb, and deleted ones linger (unless -e asks for existing files only). */
+      const db = ctx.world.locateDb && ctx.host === ctx.world.main ? ctx.world.locateDb.paths : null;
+      const paths = db || [...ctx.fs.iterate('/', 'root', { skip: (x) => LA.UPDATEDB_PRUNE.includes(x) })].map(([p]) => p);
       let count = 0;
-      for (const [p] of ctx.fs.iterate('/', 'root', { skip: (x) => x === '/proc' })) {
+      for (const p of paths) {
         if (p === '/') continue;
         if (!tests.some((t) => t(p))) continue;
         if (!ctx.fs.tryGet(VFS.dirname(p), ctx.user)) continue;
+        if (o.e && !ctx.fs.tryGet(p, 'root', false)) continue;
         count++;
         if (count > limit) break;
         if (!o.c) ctx.println(p);

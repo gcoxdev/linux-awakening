@@ -156,10 +156,13 @@ async function main() {
   const sol = pg.task.tpl.solution(pg.task.x, pg);
   await LA.runItems(pg.console, sol, pg);
   expect('practice: the package task is solved with dnf', pg.state.stats.solved === 1 && pg.world.distro === 'fedora', plain(pg.view.out).slice(-800));
+  /* each distro has its own practice profile */
   LA.distroId = 'debian';
+  expect('practice: the Debian profile is separate', !new LA.PracticeGame(new LA.HeadlessView(), pst, 'practice').load());
+  LA.distroId = 'fedora';
   const pg2 = new LA.PracticeGame(new LA.HeadlessView(), pst, 'practice');
-  expect('practice: loads', pg2.load());
-  expect('practice: still Fedora after loading', pg2.world.distro === 'fedora');
+  expect('practice: the Fedora profile loads', pg2.load());
+  expect('practice: still Fedora after loading', pg2.world.distro === 'fedora' && pg2.state.stats.solved === 1);
   expect('practice: Fedora has dnf-provides but not apt-policy', P_has(pg2, 'dnf-provides') && !P_has(pg2, 'apt-policy'));
 
   console.log(failures ? `\n${failures} distro check(s) failed (${passed} passed)` : `distros: ${passed} checks passed across ${LA.DISTRO_ORDER.join(', ')}`);

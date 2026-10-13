@@ -289,9 +289,13 @@
     ctx.err.write(`${name}: only in the Practice Range (choose it from the main menu)\n`);
     return 1;
   });
-  practice('task', 'show the current practice task', 'cmdGoal');
+  practice('task', 'show the practice task («task list» for all, «task ID» to start one)', 'cmdGoal');
   practice('skip', 'skip to a different practice task', 'cmdSkip');
   practice('solution', 'show an answer to the practice task', 'cmdSolution');
   practice('topic', 'choose a practice topic', 'cmdTopic');
   practice('level', 'choose practice difficulty', 'cmdLevel');
+  practice('next', 'the next practice task, once this one is solved', 'cmdNext');
+  practice('retry', 'start this practice task again on a clean machine', 'cmdRetry');
+  practice('variant', 'this practice task again, with new data', 'cmdVariant');
+  practice('check', 'what is done and what is missing in this practice task', 'cmdCheck');
 })();

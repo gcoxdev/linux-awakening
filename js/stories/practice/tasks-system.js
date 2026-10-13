@@ -98,7 +98,7 @@
   });
   T({
     id: 'user-add', topic: 'perms', level: 2, cmds: ['useradd', 'sudo'], title: 'A new colleague',
-    setup(t) { return { u: t.pick(['carol', 'dave', 'erin', 'frank', 'grace2', 'heidi']) }; },
+    setup(t) { const free = ['carol', 'dave', 'erin', 'frank', 'grace2', 'heidi'].filter((n) => !t.world.main.users.exists(n)); return { u: t.pick(free) }; },
     prompt: (x) => `Create a user account «${x.u}» with a home directory at «/home/${x.u}».`,
     check: (e, x) => e.world.main.users.exists(x.u) && !!e.file(`/home/${x.u}`),
     hints: ['«sudo useradd -m NAME» — «-m» makes the home directory.'],
@@ -159,7 +159,7 @@
     id: 'proc-pgrep', topic: 'procs', level: 1, cmds: ['pgrep', 'ps'], title: 'Find the PID',
     setup(t) { const name = t.pick(['indexer', 'syncd', 'thumbnailer', 'crawler']); const pid = runaway(t, name, { cpu: 4.1 }); return { name, pid }; },
     prompt: (x) => `What is the process ID (PID) of the process called «${x.name}»?`,
-    check: (e, x) => e.answer(x.pid) && e.used(['pgrep', 'ps', 'pidof']),
+    check: (e, x) => e.answer(x.pid),
     hints: ['«pgrep NAME» prints matching PIDs; «ps aux | grep NAME» shows more detail.'],
     solution: (x) => [`pgrep ${x.name}`],
   });
@@ -183,7 +183,7 @@
   T({
     id: 'proc-pkill-user', topic: 'procs', level: 2, cmds: ['pkill', 'sudo'], title: 'Everything bob is running',
     setup(t) { const pids = ['sleep 900', 'python3 job.py', 'tail -f app.log'].map((a) => t.proc({ user: 'bob', comm: a.split(' ')[0], args: a, tty: 'pts/5' })); return { pids }; },
-    prompt: 'Bob left a pile of processes running. Stop *all* of bob\'s processes in one command.',
+    prompt: 'Bob left a pile of processes running. Stop *all* of bob\'s processes — ideally with one command that picks them by owner.',
     check: (e) => !e.world.procs.some((p) => p.user === 'bob'),
     hints: ['«pkill -u USER» matches by owner; other people\'s processes need sudo.'],
     solution: ['sudo pkill -u bob', '$PW'],
@@ -220,6 +220,7 @@
       { text: 'list your jobs', check: (e) => !!e.ran('jobs', (r) => /sleep 300/.test(r.out)) },
       { text: 'bring it back with «fg» and Ctrl+C', check: (e) => !!e.tried('fg', (r) => r.status === 0 || r.status === 130) },
     ],
+    hints: ['A «&» at the end of a command runs it in the background.', '«jobs» lists background jobs; «fg» brings the latest back to the foreground, where Ctrl+C can stop it.'],
     solution: ['sleep 300 &', 'jobs', { nowait: 'fg' }, { ctrlc: true }],
     why: '«&» runs in the background; «jobs» lists; «fg %N» brings job N back; Ctrl+C interrupts the foreground job.',
   });
@@ -241,7 +242,7 @@
   T({
     id: 'sys-uname', topic: 'procs', level: 1, cmds: ['uname'], title: 'Which kernel?',
     prompt: 'Print the release of the Linux kernel this machine is running — just that.',
-    check: (e) => e.answer('6.1.0-range', { exact: true }) && e.used('uname'),
+    check: (e) => e.answer('6.1.0-range', { exact: true }),
     hints: ['«uname -r» (and «uname -a» for everything).'],
     solution: ['uname -r'],
   });
@@ -292,13 +293,17 @@
     hints: ['«journalctl -u UNIT» shows one service\'s log. «-n 20» limits it to the last 20 lines.'],
     solution: ['journalctl -u payments'],
   });
-  const cronLine = (e, re) => (e.text(`${LA.cronSpool(e.world)}/${e.game.user}`) || '').split('\n').some((l) => re.test(l.trim()));
+  /* a job in your crontab that runs SCRIPT on the schedule WHEN accepts */
+  const cronHas = (e, when, script) => P.h.cronJobs(e).some((j) => when(j) && P.h.runsScript(e, j.cmd, script));
+  const every = (f, n) => f === '*/' + n || f === '0-59/' + n || f === Array.from({ length: 60 / n }, (_, i) => i * n).join(',');
+  const cronFeedback = (script) => (e) => { const jobs = P.h.cronJobs(e); if (!jobs.length) return 'Your crontab is empty — «crontab -l» shows it.'; if (!jobs.some((j) => P.h.runsScript(e, j.cmd, script))) return `None of your jobs runs «${e.p(script)}» — check the path (cron doesn't know your current directory).`; return 'The job runs the right script, but not at the right time — read the five fields again: minute, hour, day of month, month, day of week.'; };
   T({
     id: 'cron-daily', topic: 'system', level: 2, cmds: ['crontab'], title: 'Every night at 02:30',
     setup(t) { t.file('~/backup.sh', '#!/bin/bash\ntar -czf /backup/home.tgz ~\n', { mode: 0o755 }); },
     prompt: 'Schedule «/home/{user}/backup.sh» to run every day at 02:30, using your crontab.',
-    check: (e) => cronLine(e, /^30\s+2\s+\*\s+\*\s+\*\s+.*backup\.sh/),
-    hints: ['A crontab line is «MIN HOUR DAY MONTH WEEKDAY COMMAND».', 'Write the line into a file and install it: «echo "30 2 * * * /home/{user}/backup.sh" | crontab -» — or use «crontab -e».'],
+    check: (e) => cronHas(e, (j) => P.h.num(j.min) === 30 && P.h.num(j.hour) === 2 && j.dom === '*' && j.mon === '*' && j.dow === '*', '~/backup.sh'),
+    feedback: cronFeedback('~/backup.sh'),
+    hints: ['A crontab line is «MIN HOUR DAY MONTH WEEKDAY COMMAND», and the command needs its full path.', 'Write the line into a file and install it: «echo "30 2 * * * /home/{user}/backup.sh" | crontab -» — or use «crontab -e».'],
     solution: ['echo "30 2 * * * /home/{user}/backup.sh" > /tmp/cron.txt', 'crontab /tmp/cron.txt'],
     why: '«crontab FILE» replaces your whole crontab with FILE; «crontab -e» edits it; «crontab -l» shows it.',
   });
@@ -306,7 +311,8 @@
     id: 'cron-weekly', topic: 'system', level: 3, cmds: ['crontab'], title: 'Monday mornings',
     setup(t) { t.file('~/report.sh', '#!/bin/bash\necho report\n', { mode: 0o755 }); },
     prompt: 'Schedule «/home/{user}/report.sh» to run every Monday at 06:00.',
-    check: (e) => cronLine(e, /^0\s+6\s+\*\s+\*\s+(1|mon|Mon|MON)\s+.*report\.sh/),
+    check: (e) => cronHas(e, (j) => P.h.num(j.min) === 0 && P.h.num(j.hour) === 6 && j.dom === '*' && j.mon === '*' && /^(1|mon)$/i.test(j.dow), '~/report.sh'),
+    feedback: cronFeedback('~/report.sh'),
     hints: ['Day of week is the 5th field: 0 or 7 is Sunday, 1 is Monday.', '«echo "0 6 * * 1 /home/{user}/report.sh" | crontab -»'],
     solution: ['echo "0 6 * * 1 /home/{user}/report.sh" > /tmp/cron.txt', 'crontab /tmp/cron.txt'],
   });
@@ -314,8 +320,9 @@
     id: 'cron-every15', topic: 'system', level: 3, cmds: ['crontab'], title: 'Every quarter of an hour',
     setup(t) { t.file('~/ping.sh', '#!/bin/bash\nping -c 1 web.lab\n', { mode: 0o755 }); },
     prompt: 'Schedule «/home/{user}/ping.sh» to run every 15 minutes, all day, every day.',
-    check: (e) => cronLine(e, /^(\*\/15|0,15,30,45)\s+\*\s+\*\s+\*\s+\*\s+.*ping\.sh/),
-    hints: ['«*/15» in the minute field means "every 15 minutes".'],
+    check: (e) => cronHas(e, (j) => every(j.min, 15) && j.hour === '*' && j.dom === '*' && j.mon === '*' && j.dow === '*', '~/ping.sh'),
+    feedback: cronFeedback('~/ping.sh'),
+    hints: ['«*/15» in the minute field means "every 15 minutes".', '«echo "*/15 * * * * /home/{user}/ping.sh" | crontab -»'],
     solution: ['echo "*/15 * * * * /home/{user}/ping.sh" > /tmp/cron.txt', 'crontab /tmp/cron.txt'],
   });
   T({
@@ -335,10 +342,12 @@
   });
   T({
     id: 'disk-mount', topic: 'system', level: 2, cmds: ['mount', 'sudo'], title: 'Open the USB stick',
-    prompt: 'Mount the USB stick\'s partition «/dev/sdb1» on «/mnt/usb», read-only, and list what\'s on it.',
-    check: (e) => e.world.mounts.some((m) => m.path === '/mnt/usb' && /^ro\b/.test(m.opts)) && e.used('ls'),
-    hints: ['«sudo mount -o ro /dev/sdb1 /mnt/usb», then «ls /mnt/usb».'],
+    prompt: 'Mount the USB stick\'s partition «/dev/sdb1» on «/mnt/usb», read-only, then list what\'s on it.',
+    check: (e) => e.world.mounts.some((m) => m.path === '/mnt/usb' && /^ro\b/.test(m.opts)) && e.used('ls', (r) => /report\.txt/.test(r.out) && /photos/.test(r.out)),
+    feedback: (e) => (!e.world.mounts.some((m) => m.path === '/mnt/usb') ? 'Nothing is mounted on «/mnt/usb» yet.' : !e.world.mounts.some((m) => m.path === '/mnt/usb' && /^ro\b/.test(m.opts)) ? 'It\'s mounted read-write. Unmount it and mount it again with «-o ro».' : 'Mounted read-only — now list «/mnt/usb».'),
+    hints: ['«mount -o ro DEVICE DIR» mounts read-only; it needs root.', '«sudo mount -o ro /dev/sdb1 /mnt/usb», then «ls /mnt/usb».'],
     solution: ['sudo mount -o ro /dev/sdb1 /mnt/usb', '$PW', 'ls /mnt/usb'],
+    why: 'Read-only is the safe way to look at a disk you don\'t trust, or one that holds evidence: nothing you do can change it.',
   });
   T({
     id: 'disk-umount', topic: 'system', level: 2, cmds: ['umount', 'sudo'], title: 'Safely remove',
@@ -485,7 +494,7 @@
   T({
     id: 'sys-hostname', topic: 'system', level: 1, cmds: ['hostname'], title: 'Which machine is this?',
     prompt: 'Print this machine\'s hostname.',
-    check: (e) => e.answer('range', { exact: true }) && e.used('hostname'),
+    check: (e) => e.answer('range', { exact: true }),
     hints: ['«hostname».'],
     solution: ['hostname'],
   });
@@ -500,27 +509,46 @@
     solution: ['cd ~', 'tar -czf site.tar.gz site'],
   });
   T({
-    id: 'tar-list', topic: 'archive', level: 2, cmds: ['tar'], title: 'Look before you unpack',
-    setup(t) { const n = t.int(4, 9); const entries = Array.from({ length: n }, (_, i) => ({ path: `release/file${i}.txt`, type: 'file', mode: 0o644, owner: t.user, group: t.user, mtime: t.now, content: 'x\n' })); t.file('~/release.tar.gz', '', { format: 'gzip', data: { name: 'release.tar', inner: { format: 'tar', data: { entries: [{ path: 'release/', type: 'dir', mode: 0o755, owner: t.user, group: t.user, mtime: t.now }].concat(entries) } } } }); return { n }; },
-    prompt: 'How many *files* (not folders) are inside «~/release.tar.gz»? List its contents without extracting it.',
-    check: (e, x) => (!!e.ran('tar', (r) => r.args.join(' ').includes('t')) && /release\/file0\.txt/.test(e.out())) || (e.answer(x.n) && e.used('tar')),
-    hints: ['«tar -tzf ARCHIVE» lists; pipe it to «wc -l» to count.'],
+    id: 'tar-list', topic: 'archive', level: 1, cmds: ['tar'], title: 'Look before you unpack',
+    setup(t) { const n = t.int(3, 6); const entries = [{ path: 'release/', type: 'dir' }].concat(Array.from({ length: n }, (_, i) => ({ path: `release/file${i}.txt`, type: 'file', content: 'x\n' }))).map((x) => Object.assign({ mode: x.type === 'dir' ? 0o755 : 0o644, owner: t.user, group: t.user, mtime: t.now }, x)); t.file('~/release.tar.gz', '', { format: 'gzip', data: { name: 'release.tar', inner: { format: 'tar', data: { entries } } } }); return { n }; },
+    prompt: 'List what\'s inside «~/release.tar.gz» without extracting it.',
+    check: (e, x) => !!e.ran('tar', (r) => r.toTerm && /release\/file0\.txt/.test(r.out) && new RegExp(`release/file${x.n - 1}\\.txt`).test(r.out)) && !e.file('~/release'),
+    hints: ['«t» lists an archive\'s contents; «z» reads gzip; «f» names the file.', '«tar -tzf ~/release.tar.gz»'],
     solution: ['tar -tzf ~/release.tar.gz'],
+    why: 'Always look first: an archive that unpacks loose files (no top folder) will scatter them all over your current directory.',
+  });
+  T({
+    id: 'tar-count', topic: 'archive', level: 2, cmds: ['tar', 'grep', 'wc'], title: 'How many files inside?',
+    setup(t) {
+      const n = t.int(3, 8);
+      const sub = t.chance(0.5) ? 'docs/' : 'lib/';
+      const files = Array.from({ length: n }, (_, i) => `pkg/${i % 2 ? sub : ''}${t.word()}${i}.txt`);
+      const entries = [{ path: 'pkg/', type: 'dir' }, { path: 'pkg/' + sub, type: 'dir' }].concat(files.map((p) => ({ path: p, type: 'file', content: 'x\n' }))).map((x) => Object.assign({ mode: x.type === 'dir' ? 0o755 : 0o644, owner: t.user, group: t.user, mtime: t.now }, x));
+      t.file('~/pkg.tar.gz', '', { format: 'gzip', data: { name: 'pkg.tar', inner: { format: 'tar', data: { entries } } } });
+      return { n, all: entries.length };
+    },
+    prompt: 'How many *files* — not folders — are inside «~/pkg.tar.gz»? Print the count, without extracting anything.',
+    check: (e, x) => e.answer(x.n, { exact: true }) && !e.file('~/pkg'),
+    nudge: (e, x) => (e.answer(x.all, { exact: true }) ? `${x.all} counts the folders too — in a tar listing, folder entries end with «/».` : null),
+    hints: ['«tar -tzf» lists every entry, folders included; folder entries end with «/».', '«tar -tzf ~/pkg.tar.gz | grep -v \'/$\' | wc -l»'],
+    solution: ["tar -tzf ~/pkg.tar.gz | grep -v '/$' | wc -l"],
   });
   T({
     id: 'tar-extract', topic: 'archive', level: 2, cmds: ['tar'], title: 'Unpack it somewhere specific',
-    setup(t) { const entries = ['app/run.sh', 'app/README', 'app/lib/core.py'].map((p) => ({ path: p, type: 'file', mode: 0o644, owner: t.user, group: t.user, mtime: t.now, content: `# ${p}\n` })); t.file('~/app.tar.gz', '', { format: 'gzip', data: { name: 'app.tar', inner: { format: 'tar', data: { entries } } } }); },
-    prompt: 'Extract «~/app.tar.gz» into the directory «~/deploy» (create it first).',
-    check: (e) => !!e.file('~/deploy/app/lib/core.py'),
+    setup(t) { const entries = ['app/run.sh', 'app/README', 'app/lib/core.py'].map((p) => ({ path: p, type: 'file', mode: 0o644, owner: t.user, group: t.user, mtime: t.now, content: `# ${p} ${t.word()}\n` })); t.file('~/app.tar.gz', '', { format: 'gzip', data: { name: 'app.tar', inner: { format: 'tar', data: { entries } } } }); const files = {}; for (const x of entries) files[x.path] = x.content; return { files }; },
+    prompt: 'Extract everything in «~/app.tar.gz» into the directory «~/deploy» (create it first).',
+    check: (e, x) => P.h.hasTree(e, '~/deploy', x.files),
+    feedback: (e, x) => { const miss = Object.keys(x.files).filter((f) => e.text('~/deploy/' + f) !== x.files[f]); return miss.length ? `Not there yet, or not the archive's contents: ${miss.map((m) => '~/deploy/' + m).join(', ')}.` : null; },
     hints: ['«-x» extracts; «-C DIR» extracts into DIR.', '«mkdir -p ~/deploy && tar -xzf ~/app.tar.gz -C ~/deploy»'],
     solution: ['mkdir -p ~/deploy', 'tar -xzf ~/app.tar.gz -C ~/deploy'],
   });
   T({
     id: 'gzip-keep', topic: 'archive', level: 1, cmds: ['gzip'], title: 'Compress, but keep the original',
-    setup(t) { t.file('~/big.log', pack.gen.appLog(t, 80).map((x) => x.text)); },
-    prompt: 'Compress «~/big.log» with gzip, but keep the original file too.',
-    check: (e) => !!e.file('~/big.log') && !!e.file('~/big.log.gz'),
-    hints: ['«gzip -k» keeps the original.'],
+    setup(t) { const body = pack.gen.appLog(t, 80).map((x) => x.text).join('\n') + '\n'; t.file('~/big.log', body); return { body }; },
+    prompt: 'Compress «~/big.log» with gzip into «~/big.log.gz», but keep the original file too.',
+    check: (e, x) => e.text('~/big.log') === x.body && P.h.gunzipped(e.file('~/big.log.gz')) === x.body,
+    feedback: (e, x) => (e.file('~/big.log.gz') && P.h.gunzipped(e.file('~/big.log.gz')) !== x.body ? '«big.log.gz» exists, but it isn\'t a gzip of «big.log».' : !e.file('~/big.log') ? 'The original is gone — «retry» to start again.' : null),
+    hints: ['Plain «gzip FILE» replaces the file with FILE.gz.', '«gzip -k» keeps the original.'],
     solution: ['gzip -k ~/big.log'],
   });
   T({
@@ -535,7 +563,7 @@
     id: 'zcat-grep', topic: 'archive', level: 2, cmds: ['zcat', 'grep'], title: 'Search a compressed log',
     setup(t) { const l = pack.gen.appLog(t, 90); t.file('~/old.log.gz', '', { format: 'gzip', data: { name: 'old.log', inner: { content: l.map((x) => x.text).join('\n') + '\n' } } }); return { n: l.filter((x) => x.lvl === 'ERROR').length }; },
     prompt: 'How many ERROR lines are in «~/old.log.gz»? Don\'t decompress it to disk.',
-    check: (e, x) => e.answer(x.n) && e.used(['zcat', 'zgrep']) && !e.file('~/old.log'),
+    check: (e, x) => e.answer(x.n) && !e.file('~/old.log'),
     hints: ['«zcat» prints a compressed file without unpacking it.', '«zcat ~/old.log.gz | grep -c ERROR»'],
     solution: ['zcat ~/old.log.gz | grep -c ERROR'],
   });
@@ -566,10 +594,17 @@
   T({
     id: 'sha-create', topic: 'archive', level: 2, cmds: ['sha256sum'], title: 'Publish checksums',
     setup(t) { for (const n of ['a.iso', 'b.iso', 'c.iso']) t.file('~/release/' + n, `${n} ${t.int(1, 1e6)}\n`); },
-    prompt: 'Write the SHA-256 checksums of every «.iso» file in «~/release» into «~/release/SHA256SUMS», so others can verify them.',
-    check: (e) => { const t = e.text('~/release/SHA256SUMS') || ''; return ['a.iso', 'b.iso', 'c.iso'].every((n) => new RegExp('^[0-9a-f]{64}\\s+\\S*' + n.replace('.', '\\.') + '$', 'm').test(t)); },
-    hints: ['«sha256sum FILES > LIST».', '«cd ~/release && sha256sum *.iso > SHA256SUMS»'],
+    prompt: 'Write the SHA-256 checksums of every «.iso» file in «~/release» into «~/release/SHA256SUMS», so that «sha256sum -c SHA256SUMS» run inside «~/release» verifies them.',
+    /* recompute: each listed hash must be the real hash of the file its name points to, seen from ~/release */
+    check: (e) => {
+      const lines = (e.text('~/release/SHA256SUMS') || '').split('\n').map((l) => l.match(/^([0-9a-f]{64})\s+\*?(.+)$/)).filter(Boolean);
+      const ok = (iso) => lines.some((m) => { const n = e.follow(LA.VFS.normalize(m[2], e.p('~/release'))); return n && n === e.follow('~/release/' + iso) && m[1] === U.sha256(LA.hashContent(n, e.fs)); });
+      return ['a.iso', 'b.iso', 'c.iso'].every(ok);
+    },
+    feedback: () => 'Check it the way others will: «cd ~/release && sha256sum -c SHA256SUMS». Every line should say OK.',
+    hints: ['«sha256sum FILES > LIST».', 'Run it inside the folder, so the names in the list are relative: «cd ~/release && sha256sum *.iso > SHA256SUMS»'],
     solution: ['cd ~/release', 'sha256sum *.iso > SHA256SUMS'],
+    why: 'Names in a checksum list are relative to where you ran sha256sum — so the list only verifies from the same place.',
   });
   T({
     id: 'md5', topic: 'archive', level: 1, cmds: ['md5sum'], title: 'An MD5 checksum',
@@ -607,13 +642,19 @@
   });
   T({
     id: 'boss-backup', topic: 'archive', level: 4, cmds: ['tar', 'date', 'sha256sum', 'scp'], title: 'Boss: an off-site backup',
-    setup(t) { for (const f of ['src/main.py', 'src/util.py', 'README.md']) t.file('~/project/' + f, `# ${f}\n`); return { name: `project-${U.strftime('%F', new Date(LA.now()))}.tar.gz` }; },
-    prompt: (x) => 'Back up «~/project» off-site:',
+    setup(t) { for (const f of ['src/main.py', 'src/util.py', 'README.md']) t.file('~/project/' + f, `# ${f} ${t.word()} ${t.int(1, 999)}\n`); return { name: `project-${U.strftime('%F', new Date(LA.now()))}.tar.gz`, files: P.h.snap(t, '~/project'), fp: LA.hostFingerprint('10.0.5.20') }; },
+    prompt: (x) => 'Back up «~/project» off-site, in a form that can be verified and restored:',
     parts: [
-      { text: (x) => `make a gzip tarball of ~/project named «${x.name}» in your home`, check: (e, x) => { const n = e.file('~/' + x.name); return !!n && n.format === 'gzip'; } },
-      { text: (x) => `write its SHA-256 checksum to «~/${x.name}.sha256»`, check: (e, x) => new RegExp('^[0-9a-f]{64}\\s').test(e.text(`~/${x.name}.sha256`) || '') },
-      { text: 'copy both files to «backup.lab:/srv/backups/»', check: (e, x) => !!e.world.hosts.backup.fs.tryGet('/srv/backups/' + x.name) && !!e.world.hosts.backup.fs.tryGet(`/srv/backups/${x.name}.sha256`) },
+      /* the archive really contains the project: every file, every byte */
+      { text: (x) => `make a gzip tarball of ~/project named «${x.name}» in your home`, state: true, check: (e, x) => { const a = P.h.archived(e.file('~/' + x.name)); return !!a && e.file('~/' + x.name).format === 'gzip' && Object.entries(x.files).every(([rel, c]) => a['project/' + rel] === c); } },
+      /* the checksum is the tarball's real one */
+      { text: (x) => `write its SHA-256 checksum to «~/${x.name}.sha256»`, state: true, check: (e, x) => { const m = (e.text(`~/${x.name}.sha256`) || '').match(/^([0-9a-f]{64})\s+\*?(\S+)/); const n = e.follow('~/' + x.name); return !!m && !!n && m[1] === U.sha256(LA.hashContent(n, e.fs)) && LA.VFS.basename(m[2]) === x.name; } },
+      /* and the remote copies are those files */
+      { text: 'copy both files to «backup.lab:/srv/backups/»', state: true, check: (e, x) => { const b = e.world.hosts.backup.fs; const r = b.tryGet('/srv/backups/' + x.name), l = e.follow('~/' + x.name); const rs = b.tryGet(`/srv/backups/${x.name}.sha256`); return !!r && !!l && JSON.stringify(r.data) === JSON.stringify(l.data) && !!rs && b.contentOf(rs) === e.text(`~/${x.name}.sha256`); } },
     ],
-    solution: (x) => ['cd ~', 'tar -czf project-$(date +%F).tar.gz project', `sha256sum ${x.name} > ${x.name}.sha256`, `scp ${x.name} ${x.name}.sha256 backup.lab:/srv/backups/`, { answer: 'yes' }],
+    feedback: (e, x) => { const a = P.h.archived(e.file('~/' + x.name)); if (e.file('~/' + x.name) && !a) return 'The tarball isn\'t a tar archive inside gzip — use «tar -czf».'; if (a) { const miss = Object.keys(x.files).filter((r) => a['project/' + r] !== x.files[r]); if (miss.length) return `The tarball should hold the project as «project/…»; missing: ${miss.join(', ')}. Run tar from your home directory.`; } return null; },
+    hints: ['Run tar from your home, so paths inside start with «project/».', '«sha256sum FILE > FILE.sha256» writes a checksum file that «sha256sum -c» can check later.', '«scp FILE1 FILE2 HOST:DIR» copies several files; check the host key against «~/lab-hostkeys.txt».'],
+    solution: (x) => ['cd ~', 'tar -czf project-$(date +%F).tar.gz project', `sha256sum ${x.name} > ${x.name}.sha256`, `scp ${x.name} ${x.name}.sha256 backup.lab:/srv/backups/`, { answer: x.fp }],
+    why: 'A backup you haven\'t verified is a hope. On the far side, «sha256sum -c» against the checksum proves the copy arrived intact; restoring it somewhere scratch proves it\'s complete.',
   });
 })();

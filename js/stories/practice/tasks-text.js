@@ -27,7 +27,7 @@
     id: 'grep-count', topic: 'text', level: 1, cmds: ['grep'], title: 'How many warnings?',
     setup(t) { const l = appLog(t); return { n: l.filter((x) => x.lvl === 'WARN').length }; },
     prompt: 'How many lines in «~/logs/app.log» are warnings («WARN»)? Print the count.',
-    check: (e, x) => e.answer(x.n) && e.used(['grep', 'wc', 'awk']),
+    check: (e, x) => e.answer(x.n),
     hints: ['«grep -c» counts matching lines instead of printing them.'],
     solution: ['grep -c WARN ~/logs/app.log'],
   });
@@ -67,7 +67,7 @@
     id: 'grep-w', topic: 'text', level: 2, cmds: ['grep'], title: 'The whole word',
     setup(t) { const lines = []; let n = 0; for (let i = 0; i < 30; i++) { const k = t.pick(['cat', 'catalog', 'concatenate', 'the cat sat', 'cat food', 'scatter']); lines.push(`${i}: ${k}`); if (/\bcat\b/.test(k)) n++; } t.file('~/words.txt', lines); return { n }; },
     prompt: 'How many lines of «~/words.txt» contain the word «cat» as a *whole word* — not «catalog» or «scatter»?',
-    check: (e, x) => e.answer(x.n) && e.used('grep', (r) => r.args.some((a) => /w/.test(a) && a.startsWith('-')) || r.args.some((a) => /\\b|\\</.test(a))),
+    check: (e, x) => e.answer(x.n),
     hints: ['«grep -w» matches whole words only; combine it with «-c».'],
     solution: ['grep -cw cat ~/words.txt'],
   });
@@ -111,7 +111,7 @@
     id: 'uniq-count-ips', topic: 'text', level: 2, cmds: ['sort', 'uniq', 'cut', 'awk'], title: 'How many visitors?',
     setup(t) { const l = accessLog(t); return { n: new Set(l.map((x) => x.ip)).size }; },
     prompt: 'How many *different* IP addresses appear in «~/logs/access.log»? (The IP is the first field of each line.)',
-    check: (e, x) => e.answer(x.n) && e.used(['sort', 'uniq', 'awk']),
+    check: (e, x) => e.answer(x.n),
     hints: ['Pull out the first field («cut -d\' \' -f1» or «awk \'{print $1}\'»), get the unique values, count them.', "«cut -d' ' -f1 ~/logs/access.log | sort -u | wc -l»"],
     solution: ["cut -d' ' -f1 ~/logs/access.log | sort -u | wc -l"],
   });
@@ -190,7 +190,7 @@
   });
   T({
     id: 'sed-delete', topic: 'text', level: 2, cmds: ['sed'], title: 'Strip the comments',
-    setup(t) { const lines = []; for (let i = 0; i < 12; i++) lines.push(t.chance(0.4) ? `# ${t.word()} ${t.word()}` : `${t.word()}=${t.int(1, 99)}`); t.file('~/config.ini', lines); return { want: lines.filter((l) => !l.startsWith('#')).join('\n') + '\n' }; },
+    setup(t) { const lines = []; for (let i = 0; i < 12; i++) lines.push(t.chance(0.4) ? `# ${t.word()} ${t.word()}` : `${t.word()}=${t.int(1, 99)}`); /* always something to delete, and something to keep */ lines[t.int(0, 3)] = `# ${t.word()} settings`; lines[t.int(6, 11)] = `# ${t.word()} ${t.word()}`; lines[4] = `${t.word()}=${t.int(1, 99)}`; t.file('~/config.ini', lines); return { want: lines.filter((l) => !l.startsWith('#')).join('\n') + '\n' }; },
     prompt: 'Delete every comment line (lines starting with «#») from «~/config.ini», editing it in place.',
     check: (e, x) => e.text('~/config.ini') === x.want,
     hints: ["«sed -i '/^#/d' FILE» — «/regex/d» deletes matching lines; «^» anchors to the start."],
@@ -209,7 +209,7 @@
     id: 'awk-sum', topic: 'text', level: 3, cmds: ['awk'], title: 'Bytes served',
     setup(t) { const l = accessLog(t); return { n: l.reduce((a, x) => a + x.bytes, 0) }; },
     prompt: 'What is the total of the bytes-sent column (the 10th field) in «~/logs/access.log»?',
-    check: (e, x) => e.answer(x.n) && e.used('awk'),
+    check: (e, x) => e.answer(x.n),
     hints: ["awk can add up a column: «awk '{sum += $10} END {print sum}' FILE»"],
     solution: ["awk '{sum += $10} END {print sum}' ~/logs/access.log"],
     why: 'For big totals awk may print 1.2e+06; «END {printf \"%d\\n\", sum}» forces a whole number.',
@@ -350,7 +350,7 @@
     id: 'stdin-wc', topic: 'pipes', level: 1, cmds: ['wc'], title: 'Just the number',
     setup(t) { const n = t.int(20, 90); t.file('~/list.txt', Array.from({ length: n }, () => t.word())); return { n }; },
     prompt: 'Print the number of lines in «~/list.txt» — just the number, without the file name after it.',
-    check: (e, x) => e.answer(x.n, { exact: true }) && e.used('wc'),
+    check: (e, x) => e.answer(x.n, { exact: true }),
     hints: ['When wc reads standard input it has no file name to print.', '«wc -l < ~/list.txt»'],
     solution: ['wc -l < ~/list.txt'],
   });
@@ -358,7 +358,8 @@
     id: 'heredoc', topic: 'pipes', level: 2, cmds: ['cat'], title: 'A file from a heredoc',
     setup(t) { return { lines: [`Welcome to ${t.word()}!`, `Maintenance: ${t.pick(['Sunday', 'Monday', 'Friday'])} 02:00`, 'Questions: ops@lab'] }; },
     prompt: (x) => `Create «~/motd.txt» containing exactly these three lines, using a heredoc («cat > file << EOF»):\n«${x.lines[0]}»\n«${x.lines[1]}»\n«${x.lines[2]}»`,
-    check: (e, x) => e.text('~/motd.txt') === x.lines.join('\n') + '\n',
+    check: (e, x) => e.text('~/motd.txt') === x.lines.join('\n') + '\n' && e.typed(/<<-?\s*['"]?\w+/),
+    nudge: (e, x) => (e.text('~/motd.txt') === x.lines.join('\n') + '\n' && !e.typed(/<<-?\s*['"]?\w+/) ? 'Right contents — now do it with a heredoc, as the task asks: «cat > ~/motd.txt << EOF», the lines, then «EOF».' : null),
     hints: ['Type «cat > ~/motd.txt << EOF», press Enter, type the lines, and finish with a line that just says «EOF».'],
     solution: (x) => [`cat > ~/motd.txt << 'EOF'\n${x.lines.join('\n')}\nEOF`],
   });

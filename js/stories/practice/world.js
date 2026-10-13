@@ -112,6 +112,8 @@
       blockDevices: ['sdb', 'sdb1'],
     });
     const { fs, D, F, P, svc } = B;
+    /* a scratch machine: root may create anything in the usual top-level places */
+    for (const d of ['/srv', '/opt', '/mnt', '/media']) fs.get(d).immutable = false;
     w.passwords.range = { [u]: 'practice', alice: 'alice123', bob: 'bob123', deploy: Math.random().toString(36), root: Math.random().toString(36) };
     const home = '/home/' + u;
     D(home, { owner: u, group: u, mode: 0o755 });
@@ -126,6 +128,8 @@ PS1='${LA.distroPS1(w.distro)}'
 alias ls='ls --color=auto'
 alias grep='grep --color=auto'
 `);
+    /* the lab's published host keys: check them before trusting a new machine */
+    Y('lab-hostkeys.txt', `# SSH host keys for the lab, published by ops. Compare before you answer "yes".\nweb.lab     ED25519 ${LA.hostFingerprint('10.0.5.10')}\nbackup.lab  ED25519 ${LA.hostFingerprint('10.0.5.20')}\n`);
     Y('.profile', '# ~/.profile\nif [ -n "$BASH_VERSION" ]; then\n    if [ -f "$HOME/.bashrc" ]; then\n        . "$HOME/.bashrc"\n    fi\nfi\nif [ -d "$HOME/bin" ] ; then\n    PATH="$HOME/bin:$PATH"\nfi\n');
     D(home + '/.ssh', { owner: u, group: u, mode: 0o700 });
     const KEY = `ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPr4ct1c3R4ng3K3yF0rThePl4y3rQx ${u}@range`;
@@ -213,7 +217,7 @@ alias grep='grep --color=auto'
       { names: ['gateway', 'gateway.lab'], ip: '10.0.5.1', up: true, latency: 0.4, ptr: 'gateway.lab' },
       { names: ['web', 'web.lab'], ip: '10.0.5.10', up: true, latency: 0.9, http: true, ssh: true, hostKey: 'web', ptr: 'web.lab' },
       { names: ['backup', 'backup.lab'], ip: '10.0.5.20', up: true, latency: 1.3, ssh: true, hostKey: 'backup', ptr: 'backup.lab' },
-      { names: ['deb.lab', 'security.lab'], ip: '10.0.5.30', up: true, latency: 1.1, ptr: 'deb.lab' },
+      { names: ['mirror.lab', 'security.lab'], ip: '10.0.5.30', up: true, latency: 1.1, ptr: 'mirror.lab' },
       { names: [], ip: '10.0.5.99', up: false },
     ];
     w.txt = { 'range.lab': 'practice=yes; break=anything', 'web.lab': 'owner=ops@lab' };

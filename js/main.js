@@ -16,7 +16,12 @@
     return LA.DISTROS[v] ? v : 'debian';
   };
   { const q = new URLSearchParams(location.search).get('distro'); if (LA.DISTROS[q]) storage.set(DISTRO_KEY, q); }
-  const saveKeyOf = (pack) => pack.saveKey || 'linux-awakening-save-' + pack.id;
+  /* stories keep one save each; the Practice Range keeps one profile per distro */
+  const saveKeyOf = (pack) => {
+    const base = pack.saveKey || 'linux-awakening-save-' + pack.id;
+    const d = chosenDistro();
+    return pack.isPractice && d !== 'debian' ? `${base}-${d}` : base;
+  };
   const readSave = (pack) => {
     const raw = storage.get(saveKeyOf(pack));
     if (!raw) return null;
@@ -63,7 +68,7 @@
       const b = ev.target.closest('button[data-restart]');
       if (!b) return;
       const pack = LA.stories[b.dataset.restart];
-      if (!window.confirm(`Start ${pack.title} over from the beginning, on ${LA.DISTROS[chosenDistro()].label}? Your saved progress ${pack.isPractice ? '(rank, XP and badges)' : 'in this story'} will be erased.`)) return;
+      if (!window.confirm(pack.isPractice ? `Start the Practice Range over on ${LA.DISTROS[chosenDistro()].label}? Your rank, XP and badges for this distro will be erased (other distros keep theirs).` : `Start ${pack.title} over from the beginning, on ${LA.DISTROS[chosenDistro()].label}? Your saved progress in this story will be erased.`)) return;
       storage.remove(saveKeyOf(pack));
       location.href = '?story=' + encodeURIComponent(pack.id);
     });
@@ -83,6 +88,7 @@
         const P = LA.practice;
         facts = [`${P.tasksFor(cur).length} task types`, `${P.TOPICS.length} topics`, `${P.allCommands(cur).length} commands`];
         if (save) saveText = `Saved: ${save.state.user} · ${P.rankOf(save.state.xp)[1]} · ${save.state.xp} XP · ${save.state.stats.solved} solved`;
+        else saveText = 'Each distro keeps its own rank and progress.';
       } else if (save) {
         const st = save.state;
         const ch = pack.chapters[st.ch];

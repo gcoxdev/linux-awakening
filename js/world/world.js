@@ -324,6 +324,13 @@
       return null;
     }
 
+    /* ---------- the locate database ---------- */
+    updatedb() {
+      const paths = [];
+      for (const [p] of this.main.fs.iterate('/', 'root', { skip: (x) => LA.UPDATEDB_PRUNE.includes(x) })) if (p !== '/') paths.push(p);
+      this.locateDb = { time: LA.now(), paths };
+    }
+
     /* ---------- packages ---------- */
     installPackage(n) {
       const p = this.packages.available[n];
@@ -448,7 +455,7 @@
         services: this.services, journal: this.journal, sessions: this.sessions.filter((s) => !s.player), wtmp: this.wtmp,
         sockets: this.sockets, mounts: this.mounts, disks: this.disks, passwords: this.passwords,
         installed: this.packages.installed, dmesg: this.dmesg, bootTime: this.bootTime, flags: this.flags, username: this.username,
-        aptUpdated: !!this.aptUpdated, distro: this.distro,
+        aptUpdated: !!this.aptUpdated, distro: this.distro, locateDb: this.locateDb || null,
       };
     }
     static deserialize(o) {
@@ -469,7 +476,7 @@
       Object.assign(w, {
         procs: o.procs, nextPid: o.nextPid, services: o.services, journal: o.journal, sessions: o.sessions, wtmp: o.wtmp,
         sockets: o.sockets, disks: o.disks, passwords: o.passwords, dmesg: o.dmesg, bootTime: o.bootTime, flags: o.flags || {},
-        aptUpdated: o.aptUpdated,
+        aptUpdated: o.aptUpdated, locateDb: o.locateDb || null,
       });
       w.packages.available = LA.packageDB(w.distro, Object.assign({}, PKG, w.sys.extraPkgs || {}));
       w.packages.installed = o.installed;

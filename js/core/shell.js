@@ -616,11 +616,19 @@
     async execList(list, io) {
       let status = this.lastStatus;
       for (const it of list.items) {
+        this.errexitSpared = false;
         if (it.bg) { this.startJob(it.node, io); status = 0; }
         else status = await this.exec(it.node, io);
         this.lastStatus = status;
+        /* set -e: a failing command ends a script — but not one being tested by if/while/&&/||/! */
+        if (status !== 0 && this.errexit && !this.interactive && !this.condDepth && !this.errexitSpared && !it.bg) throw new ExitSignal(status);
       }
       return status;
+    }
+    /* run something whose failure is a test, not an error (for set -e) */
+    async asCondition(fn) {
+      this.condDepth = (this.condDepth || 0) + 1;
+      try { return await fn(); } finally { this.condDepth--; }
     }
 
     async exec(node, io) {
@@ -630,12 +638,19 @@
         case 'simple': return this.execSimple(node, io);
         case 'pipeline': return this.execPipeline(node, io);
         case 'andor': {
-          let st = await this.exec(node.parts[0], io);
-          for (let i = 1; i < node.parts.length; i++) {
+          const n = node.parts.length;
+          let st = await this.asCondition(() => this.exec(node.parts[0], io));
+          let ranLast = n === 1;
+          for (let i = 1; i < n; i++) {
             this.lastStatus = st;
             const op = node.ops[i - 1];
-            if ((op === '&&' && st === 0) || (op === '||' && st !== 0)) st = await this.exec(node.parts[i], io);
+            if ((op === '&&' && st === 0) || (op === '||' && st !== 0)) {
+              st = i === n - 1 ? await this.exec(node.parts[i], io) : await this.asCondition(() => this.exec(node.parts[i], io));
+              if (i === n - 1) ranLast = true;
+            }
           }
+          /* «false && x» fails without ending a set -e script: only the last command of a list counts */
+          if (!ranLast) this.errexitSpared = true;
           return st;
         }
         default: return this.execCompound(node, io);
@@ -654,7 +669,7 @@
         switch (node.type) {
           case 'if': {
             for (const cl of node.clauses) {
-              const c = await this.execList(cl.cond, rio);
+              const c = await this.asCondition(() => this.execList(cl.cond, rio));
               if (c === 0) return await this.execList(cl.body, rio);
             }
             if (node.elseBody) return await this.execList(node.elseBody, rio);
@@ -684,7 +699,7 @@
             for (;;) {
               await this.tick();
               if (++guard > 100000) { rio.err.write('bash: loop stopped after 100000 iterations (simulator safety valve)\n'); return 1; }
-              const c = await this.execList(node.cond, rio);
+              const c = await this.asCondition(() => this.execList(node.cond, rio));
               if (node.until ? c === 0 : c !== 0) break;
               try { st = await this.execList(node.body, rio); }
               catch (e) {
@@ -725,20 +740,28 @@
     }
 
     async execPipeline(node, io) {
+      if (node.bang) {
+        /* «! cmd» is a test: its failure never ends a set -e script */
+        const st = await this.asCondition(() => this.execPipeline(Object.assign({}, node, { bang: false }), io));
+        return st ? 0 : 1;
+      }
       let status;
       if (node.cmds.length === 1) status = await this.exec(node.cmds[0], io);
       else {
         let input = io.stdin;
+        let failed = 0;
         for (let i = 0; i < node.cmds.length; i++) {
           const last = i === node.cmds.length - 1;
           const out = last ? io.out : new BufWriter();
           const err = node.both && node.both[i] ? out : io.err;
           const sub = { stdin: i === 0 ? input : new InStream(input), out, err };
           status = await this.exec(node.cmds[i], sub);
+          if (status !== 0) failed = status;
           if (!last) input = out.buf;
         }
+        /* set -o pipefail: the pipeline fails if any part failed (the rightmost failure) */
+        if (this.pipefail) status = failed;
       }
-      if (node.bang) status = status ? 0 : 1;
       return status;
     }
 
@@ -1317,6 +1340,7 @@
         Object.assign(sh.aliases, this.aliases);
         sh.positional = this.positional.slice();
         sh.lastStatus = this.lastStatus;
+        sh.errexit = this.errexit; sh.pipefail = this.pipefail; sh.strictVars = this.strictVars;
       }
       sh.jobs = this.jobs;
       return sh;

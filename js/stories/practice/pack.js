@@ -6,7 +6,7 @@
   LA.defineStory('practice', {
     title: 'Practice Range',
     tagline: 'No story — just task after task on a real-feeling machine. Earn XP, keep your streak, master every command.',
-    blurb: 'Each task asks you to do something useful: find the biggest log, fix a permission, write a one-liner, schedule a job, unpack an archive, script a loop. Do it however you like — any correct way counts. The machine resets for every task. Pick a topic or let it mix things up, and climb from Intern to Greybeard.',
+    blurb: 'Each task asks for something useful: find the biggest log, fix a permission, write a one-liner, schedule a job, restore a backup, script a loop. Any correct way counts, and the check looks at the result — not just the command. Names and data change every time. Pick a topic or let it mix things up, and climb from Intern to Greybeard.',
     pace: 'Endless · scored',
     accent: '#a78bfa',
     cardArt: String.raw`  [■■■□□]  XP 1240   streak ×7
@@ -54,8 +54,8 @@ Pick a username for the practice machine — lowercase letters and digits, start
     },
     hintSpeaker: () => 'Hint',
     welcome: (g) => `:::lesson
-**Welcome to the range.** Every task is checked after each command you type, and any correct approach counts. The machine is rebuilt for every new task, so experiment freely.
-«hint» gives a hint (the last one is an answer) · «skip» for a different task · «solution» to see an answer · «topic» to choose a topic · «level» for difficulty · «progress» for your stats.
+**Welcome to the range.** Each task asks for a result on this machine — do it any way you like, unless the task names a method. It's checked after every command, and once it's solved the machine stays put so you can look around; then «next».
+«hint» gives clues (free — the last one offers the full answer, which costs the XP) · «check» says what's done and what's missing · «skip» for another task · «retry» / «variant» to do it again · «task list» to pick one · «topic» and «level» to choose · «progress» for your stats.
 Your sudo password is «practice».
 :::`,
   });

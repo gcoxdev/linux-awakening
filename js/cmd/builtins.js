@@ -458,13 +458,22 @@
           else if (opt === 'pipefail') sh.pipefail = on;
           continue;
         }
-        if (/^[-+][euxC]+$/.test(a)) {
+        if (/^[-+][euxCo]+$/.test(a)) {
           const on = a[0] === '-';
           for (const c of a.slice(1)) {
             if (c === 'e') sh.errexit = on;
             if (c === 'u') sh.strictVars = on;
             if (c === 'x') sh.xtrace = on;
             if (c === 'C') sh.noclobber = on;
+            /* «set -eo pipefail»: o takes the next word as an option name */
+            if (c === 'o') {
+              const opt = args[++i];
+              if (opt === 'pipefail') sh.pipefail = on;
+              else if (opt === 'errexit') sh.errexit = on;
+              else if (opt === 'nounset') sh.strictVars = on;
+              else if (opt === 'xtrace') sh.xtrace = on;
+              else if (opt === 'noclobber') sh.noclobber = on;
+            }
           }
           continue;
         }
