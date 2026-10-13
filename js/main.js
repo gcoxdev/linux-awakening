@@ -93,7 +93,7 @@
       if (pack.pace) facts.push(pack.pace);
       /* a save keeps the distro it was started on */
       const savedOn = save ? (save.state.distro || (save.world && save.world.distro) || 'debian') : null;
-      if (save && savedOn !== cur) saveText += ` · on ${LA.DISTROS[savedOn].short}`;
+      const savedDistro = save && savedOn !== cur ? `on ${LA.DISTROS[savedOn].short}` : '';
       const card = document.createElement('article');
       card.className = 'story-card';
       if (pack.accent) card.style.setProperty('--accent', pack.accent);
@@ -102,7 +102,7 @@
         <h2 class="story-name">${esc(pack.title)}</h2>
         <p class="story-tagline">${esc(pack.tagline || '')}</p>
         <p class="story-blurb">${esc(pack.blurb || '')}</p>
-        ${saveText ? `<p class="story-save" title="Saved game">▸ ${esc(saveText)}</p>` : ''}
+        ${saveText ? `<p class="story-save">▸ ${esc(saveText)}${savedDistro ? ` <span class="save-distro">· ${esc(savedDistro)}</span>` : ''}</p>` : ''}
         <div class="story-foot">
           <p class="story-facts">${facts.map(esc).join(' · ')}</p>
           <div class="story-actions">
