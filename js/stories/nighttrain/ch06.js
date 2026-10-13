@@ -6,7 +6,7 @@
   const pack = LA.stories.nighttrain;
 
   pack.add({
-    n: 6, id: 'locks', title: 'Locked Doors', place: 'km 121 · Hallin Junction', clock: [1, 1, 36],
+    n: 6, id: 'locks', title: 'Locked Doors', place: 'mile 75 · Hallin Junction', clock: [1, 1, 36],
     unlocks: ['id', 'groups', 'sudo', 'stat', 'chmod', 'chown', 'chgrp', 'umask', 'su', 'passwd'],
     intro: N`The Meridian slides into Hallin Junction and stops. A single platform lamp, a stationmaster in a greatcoat, a goods train asleep on the next track.
 

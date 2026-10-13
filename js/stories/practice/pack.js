@@ -5,9 +5,9 @@
 
   LA.defineStory('practice', {
     title: 'Practice Range',
-    tagline: 'No story — just task after task on a real-feeling machine. Earn XP, keep your streak, master every command.',
-    blurb: 'Each task asks for something useful: find the biggest log, fix a permission, write a one-liner, schedule a job, restore a backup, script a loop. Any correct way counts, and the check looks at the result — not just the command. Names and data change every time. Pick a topic or let it mix things up, and climb from Intern to Greybeard.',
-    pace: 'Endless · scored',
+    tagline: 'No story — just real tasks, checked and scored.',
+    blurb: 'Fix permissions, dig through logs, script loops, restore backups. Earn XP and master every command.',
+    pace: 'Endless',
     accent: '#a78bfa',
     cardArt: String.raw`  [■■■□□]  XP 1240   streak ×7
   $ find /var/log -size +1M
@@ -40,7 +40,7 @@ Pick a username for the practice machine — lowercase letters and digits, start
     nameTaken: (n) => `"${n}" already exists on this machine. Choose another.`,
     nameRules: 'Lowercase letters and digits only, starting with a letter, 2–16 characters.',
     savedLabel: 'Saved practice progress',
-    scope: 'The range is built on {distroFull}: Bash, GNU tools, systemd and {pm}. Pick another distro on the main menu to practise its tools.',
+    scope: 'The range is built on {distroFull}: Bash, GNU tools, systemd and {pm}. Pick another distro on the main menu to practice its tools.',
     secrets: {},
     collect: { label: 'Badges', noun: 'badge', tag: '🏅', banner: 'BADGE', items: {} },
     flavor: {

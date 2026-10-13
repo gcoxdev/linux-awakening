@@ -7,7 +7,7 @@
   const LOG1 = '/var/log/meridian/doors.log.1';
 
   pack.add({
-    n: 4, id: 'needles', title: 'Needles', place: 'km 86 · Varn Forest', clock: [1, 0, 58],
+    n: 4, id: 'needles', title: 'Needles', place: 'mile 53 · Varn Forest', clock: [1, 0, 58],
     unlocks: ['grep', 'find', 'locate', 'sort', 'uniq', 'which', 'whereis'],
     intro: N`Pine forest on both sides now, close enough to touch. The train is quiet in the way that means nobody is sleeping.
 

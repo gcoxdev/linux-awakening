@@ -24,9 +24,9 @@ done
   const scriptPath = (e) => e.home + '/case/timeline.sh';
 
   pack.add({
-    n: 12, id: 'clockwork', title: 'Clockwork', place: 'km 199 · the Merrow Tunnel', clock: [1, 3, 33],
+    n: 12, id: 'clockwork', title: 'Clockwork', place: 'mile 124 · the Merrow Tunnel', clock: [1, 3, 33],
     unlocks: ['basename', 'bc', 'seq', 'printf', 'test', 'read', 'realpath', 'dirname'],
-    intro: N`The Merrow Tunnel swallows the train. Three and a half kilometres of rock overhead, the windows suddenly mirrors, the noise doubled. No radio in here — no radio anywhere until the far end.
+    intro: N`The Merrow Tunnel swallows the train. Two miles of rock overhead, the windows suddenly mirrors, the noise doubled. No radio in here — no radio anywhere until the far end.
 
 @Vesna: Twenty minutes of tunnel. Enough to learn to make the computer do the boring parts. A **script** is just commands in a file. Everything you've typed tonight could have been a script.`,
     steps: [
@@ -44,7 +44,7 @@ done
 :::`,
       },
       {
-        say: N`@Rosa: (on the intercom) Out of the tunnel at 03:52. Then thirty-seven kilometres to Kessel, and I'm doing sixty-four. You can work out when we arrive. I'm busy.
+        say: N`@Rosa: (on the intercom) Out of the tunnel at 03:52. Then twenty-three miles to Kessel, and I'm doing forty. You can work out when we arrive. I'm busy.
 The shell's own arithmetic, «$(( ))», only does whole numbers. «bc» is a calculator that can do decimals; «scale=1» asks for one decimal place.`,
         goal: 'Minutes from the tunnel to Kessel: «echo "scale=1; 37 * 60 / 64" | bc»',
         hints: ['Type «echo "scale=1; 37 * 60 / 64" | bc».'],

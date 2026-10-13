@@ -7,16 +7,16 @@
   const CARS = '/srv/meridian/cars';
 
   pack.add({
-    n: 1, id: 'missing', title: 'The Missing Engineer', place: 'km 41 · the staff car', clock: [1, 0, 14],
+    n: 1, id: 'missing', title: 'The Missing Engineer', place: 'mile 25 · the staff car', clock: [1, 0, 14],
     unlocks: ['pwd', 'ls', 'cd', 'cat', 'whoami', 'hostname', 'clear'],
     intro: N`The door slides open before you've finished sitting up. Abel Okonkwo, train manager, forty years on the Meridian, is in full uniform at a quarter past midnight, and he is not calm.
 
-@Abel: The Halvard Atlas is gone. Dr Brandt opened the safe for her hourly check at twelve minutes past and found a railway timetable, folded to size, in the case. And Vesna — Vesna isn't answering her page. She isn't anywhere I've looked.
+@Abel: The Halvard Atlas is gone. Dr. Brandt opened the safe for her hourly check at twelve minutes past and found a railway timetable, folded to size, in the case. And Vesna — Vesna isn't answering her page. She isn't anywhere I've looked.
 @Abel: You're the only other person aboard who can read that machine. So read it.
 
 He points at rack 7 — the server, humming at the end of the staff car — and the terminal waiting on the fold-down desk beside it.
 
-A girl of about twelve in pyjamas and an enormous cardigan is standing in the corridor behind him, holding a notebook.
+A girl of about twelve in pajamas and an enormous cardigan is standing in the corridor behind him, holding a notebook.
 
 @June: I'm June. B14. I can't sleep on trains, I know every station on this line, and I saw something. Can I watch?
 @Abel: ...Fine. Don't touch anything.
@@ -83,7 +83,7 @@ Press **Tab** to complete a file or command name, and **↑** to bring back a co
         hints: ['First «ls» to see what\'s here.', 'Then «cd cars» — no slash at the front, because «cars» is right here.'],
         check: (e) => e.cwd === CARS && e.stepRan('ls'),
         solve: ['ls', 'cd cars'],
-        done: N`«ls» here would show eight carriages, front to back, one directory each.`,
+        done: N`«ls» here would show eight cars, front to back, one directory each.`,
       },
       {
         say: N`The baggage car is «car2_baggage». Go in and read its «status» file.`,
@@ -118,7 +118,7 @@ She walked to this car. Then, somewhere between here and anywhere else, she stop
         evidence: 'fault',
       },
       {
-        say: N`If she came here, she'd have walked back toward the staff car afterwards. «..» is the directory above this one, so «../car7_staff» means *up one level, then into car7_staff* — the next carriage over, as far as paths are concerned.`,
+        say: N`If she came here, she'd have walked back toward the staff car afterwards. «..» is the directory above this one, so «../car7_staff» means *up one level, then into car7_staff* — the next car over, as far as paths are concerned.`,
         goal: 'Go to the staff car\'s directory in one step: «cd ../car7_staff»',
         hints: ['Type «cd ../car7_staff».'],
         check: (e) => e.cwd === CARS + '/car7_staff',
@@ -131,10 +131,10 @@ She walked to this car. Then, somewhere between here and anywhere else, she stop
         hints: ['«cd ~» then «clear». (Ctrl+L also clears.)'],
         check: (e) => e.cwd === e.home && e.stepRan('clear'),
         solve: ['cd ~', 'clear'],
-        done: N`A clean screen. A missing atlas, a missing engineer, and seventy kilometres of mountain before the next stop.`,
+        done: N`A clean screen. A missing atlas, a missing engineer, and fifty miles of mountain before the next stop.`,
       },
     ],
-    outro: N`@Abel: Dr Brandt is in A5, trying not to be sick. The insurance man — Mr Marsh, the escort — is sitting with her. Very calm about it all. Very helpful.
+    outro: N`@Abel: Dr. Brandt is in A5, trying not to be sick. The insurance man — Mr. Marsh, the escort — is sitting with her. Very calm about it all. Very helpful.
 @Abel: Find me Vesna, Engineer.`,
   });
 })();

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* Free-form shell behaviour checks + every secret. Usage: node test/commands.js [-v] */
+/* Free-form shell behavior checks + every secret. Usage: node test/commands.js [-v] */
 'use strict';
 const fs = require('fs');
 const path = require('path');

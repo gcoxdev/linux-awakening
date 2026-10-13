@@ -7,7 +7,7 @@
   const CARDS = '/etc/meridian/cards.csv';
 
   pack.add({
-    n: 5, id: 'crossref', title: 'Cross-Reference', place: 'km 103 · Lake Varn', clock: [1, 1, 16],
+    n: 5, id: 'crossref', title: 'Cross-Reference', place: 'mile 64 · Lake Varn', clock: [1, 1, 16],
     unlocks: ['column', 'cut', 'awk', 'tr', 'tee', 'tac', 'paste', 'xargs'],
     intro: N`The lake goes by on the left, flat and black, with a single lit farmhouse on the far shore.
 
@@ -19,7 +19,7 @@ The door log has had lines cut out of it. You can't read what isn't there — bu
         hints: ['Type «column -t -s, /srv/meridian/manifest/passengers.csv».'],
         check: (e) => !!e.ran('column', (r) => e.has(r, 't')),
         solve: ['column -t -s, /srv/meridian/manifest/passengers.csv'],
-        done: N`Much better. A3, Lucien Marsh. A5, Dr Ottilie Brandt. B11, Constance Fairley — a journalist, Abel says. B14, Rosalind and June Castellanos.`,
+        done: N`Much better. A3, Lucien Marsh. A5, Dr. Ottilie Brandt. B11, Constance Fairley — a journalist, Abel says. B14, Rosalind and June Castellanos.`,
       },
       {
         say: N`Now the cards. You don't need every column. «cut» slices them out: «-d,» sets the delimiter, «-f1,2,3» picks fields one to three.`,
@@ -47,7 +47,7 @@ An escort card, issued for one door only — the baggage car — that didn't ope
         solve: ['grep 0417 /etc/meridian/cards.csv'],
         done: N`«0417,MARSH L (ARDEN MUTUAL),ESCORT-TEMP,car2,... 22:41»
 
-Issued at 22:41, forty-nine minutes before departure. To Mr Marsh. Very calm. Very helpful.`,
+Issued at 22:41, forty-nine minutes before departure. To Mr. Marsh. Very calm. Very helpful.`,
         evidence: 'card0417',
       },
       {
@@ -71,7 +71,7 @@ Every program has three streams: **stdin** (0, input), **stdout** (1, output) an
         solve: ['grep -r 0417 /etc /srv /home 2>/dev/null'],
         done: N`Clean results. And one you hadn't seen — Abel's own note, «/home/abel/cards_issued.txt»:
 
-*«22:41 0417 L. MARSH, Arden Mutual — escort for the Halvard Atlas (said Mr P. Vos was taken ill; produced a letter on Arden paper signed "P. Vos")»*
+*«22:41 0417 L. MARSH, Arden Mutual — escort for the Halvard Atlas (said Mr. P. Vos had fallen ill; produced a letter on Arden paper signed "P. Vos")»*
 
 @Abel: He had a letter. It looked right. They always look right.`,
       },
@@ -84,7 +84,7 @@ Every program has three streams: **stdin** (0, input), **stdout** (1, output) an
         done: N`On screen and on disk.`,
       },
       {
-        say: N`One more card to follow: «1103», Mr Marsh's own cabin card. Read his movements newest-first. «tac» is «cat» backwards — it prints a file's lines in reverse order.`,
+        say: N`One more card to follow: «1103», Mr. Marsh's own cabin card. Read his movements newest-first. «tac» is «cat» backwards — it prints a file's lines in reverse order.`,
         goal: 'Marsh\'s cabin card, newest first: «tac /var/log/meridian/doors.log.1 | grep 1103»',
         hints: ['Type «tac /var/log/meridian/doors.log.1 | grep 1103».'],
         check: (e) => !!e.ran('tac') && /1103 cabin_A3/.test(e.out()),
@@ -98,16 +98,16 @@ Back from where? The log doesn't say. Someone made sure it wouldn't.`,
         setup: (g) => {
           const o = { owner: g.user, group: g.user };
           g.fs.put(g.home + '/case/june_times.txt', '23:48\n23:52\n23:52\n23:54\n', o);
-          g.fs.put(g.home + '/case/june_people.txt', 'lady in a red scarf, going into the lounge\nlady in an orange jacket (Vesna?), going back\ntall man, grey coat, right behind her\nsomeone came out of the staff end, fast, in shirtsleeves\n', o);
+          g.fs.put(g.home + '/case/june_people.txt', 'lady in a red scarf, going into the lounge\nlady in an orange jacket (Vesna?), going back\ntall man, gray coat, right behind her\nsomeone came out of the staff end, fast, in shirtsleeves\n', o);
         },
         say: N`June has been busy. She wrote down everyone she saw in the corridor, in two lists — times in «~/case/june_times.txt», people in «~/case/june_people.txt» — "because that's how my notebook is laid out". «paste» glues files together side by side, line by line.`,
         goal: 'Put June\'s lists side by side: «paste ~/case/june_times.txt ~/case/june_people.txt»',
         hints: ['Type «paste ~/case/june_times.txt ~/case/june_people.txt».'],
-        check: (e) => !!e.ran('paste', (r) => /grey coat/.test(r.out)),
+        check: (e) => !!e.ran('paste', (r) => /gr[ae]y coat/.test(r.out)),
         solve: ['cat /srv/meridian/cars/car4_lounge/smoke.log', 'paste ~/case/june_times.txt ~/case/june_people.txt'],
         done: N`«23:54  someone came out of the staff end, fast, in shirtsleeves»
 
-@June: Shirtsleeves. The grey coat went *in* with Vesna and came out without her and without the coat. Where's the coat?
+@June: Shirtsleeves. The gray coat went *in* with Vesna and came out without her and without the coat. Where's the coat?
 @June: Also, the red scarf lady went into the lounge at 23:48. I bet she was smoking. Grandmother says journalists always are. (The lounge has a smoke detector. It probably writes things down too.)`,
       },
       {
@@ -116,7 +116,7 @@ Back from where? The log doesn't say. Someone made sure it wouldn't.`,
         hints: ['Type «ls /srv/meridian/cars/*/door | xargs grep -l LOCKED».', '«grep -l» prints just the names of files that match.'],
         check: (e) => !!e.ran('xargs') && /car8_mail/.test(e.out()),
         solve: ['ls /srv/meridian/cars/*/door | xargs grep -l LOCKED'],
-        done: N`The locomotive, the baggage car, the staff car — staff-only, as they should be. And «car8_mail»: locked since 23:53:34, refrigerated to four degrees, sealed until Kessel.
+        done: N`The locomotive, the baggage car, the staff car — staff-only, as they should be. And «car8_mail»: locked since 23:53:34, refrigerated to thirty-nine degrees, sealed until Kessel.
 
 You look at the door at the end of the staff car. The one with the customs seal on it. Abel looks at it too.`,
       },

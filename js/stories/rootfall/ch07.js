@@ -112,8 +112,8 @@ Mail headers record where a message really came from. The «From:» line is just
         check: (e) => /alias ll=/.test(e.read(e.home + '/.bashrc') || '') && !!e.stepEvent('source', (ev) => ev.path === e.home + '/.bashrc'),
         solve: [`echo "alias ll='ls -la'" >> ~/.bashrc`, 'source ~/.bashrc'],
         done: (g) => (g.state.flags.poisonFixedEarly
-          ? N`Done. Your old prompt colours flicker back on, exactly as you once set them — and «ll» will be there in every new shell.`
-          : N`Done. Your old prompt colours flicker back on, exactly as you once set them.
+          ? N`Done. Your old prompt colors flicker back on, exactly as you once set them — and «ll» will be there in every new shell.`
+          : N`Done. Your old prompt colors flicker back on, exactly as you once set them.
 
 Then Tux wakes with a start, scrambles out of his bed, and starts pecking urgently at the keyboard. He wants you to read something. Anything.`),
       },
@@ -122,7 +122,7 @@ Then Tux wakes with a start, scrambles out of his bed, and starts pecking urgent
         skipSay: N`Tux sniffs at the screen, suspicious of something... then relaxes. Your «.bashrc» is clean.
 
 @Mara: Wait — there should be a line in there Hollow planted. An alias that makes «cat» lie. You already found it and took it out? ...Of course you did. You always read your startup files.`,
-        say: N`@Mara: Read your sticky note again. Humour the penguin.`,
+        say: N`@Mara: Read your sticky note again. Humor the penguin.`,
         goal: 'Read a file — any file — with «cat», for instance «cat sticky_note.txt»',
         hints: ['Type: «cat sticky_note.txt»', 'If cat behaves normally, your shell hasn\'t loaded the file yet — run «source ~/.bashrc» and try again.'],
         check: (e) => /^\s*cat\b/.test(e.line) && !!e.ran('echo', (r) => r.args.join(' ').includes('nothing to remember')),
@@ -175,7 +175,7 @@ That is not what your sticky note says.
         done: N`«cat is /usr/bin/cat». The real thing, loaded fresh from a clean file.
 
 :::lesson
-Startup files run automatically — «~/.bashrc» for every interactive shell, «~/.profile» at login — which makes them a favourite hiding place for mischief. After any fix, **verify**: load the file again and check the result, rather than trusting that the edit worked.
+Startup files run automatically — «~/.bashrc» for every interactive shell, «~/.profile» at login — which makes them a favorite hiding place for mischief. After any fix, **verify**: load the file again and check the result, rather than trusting that the edit worked.
 :::`,
       },
       {

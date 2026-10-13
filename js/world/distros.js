@@ -123,7 +123,7 @@
     return Object.assign(groups, out);
   };
 
-  /* the default bash prompt each distro ships (in colour) */
+  /* the default bash prompt each distro ships (in color) */
   LA.distroPS1 = (id, root) => {
     const d = LA.distro(id);
     const u = root ? COLOR.root : COLOR.user;

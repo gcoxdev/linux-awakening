@@ -8,7 +8,7 @@
   const isFlare = (p) => p.comm === 'yes' && p.user === 'kiosk';
 
   pack.add({
-    n: 8, id: 'life', title: 'Signs of Life', place: 'km 152 · Brennholt Pass, the summit', clock: [1, 2, 14],
+    n: 8, id: 'life', title: 'Signs of Life', place: 'mile 94 · Brennholt Pass, the summit', clock: [1, 2, 14],
     unlocks: ['uptime', 'top', 'ps', 'sleep', 'jobs', 'pgrep', 'kill', 'killall', 'fg'],
     onStart(g) {
       const w = g.world, fs = g.fs;
@@ -32,7 +32,7 @@ shows ps), note (that's how i'm writing this), wait, and a printer test that
 runs yes until the power goes off. no sudo. no kill. nothing that can stop
 anything - including my own printer tests.
 
-it is four degrees in here. i'm wearing everything in the parcel bins and i'm
+it is thirty-nine degrees in here. i'm wearing everything in the parcel bins and i'm
 all right for a couple of hours yet. don't do anything stupid on my account.
 
 if you see this, run:  sleep 1234
@@ -41,14 +41,14 @@ i can see "ps" from here. that's how i'll know.
       }
       const lp = '/srv/meridian/cars/car5_sleeper_a/lost_property.txt';
       if (!fs.tryGet(lp)) fs.put(lp, `LOST PROPERTY — logged by A. Diallo, 01:52
-  1 x man's overcoat, grey wool, label "Harrow & Sons", size L,
+  1 x man's overcoat, gray wool, label "Harrow & Sons", size L,
       stuffed in the bin of the A-car washroom. Pockets: a ticket stub
       (Calder–Port Isolde, A3) and a crew keycard on a red lanyard: 0201.
 `, { owner: 'amadou', group: 'crew', mode: 0o664, mtime: LA.now() - 22 * 60000 });
     },
     intro: N`Brennholt Pass. The train is crawling over the summit in snow, wipers going in the locomotive, the lamps along the corridor reflected back at themselves in the black windows.
 
-@Abel: Amadou found a coat, by the way. In the A-car washroom bin. He's written it up — lost property, sleeper A. I don't see how it matters tonight.
+@Abel: Amadou found a coat, by the way. In the A-car washroom bin. He's written it up — lost and found, sleeper A. I don't see how it matters tonight.
 
 The rack fans behind you have been getting louder for ten minutes. You hadn't noticed until now. Now you can't stop noticing.`,
     steps: [
@@ -145,8 +145,8 @@ can't stop them. then get doord back up. he stopped it at 00:06 - it'll be in th
         done: N`«^C». Job done, in every sense.`,
       },
     ],
-    outro: N`@June: The coat. Abel, the *coat*. Grey wool, in the A-car — and the man who came out of the staff end was in shirtsleeves. *I saw him.*
-@Abel: ...It's written up in the lost property file. Somebody should read what was in the pockets.
+    outro: N`@June: The coat. Abel, the *coat*. Gray wool, in the A-car — and the man who came out of the staff end was in shirtsleeves. *I saw him.*
+@Abel: ...It's written up in the lost and found file. Somebody should read what was in the pockets.
 
 Now: doord.`,
   });

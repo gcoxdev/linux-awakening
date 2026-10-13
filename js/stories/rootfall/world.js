@@ -39,7 +39,7 @@ LOG=/var/log/lethe.log
   /* Hollow's plan gives the ending away, so it is only placed in /var/.hollow when the last chapter starts */
   LA.HOLLOW_PLAN = `step 1. their keys      (done. the night market sells anything: a copy
                          of the keeper's key, and the operator's
-                         password, going cheap as a rumour.)
+                         password, going cheap as a rumor.)
 step 2. their sweeper   (done. the operator built me a broom. how kind.)
 step 3. their memories  (in progress. homes first, then the archives,
                          then the names.)
@@ -100,7 +100,7 @@ So I don't know why the egg was still there, balanced on the very
 lip of the Void, refusing to fall.
 
 I carried it home in my scarf. It hatched on the radiator three
-days later: a furious grey ball of feathers that bit my thumb and
+days later: a furious gray ball of feathers that bit my thumb and
 then fell asleep in my hand.
 
 I named him Tux. He has never once let me out of his sight since.
@@ -482,7 +482,7 @@ Notes:       Kept muttering "lethe... lethe..." in sleep.
              Penguin refuses to leave bedside. Penguin has
              been issued a visitor badge.
 `);
-    H('floor3/room307/window.txt', R`You pull the blind. Rootfall spreads out below in the grey morning.
+    H('floor3/room307/window.txt', R`You pull the blind. Rootfall spreads out below in the gray morning.
 
         _._                         |>
       __|_|__    _______           /|\        ___
@@ -893,7 +893,7 @@ Read your .bash_history. You always said history is the truest diary.
     E('crontab', '# /etc/crontab: system-wide crontab\nSHELL=/bin/sh\nPATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin\n\n# m h dom mon dow user  command\n17 *  * * *  root  cd / && run-parts --report /etc/cron.hourly\n25 6  * * *  root  test -x /usr/sbin/anacron || run-parts --report /etc/cron.daily\n');
     D('/etc/cron.d'); D('/etc/cron.daily'); D('/etc/cron.hourly');
     E('cron.d/e2scrub_all', '30 3 * * 0 root test -e /run/systemd/system || SERVICE_MODE=1 /usr/lib/x86_64-linux-gnu/e2fsprogs/e2scrub_all_cron\n');
-    E('cron.daily/logrotate', '#!/bin/sh\n# skip in favour of systemd timer\nexit 0\n', { mode: 0o755 });
+    E('cron.daily/logrotate', '#!/bin/sh\n# skip in favor of systemd timer\nexit 0\n', { mode: 0o755 });
     E('systemd/system/lethe.service', `[Unit]
 Description=Lethe nightly memory sweeper
 After=network.target
@@ -967,7 +967,7 @@ esac
 HISTCONTROL=ignoreboth
 HISTSIZE=1000
 
-# a colourful prompt
+# a colorful prompt
 PS1='${LA.distroPS1(w.distro)}'
 
 # aliases
@@ -1350,7 +1350,7 @@ If found: this belongs to ${u}. If you ARE ${u}: welcome back.
     return w;
   };
 
-  /* static, non-serialised data that depends only on the username */
+  /* static, non-serialized data that depends only on the username */
   pack.worldStatic = function (w) {
     const u = w.username;
     w.hosts.rootfall.neigh = '10.0.0.1 dev eth0 lladdr 52:54:00:00:00:01 REACHABLE\n10.0.0.2 dev eth0 lladdr 52:54:00:4c:16:02 STALE\n10.0.0.66 dev eth0  FAILED';

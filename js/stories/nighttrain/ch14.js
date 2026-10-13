@@ -8,7 +8,7 @@
   const PA = '/srv/meridian/pa/announce';
 
   pack.add({
-    n: 14, id: 'kessel', title: 'Kessel Junction', place: 'km 236 · the border', clock: [1, 4, 16],
+    n: 14, id: 'kessel', title: 'Kessel Junction', place: 'mile 147 · the border', clock: [1, 4, 16],
     unlocks: ['usermod', 'userdel', 'sed', 'nl'],
     onStart(g) {
       const n = g.fs.tryGet(PA);
@@ -64,7 +64,7 @@ Signed «R.L.». *Atlas → sack → pile.*
         hints: ['Type «sudo pkill -KILL -u maint».'],
         check: (e) => !e.world.procs.some((p) => p.user === 'maint') && !e.world.sessions.some((s) => s.user === 'maint'),
         solve: ['sudo pkill -KILL -u maint', '$PW'],
-        done: N`Four carriages away, in cabin A3, a laptop screen says *Connection to meridian closed* — and somebody discovers the train has stopped doing what he tells it.`,
+        done: N`Four cars away, in cabin A3, a laptop screen says *Connection to meridian closed* — and somebody discovers the train has stopped doing what he tells it.`,
       },
       {
         say: N`He knows the password. **Lock** it so it can't be used again while you finish. «usermod» changes an account; «-L» locks its *password* — only the password. Ending sessions («pkill») and removing SSH keys are separate jobs; nobody does all three for you.`,
@@ -104,14 +104,14 @@ He never needed to carry it off the train at all.`,
         evidence: 'sack',
       },
       {
-        say: N`Abel signed for the Kessel mail at Calder: «~abel/kessel_mail.txt» says *six sacks, 18.4 kg*. Add up what the manifest says now. «awk -F,» splits on commas; the pattern «$1 ~ /^K-/» picks Kessel sacks; «{sum += $4}» adds up column four; «END» prints the total once at the end.`,
+        say: N`Abel signed for the Kessel mail at Calder: «~abel/kessel_mail.txt» says *six sacks, 40.5 lb*. Add up what the manifest says now. «awk -F,» splits on commas; the pattern «$1 ~ /^K-/» picks Kessel sacks; «{sum += $4}» adds up column four; «END» prints the total once at the end.`,
         goal: 'Total the Kessel mail: «awk -F, \'$1 ~ /^K-/ {sum += $4} END {print sum}\' /srv/meridian/manifest/mail.csv»',
         hints: ["Type «awk -F, '$1 ~ /^K-/ {sum += $4} END {print sum}' /srv/meridian/manifest/mail.csv»."],
-        check: (e) => !!e.ran('awk', (r) => /21\.5/.test(r.out)),
+        check: (e) => !!e.ran('awk', (r) => /47\.3/.test(r.out)),
         solve: ["awk -F, '$1 ~ /^K-/ {sum += $4} END {print sum}' /srv/meridian/manifest/mail.csv"],
-        done: N`«21.5». Three point one kilos more than Abel signed for.
+        done: N`«47.3». Six point eight pounds more than Abel signed for.
 
-@Ottilie: (from the corridor, where she has been standing for some time, very white) The Atlas weighs four kilos six hundred in its case. Without the case — three point one.`,
+@Ottilie: (from the corridor, where she has been standing for some time, very white) The Atlas weighs just over ten pounds in its case. Without the case — six point eight.`,
       },
       {
         say: N`Mark the sack so nobody at Kessel unloads it into the post office. «sed» is a *stream editor*: «s/OLD/NEW/» substitutes text, and an address in front — «/^K-27/» — limits it to matching lines. «$» means *end of line*, so this appends to the K-27 line. Without «-i», sed only prints the result; the file is untouched. Preview first.`,
@@ -218,7 +218,7 @@ A checksum proves a file hasn't *changed* since it was fingerprinted. It doesn't
         },
         nudge: (e) => (e.host === 'kessel' && e.mem.verified ? 'Verified. Now «exit» back to the train.' : e.tried('sha256sum', (r) => /FAILED/.test(r.out)) ? '@Vesna: FAILED means the zip there isn\'t the zip you fingerprinted. Send them both again.' : null),
         solve: ['scp ~/evidence.zip ~/evidence.zip.sha256 kessel:/srv/police/inbox/', 'ssh {user}@kessel', 'cd /srv/police/inbox', 'sha256sum -c evidence.zip.sha256', 'exit'],
-        done: N`«evidence.zip: OK» — on Holm's machine, forty kilometres away. Whatever happens next, the case is out of this train and provably unaltered.
+        done: N`«evidence.zip: OK» — on Holm's machine, twenty-five miles away. Whatever happens next, the case is out of this train and provably unaltered.
 
 The train phone rings once. Abel answers, listens, and says only: «She says she has it.»`,
       },
@@ -233,7 +233,7 @@ The train phone rings once. Abel answers, listens, and says only: «She says she
         done: (g) => `:::art
   ((( PA )))   ${(g.fs.contentOf(g.fs.get(PA)) || '').trim().replace(/[«»]/g, '')}
 :::
-Your words, in a flat synthetic voice, in every carriage of the train at once.`,
+Your words, in a flat synthetic voice, in every car of the train at once.`,
       },
     ],
     outro: N`The doors open on a platform full of police.`,
@@ -258,11 +258,11 @@ Your words, in a flat synthetic voice, in every carriage of the train at once.`,
     const packet = files.length
       ? `the packet you sent — ${files.length} files, every one fingerprinted, the archive verified on her own machine${extras.length ? `, including ${extras.join(' and ')}` : ''}`
       : 'the case file';
-    return N`Inspector Dagny Holm is small, grey-haired, and walks onto the Meridian like she owns the railway. She shakes Abel's hand, hugs Vesna — who suffers it — and goes straight to cabin A3.
+    return N`Inspector Dagny Holm is small, gray-haired, and walks onto the Meridian like she owns the railway. She shakes Abel's hand, hugs Vesna — who suffers it — and goes straight to cabin A3.
 
-Mr Lucien Marsh, whose name is not Lucien Marsh, is sitting on his bunk in his shirtsleeves with Vesna's laptop open on his knees and Vesna's radio on the pillow beside him. He looks up at the inspector, and then past her at you, and you see him understand, all at once, that the trainee read the logs.
+Mr. Lucien Marsh, whose name is not Lucien Marsh, is sitting on his bunk in his shirtsleeves with Vesna's laptop open on his knees and Vesna's radio on the pillow beside him. He looks up at the inspector, and then past her at you, and you see him understand, all at once, that the trainee read the logs.
 
-In the baggage car, on top of the pile of Kessel mail, sack K-27 has a flat waterproof tube in it. Dr Brandt opens it with gloves on, on the floor of the car, under Abel's torch, and doesn't say anything at all for a long time. Then she says, *"Plate thirty-one. The coastline is hand-coloured,"* and starts to cry, and nobody pretends not to notice.
+In the baggage car, on top of the pile of Kessel mail, sack K-27 has a flat waterproof tube in it. Dr. Brandt opens it with gloves on, on the floor of the car, under Abel's torch, and doesn't say anything at all for a long time. Then she says, *"Plate thirty-one. The coastline is hand-colored,"* and starts to cry, and nobody pretends not to notice.
 
 Holm takes the sack, the laptop, ${packet}, and a statement from June («age 12»), which runs to four pages and includes a diagram.
 

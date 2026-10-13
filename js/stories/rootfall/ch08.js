@@ -121,7 +121,7 @@ Disk full? «df -h» to see which filesystem, then «du -sh /path/*» to find th
         solve: ['ps aux | grep lethe'],
         done: N`«root  451  2.3  2.4 ... /usr/bin/lethe --daemon --conf /etc/lethe/lethe.conf»
 
-@Juno: PID 451. Fahrenheit 451 — the temperature at which books burn. Somebody has a sense of humour.
+@Juno: PID 451. Fahrenheit 451 — the temperature at which books burn. Somebody has a sense of humor.
 
 :::lesson
 You'll usually see a second match: the «grep lethe» process itself, which also contains the word "lethe". Everyone gets fooled by that once.

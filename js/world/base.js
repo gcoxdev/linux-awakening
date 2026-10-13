@@ -1,4 +1,4 @@
-/* Linux Awakening — the ordinary Linux machine underneath a story (Debian, Fedora, Arch or openSUSE flavoured): accounts, the directory
+/* Linux Awakening — the ordinary Linux machine underneath a story (Debian, Fedora, Arch or openSUSE flavored): accounts, the directory
    skeleton, /usr/bin, /dev, the usual /etc files, and the daemons every server runs.
    A story's world builder calls LA.baseSystem() and then adds its own people, files and secrets.
    (Rootfall predates this helper and builds its own skeleton by hand.) */

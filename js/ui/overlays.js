@@ -162,7 +162,7 @@
     };
     const endAsk = () => { pending = null; ask.classList.add('hidden'); ta.focus(); };
     const doSave = (name, thenExit) => {
-      if (!name) { say('Cancelled'); endAsk(); return; }
+      if (!name) { say('Canceled'); endAsk(); return; }
       let text = ta.value;
       if (text && !text.endsWith('\n')) text += '\n';
       const r = o.onSave(text, name);
@@ -181,7 +181,7 @@
         const a = v.trim().toLowerCase();
         if (a.startsWith('y')) { endAsk(); save(true); }
         else if (a.startsWith('n')) { endAsk(); finish(); }
-        else { endAsk(); say('Cancelled'); }
+        else { endAsk(); say('Canceled'); }
       }, true);
     };
     const lineBounds = () => {
@@ -226,7 +226,7 @@
       if (pending) {
         if (ev.target !== askInput) return;
         if (ev.key === 'Enter') { ev.preventDefault(); pending.cb(askInput.value); return; }
-        if (ev.key === 'Escape' || (ev.ctrlKey && (ev.key === 'c' || ev.key === 'C'))) { ev.preventDefault(); endAsk(); say('Cancelled'); return; }
+        if (ev.key === 'Escape' || (ev.ctrlKey && (ev.key === 'c' || ev.key === 'C'))) { ev.preventDefault(); endAsk(); say('Canceled'); return; }
         if (pending.yn && /^[ynYN]$/.test(ev.key)) { ev.preventDefault(); pending.cb(ev.key); return; }
         return;
       }

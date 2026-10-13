@@ -118,7 +118,7 @@ Mags reads it over your shoulder and smiles, a little sadly.`,
         solve: ['tail catalog.txt'],
         done: N`*On Forgetting — by {user}. CHECKED OUT (never returned).*
 
-@Mags: Seven years overdue. You wrote a book about forgetting, and then you forgot it. Rootfall has a sense of humour.`,
+@Mags: Seven years overdue. You wrote a book about forgetting, and then you forgot it. Rootfall has a sense of humor.`,
       },
       {
         say: N`@Mags: Before you go, you should read the city's history. It's long — don't dump it all on the screen with «cat». Use «less», which lets you scroll a file a page at a time. Same keys as the manual. **q** to quit.`,

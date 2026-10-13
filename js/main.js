@@ -34,10 +34,8 @@
     const cur = chosenDistro();
     box.innerHTML = LA.DISTRO_ORDER.map((id) => {
       const d = LA.DISTROS[id];
-      return `<button type="button" role="radio" class="distro-opt${id === cur ? ' on' : ''}" aria-checked="${id === cur}" tabindex="${id === cur ? 0 : -1}" data-distro="${id}"><span class="distro-name">${esc(d.label)}</span><span class="distro-pm">${esc(d.pm)}</span></button>`;
+      return `<button type="button" role="radio" class="distro-opt${id === cur ? ' on' : ''}" aria-checked="${id === cur}" tabindex="${id === cur ? 0 : -1}" data-distro="${id}" title="${esc(d.family)}"><span class="distro-name">${esc(d.label)}</span><span class="distro-pm">${esc(d.pm)}</span></button>`;
     }).join('');
-    const d = LA.DISTROS[cur];
-    document.getElementById('distroNote').innerHTML = `<strong>${esc(d.label)}</strong> family: ${esc(d.family)}. ${LA.inlineMarkup(d.blurb)}.`;
   }
 
   function showMenu() {
@@ -79,26 +77,23 @@
     const cur = chosenDistro();
     grid.innerHTML = '';
     for (const pack of Object.values(LA.stories)) {
-      const steps = pack.chapters.reduce((n, c) => n + c.steps.length, 0);
       const cmds = new Set(pack.chapters.flatMap((c) => c.unlocks || [])).size;
       const save = readSave(pack);
       let saveText = '';
-      let facts = [`${pack.chapters.length} chapters`, `${steps} steps`, `${cmds} commands`];
+      let facts = [`${pack.chapters.length} chapters`, `${cmds} commands`];
       if (pack.isPractice) {
         const P = LA.practice;
-        facts = [`${P.tasksFor(cur).length} task types`, `${P.TOPICS.length} topics`, `${P.allCommands(cur).length} commands`];
-        if (save) saveText = `Saved: ${save.state.user} · ${P.rankOf(save.state.xp)[1]} · ${save.state.xp} XP · ${save.state.stats.solved} solved`;
-        else saveText = 'Each distro keeps its own rank and progress.';
+        facts = [`${P.tasksFor(cur).length} tasks`, `${P.allCommands(cur).length} commands`];
+        if (save) saveText = `${save.state.user} · ${P.rankOf(save.state.xp)[1]} · ${save.state.xp} XP`;
       } else if (save) {
         const st = save.state;
         const ch = pack.chapters[st.ch];
-        saveText = st.done ? `✓ Finished as ${st.user} — free play` : `Saved: ${st.user}, Chapter ${ch ? ch.n : '?'} · ${ch ? ch.title : ''}`;
+        saveText = st.done ? `✓ Finished as ${st.user}` : `${st.user} · Chapter ${ch ? ch.n : '?'}: ${ch ? ch.title : ''}`;
       }
       if (pack.pace) facts.push(pack.pace);
       /* a save keeps the distro it was started on */
       const savedOn = save ? (save.state.distro || (save.world && save.world.distro) || 'debian') : null;
-      if (save) saveText += ` · ${LA.DISTROS[savedOn].label}`;
-      const other = save && savedOn !== cur ? `Continue keeps ${LA.DISTROS[savedOn].short}; Start over uses ${LA.DISTROS[cur].short}.` : '';
+      if (save && savedOn !== cur) saveText += ` · on ${LA.DISTROS[savedOn].short}`;
       const card = document.createElement('article');
       card.className = 'story-card';
       if (pack.accent) card.style.setProperty('--accent', pack.accent);
@@ -107,11 +102,13 @@
         <h2 class="story-name">${esc(pack.title)}</h2>
         <p class="story-tagline">${esc(pack.tagline || '')}</p>
         <p class="story-blurb">${esc(pack.blurb || '')}</p>
-        <div class="story-facts">${facts.map((f) => `<span>${esc(f)}</span>`).join('')}</div>
-        <div class="story-save">${esc(saveText)}${other ? `<span class="story-other">${esc(other)}</span>` : ''}</div>
-        <div class="story-actions">
-          <a class="btn primary" href="?story=${encodeURIComponent(pack.id)}">${save ? (save.state.done ? 'Revisit' : 'Continue') : pack.isPractice ? 'Start practising' : 'Start'}</a>
-          ${save ? `<button class="btn ghost" data-restart="${esc(pack.id)}">Start over</button>` : ''}
+        ${saveText ? `<p class="story-save" title="Saved game">▸ ${esc(saveText)}</p>` : ''}
+        <div class="story-foot">
+          <p class="story-facts">${facts.map(esc).join(' · ')}</p>
+          <div class="story-actions">
+            ${save ? `<button class="btn ghost" data-restart="${esc(pack.id)}">Start over</button>` : ''}
+            <a class="btn primary" href="?story=${encodeURIComponent(pack.id)}">${save ? (save.state.done ? 'Revisit' : 'Continue') : pack.isPractice ? 'Practice' : 'Start'}</a>
+          </div>
         </div>`;
       grid.appendChild(card);
     }

@@ -53,7 +53,7 @@
   LA.ansiToHtml = ansiToHtml;
 
   /* ---------- story markup ---------- */
-  /* each story gives its cast their own colours */
+  /* each story gives its cast their own colors */
   const speakerColor = (who) => {
     const g = LA.game;
     return (g && g.pack && g.pack.speakers[who.toLowerCase()]) || null;

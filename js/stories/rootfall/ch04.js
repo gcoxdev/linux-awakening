@@ -108,7 +108,7 @@ Useful grep flags: «-i» ignore case · «-n» line numbers · «-r» recursive
         solve: ["find / -name 'memory_*'", 'cat /hospital/basement/lost_and_found/memory_01.txt', 'cat /usr/share/doc/.restricted_section/memory_02.txt', 'cat /opt/.arcade/memory_03.txt'],
         done: N`Memories. *Your* memories, scattered across the city like dropped coins: one in the hospital basement, one in the library's restricted section, one somewhere under «/opt» in a place that doesn't even appear on maps.
 
-Copies, you realise. You must have hidden them yourself, loose, outside any folder called «memories» — out of reach of a sweeper aimed at «/home/*/memories». Insurance.
+Copies, you realize. You must have hidden them yourself, loose, outside any folder called «memories» — out of reach of a sweeper aimed at «/home/*/memories». Insurance.
 
 @Tux: (Tux looks at the list, then at you, then at the list again. He clearly thinks you should go and collect them. Reading one with «cat» brings it back.)
 

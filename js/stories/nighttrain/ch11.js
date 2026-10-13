@@ -7,7 +7,7 @@
   const ARCH = '/mnt/recorder/cctv/car2-23.tar.gz';
 
   pack.add({
-    n: 11, id: 'frames', title: 'Frames', place: 'km 188 · the Stellmark valley', clock: [1, 3, 14],
+    n: 11, id: 'frames', title: 'Frames', place: 'mile 117 · the Stellmark valley', clock: [1, 3, 14],
     unlocks: ['tar', 'strings', 'base64', 'zcat', 'gunzip', 'gzip', 'zip', 'unzip', 'umount'],
     intro: N`Vesna has stopped shivering. She's sitting on the bunk opposite the rack with her knees up, a second coffee, and her laptop-less hands moving restlessly as she watches you type.
 
@@ -35,9 +35,9 @@ tar in one breath: **c** create · **x** extract · **t** list · **z** gzip · 
         say: N`You can't look at a picture in a terminal. But the camera writes a description into every still, and «strings» digs readable text out of any file — binary or not.`,
         goal: 'Read what the camera saw at 23:44: «strings ~/case/frames/car2/frame-2344.jpg»',
         hints: ['Type «strings ~/case/frames/car2/frame-2344.jpg».'],
-        check: (e) => !!e.ran('strings', (r) => /grey overcoat/.test(r.out)),
+        check: (e) => !!e.ran('strings', (r) => /gr[ae]y overcoat/.test(r.out)),
         solve: ['strings ~/case/frames/car2/frame-2344.jpg'],
-        done: N`«CAM2 23:44:12 baggage car - 2 persons: staff (orange hi-vis) at safe keypad, safe OPEN; adult male (grey overcoat) beside her, holding flat case»
+        done: N`«CAM2 23:44:12 baggage car - 2 persons: staff (orange hi-vis) at safe keypad, safe OPEN; adult male (gray overcoat) beside her, holding flat case»
 
 @June: A flat case. You'd carry an atlas in a flat case.
 @Vesna: You'd carry a *timetable* in a flat case, too. If you needed it to weigh about right.`,
@@ -60,7 +60,7 @@ tar in one breath: **c** create · **x** extract · **t** list · **z** gzip · 
         hints: ['Type «zcat /var/log/meridian/doors.log.2.gz | grep 0417».'],
         check: (e) => !!e.ran('zcat') && /0417/.test(e.out()),
         solve: ['zcat /var/log/meridian/doors.log.2.gz | grep 0417'],
-        done: N`«22:52:03 0417 car2_baggage OPEN» — the official inspection before departure, with Abel and Dr Brandt. He knew exactly what that door and that safe looked like from the inside before the train ever left Calder.
+        done: N`«22:52:03 0417 car2_baggage OPEN» — the official inspection before departure, with Abel and Dr. Brandt. He knew exactly what that door and that safe looked like from the inside before the train ever left Calder.
 
 He edited the hour that mattered and forgot the hour before it. People who edit logs always forget one.`,
       },

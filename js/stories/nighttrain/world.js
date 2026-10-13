@@ -14,7 +14,7 @@
   const PASSENGERS = [
     ['A1', 'Haldor Brekke', '1101', 'Port Isolde'], ['A2', 'Sunniva Dahl', '1102', 'Kessel Junction'],
     ['A3', 'Lucien Marsh', '1103', 'Port Isolde'], ['A4', 'Tomasz Wierzbicki', '1104', 'Port Isolde'],
-    ['A5', 'Dr Ottilie Brandt', '1105', 'Port Isolde'], ['A7', 'Priya Raman', '1107', 'Stellmark'],
+    ['A5', 'Dr. Ottilie Brandt', '1105', 'Port Isolde'], ['A7', 'Priya Raman', '1107', 'Stellmark'],
     ['A7', 'Dev Raman', '1117', 'Stellmark'], ['A8', 'Fr Anselm Quist', '1108', 'Port Isolde'],
     ['B9', 'Greta Lindholm', '1209', 'Port Isolde'], ['B10', 'Oskar Varga', '1210', 'Kessel Junction'],
     ['B10', 'Edit Varga', '1220', 'Kessel Junction'], ['B11', 'Constance Fairley', '1211', 'Port Isolde'],
@@ -28,22 +28,22 @@
     ['0202', null, 'STAFF-ENGINEER-TRAINEE', 'ALL'], ['0417', 'MARSH L (ARDEN MUTUAL)', 'ESCORT-TEMP', 'car2'],
   ];
   const MAIL = [
-    ['K-21', 'KESSEL JCT POST OFFICE', 'Kessel Junction', '3.4', 'car2_baggage', 'abel', '22:31'],
-    ['K-22', 'KESSEL JCT POST OFFICE', 'Kessel Junction', '2.9', 'car2_baggage', 'abel', '22:31'],
-    ['K-23', 'BRANDVOLD PHARMACY', 'Kessel Junction', '4.1', 'car2_baggage', 'abel', '22:32'],
-    ['K-24', 'KESSEL JCT POST OFFICE', 'Kessel Junction', '2.6', 'car2_baggage', 'abel', '22:32'],
-    ['K-25', 'CUSTOMS OFFICE KESSEL', 'Kessel Junction', '1.8', 'car2_baggage', 'abel', '22:33'],
-    ['K-26', 'KESSEL JCT POST OFFICE', 'Kessel Junction', '3.6', 'car2_baggage', 'abel', '22:33'],
-    ['P-01', 'ISOLDE FISH MARKET', 'Port Isolde', '12.0', 'car8_mail', 'abel', '22:20'],
-    ['P-02', 'ISOLDE FISH MARKET', 'Port Isolde', '12.0', 'car8_mail', 'abel', '22:20'],
-    ['P-03', 'HOSPITAL OF ST BRIGID', 'Port Isolde', '6.5', 'car8_mail', 'abel', '22:21'],
-    ['P-04', 'ISOLDE CENTRAL POST', 'Port Isolde', '8.2', 'car8_mail', 'abel', '22:22'],
-    ['P-05', 'ISOLDE CENTRAL POST', 'Port Isolde', '7.7', 'car8_mail', 'abel', '22:22'],
-    ['P-06', 'CAFE LIND (FLOWERS)', 'Port Isolde', '5.0', 'car8_mail', 'abel', '22:24'],
+    ['K-21', 'KESSEL JCT POST OFFICE', 'Kessel Junction', '7.5', 'car2_baggage', 'abel', '22:31'],
+    ['K-22', 'KESSEL JCT POST OFFICE', 'Kessel Junction', '6.4', 'car2_baggage', 'abel', '22:31'],
+    ['K-23', 'BRANDVOLD PHARMACY', 'Kessel Junction', '9.0', 'car2_baggage', 'abel', '22:32'],
+    ['K-24', 'KESSEL JCT POST OFFICE', 'Kessel Junction', '5.7', 'car2_baggage', 'abel', '22:32'],
+    ['K-25', 'CUSTOMS OFFICE KESSEL', 'Kessel Junction', '4.0', 'car2_baggage', 'abel', '22:33'],
+    ['K-26', 'KESSEL JCT POST OFFICE', 'Kessel Junction', '7.9', 'car2_baggage', 'abel', '22:33'],
+    ['P-01', 'ISOLDE FISH MARKET', 'Port Isolde', '26.5', 'car8_mail', 'abel', '22:20'],
+    ['P-02', 'ISOLDE FISH MARKET', 'Port Isolde', '26.5', 'car8_mail', 'abel', '22:20'],
+    ['P-03', 'HOSPITAL OF ST BRIGID', 'Port Isolde', '14.3', 'car8_mail', 'abel', '22:21'],
+    ['P-04', 'ISOLDE CENTRAL POST', 'Port Isolde', '18.1', 'car8_mail', 'abel', '22:22'],
+    ['P-05', 'ISOLDE CENTRAL POST', 'Port Isolde', '17.0', 'car8_mail', 'abel', '22:22'],
+    ['P-06', 'CAFE LIND (FLOWERS)', 'Port Isolde', '11.0', 'car8_mail', 'abel', '22:24'],
   ];
-  const SACK_27 = ['K-27', 'R. LOWELL (POSTE RESTANTE)', 'Kessel Junction', '3.1', 'car2_baggage', 'vesna', '00:08'];
+  const SACK_27 = ['K-27', 'R. LOWELL (POSTE RESTANTE)', 'Kessel Junction', '6.8', 'car2_baggage', 'vesna', '00:08'];
   pack.SACK_27 = SACK_27;
-  const mailCsv = (rows) => 'sack,addressee,destination,weight_kg,car,added_by,added\n' + rows.map((r) => r.join(',')).join('\n') + '\n';
+  const mailCsv = (rows) => 'sack,addressee,destination,weight_lb,car,added_by,added\n' + rows.map((r) => r.join(',')).join('\n') + '\n';
 
   /* the recorder's snapshots: every 15 minutes from 23:45 until Rosa unplugs it at Stellmark */
   pack.SNAPSHOTS = ['2345', '0000', '0015', '0030', '0045', '0100', '0115', '0130', '0145', '0200', '0215', '0230', '0245'];
@@ -222,7 +222,7 @@ isolde.rail      10.20.0.6   ${LA.hostFingerprint('10.20.0.6')}
     const S = (p, c, x = {}) => F('/srv/meridian/' + p, c, Object.assign({ mode: 0o664, group: 'crew', mtime: T(19, 40) }, x));
     S('README', `/srv/meridian — the train, as the server sees it
 
-  cars/        one directory per carriage, front to back: status, door, temp
+  cars/        one directory per car, front to back: status, door, temp
   manifest/    who is aboard (passengers.csv) and what (mail.csv)
   pa/          write a line into pa/announce and it goes out on the speakers
   timetable.txt
@@ -233,7 +233,7 @@ dep  Calder Central       23:30
      Ashford Viaduct      00:30   (pass)
      Lake Varn            01:15   (pass)
 arr  Hallin Junction      01:38   dep 01:41
-     Brennholt Pass       02:10   (summit, 1,940 m)
+     Brennholt Pass       02:10   (summit, 6,365 ft)
 arr  Stellmark            02:58   dep 03:02
      Merrow Tunnel        03:30 - 03:52
 arr  Kessel Junction      04:40   dep 04:55   border · customs · mail exchange
@@ -242,14 +242,14 @@ arr  Port Isolde          06:10
 No radio between Calder and the far end of the Merrow Tunnel.
 `, { mode: 0o644 });
     const carInfo = {
-      car1_locomotive: ['LOCOMOTIVE', 'Driver: R. Beltran. Event recorder aboard (snapshots every 15 min).', 'LOCKED', 18.5],
-      car2_baggage: ['BAGGAGE', '', 'LOCKED', 9.0],
-      car3_dining: ['DINING CAR', 'Chef: A. Diallo. Kitchen closed 00:30; coffee all night.', 'CLOSED', 21.0],
-      car4_lounge: ['LOUNGE / OBSERVATION', 'Glass roof. Smoke detector: armed.', 'CLOSED', 20.5],
-      car5_sleeper_a: ['SLEEPER A (cabins A1-A8)', '', 'CLOSED', 21.5],
-      car6_sleeper_b: ['SLEEPER B (cabins B9-B16)', '', 'CLOSED', 21.5],
-      car7_staff: ['STAFF CAR', 'Crew bunks. Server rack 7 (this machine).', 'LOCKED', 22.0],
-      car8_mail: ['MAIL VAN (refrigerated)', 'SEALED by customs at Calder; seal opens at Kessel Junction.\nReefer: +4 C (perishables).\nParcel kiosk: ttyS3.', 'LOCKED', 4.0],
+      car1_locomotive: ['LOCOMOTIVE', 'Driver: R. Beltran. Event recorder aboard (snapshots every 15 min).', 'LOCKED', 65.3],
+      car2_baggage: ['BAGGAGE', '', 'LOCKED', 48.2],
+      car3_dining: ['DINING CAR', 'Chef: A. Diallo. Kitchen closed 00:30; coffee all night.', 'CLOSED', 69.8],
+      car4_lounge: ['LOUNGE / OBSERVATION', 'Glass roof. Smoke detector: armed.', 'CLOSED', 68.9],
+      car5_sleeper_a: ['SLEEPER A (cabins A1-A8)', '', 'CLOSED', 70.7],
+      car6_sleeper_b: ['SLEEPER B (cabins B9-B16)', '', 'CLOSED', 70.7],
+      car7_staff: ['STAFF CAR', 'Crew bunks. Server rack 7 (this machine).', 'LOCKED', 71.6],
+      car8_mail: ['MAIL VAN (refrigerated)', 'SEALED by customs at Calder; seal opens at Kessel Junction.\nReefer: 39 F (perishables).\nParcel kiosk: ttyS3.', 'LOCKED', 39.2],
     };
     CARS.forEach((c, i) => {
       const [name, extra, door, temp] = carInfo[c];
@@ -274,18 +274,18 @@ ${hms(T(23, 38, 4))} ALARM vibration level=3
 ${hms(T(23, 44, 12))} OPEN  card=0201 pin=OK  token=${U.b64encode('witness=0417 reason=fault-check')}
 ${hms(T(23, 47, 40))} CLOSE card=0201
 ${hms(T(0, 12, 5))} OPEN  card=0101 pin=OK  token=${U.b64encode('witness=1105 reason=hourly-check')}
-${hms(T(0, 12, 33))} CHECK contents=MISMATCH weight_expected=4.62kg weight_found=0.31kg
+${hms(T(0, 12, 33))} CHECK contents=MISMATCH weight_expected=10.19lb weight_found=0.68lb
 ${hms(T(0, 12, 40))} CLOSE card=0101
 `, { mode: 0o640, mtime: T(0, 12, 40) });
     fs.put('/srv/meridian/cars/car2_baggage/decoy.jpg', '', { format: 'jpeg', data: { comment: 'Photographed by O. Brandt 00:13 — contents of the Atlas case: Meridian timetable (this season), folded, in conservation tissue', size: '1600x1200' }, mode: 0o644, group: 'crew', mtime: T(0, 13, 10), size: 1311722 });
-    fs.put('/srv/meridian/cars/car2_baggage/certificate', '', { format: 'pdf', data: { title: 'Certificate of Provenance — The Halvard Atlas (1683)', body: 'Lot 112. 41 engraved maps, hand-coloured. Insured value 2,400,000. Conservator: Dr O. Brandt.', pages: 3 }, mode: 0o644, group: 'crew', mtime: T(21, 50), size: 284113 });
+    fs.put('/srv/meridian/cars/car2_baggage/certificate', '', { format: 'pdf', data: { title: 'Certificate of Provenance — The Halvard Atlas (1683)', body: 'Lot 112. 41 engraved maps, hand-colored. Insured value 2,400,000. Conservator: Dr. O. Brandt.', pages: 3 }, mode: 0o644, group: 'crew', mtime: T(21, 50), size: 284113 });
     S('cars/car3_dining/menu.txt', `DINING CAR — LATE MENU
   Mountain bread, salted butter ............ 4
   Fish soup, Port Isolde style ............. 9
   Amadou's stew (ask him what's in it) ..... 11
   Coffee, all night ......................... 2
 `);
-    S('cars/car3_dining/orders.log', `${hms(T(23, 20))} A3   2 x coffee, black          (Mr Marsh: "one for the engineer later")
+    S('cars/car3_dining/orders.log', `${hms(T(23, 20))} A3   2 x coffee, black          (Mr. Marsh: "one for the engineer later")
 ${hms(T(23, 31))} B11  red wine
 ${hms(T(23, 46))} A1   stew
 ${hms(T(0, 20))} A3   1 x coffee, black          (paid cash. changed his coat?)
@@ -359,20 +359,20 @@ fi
     F('/usr/local/bin/kioskmenu', '', { format: 'elf', data: { cmd: 'kioskmenu' }, mode: 0o755 });
     E('systemd/system/doord.service', '[Unit]\nDescription=Meridian door controller\n\n[Service]\nExecStart=/usr/sbin/doord --conf /etc/meridian/doord.conf\nRestart=on-failure\n\n[Install]\nWantedBy=multi-user.target\n');
     E('systemd/system/cctvd.service', '[Unit]\nDescription=Meridian CCTV recorder\n\n[Service]\nExecStart=/usr/sbin/cctvd --conf /etc/meridian/cctv.conf\nRestart=always\n\n[Install]\nWantedBy=multi-user.target\n');
-    E('systemd/system/reefer.service', '[Unit]\nDescription=Mail van refrigeration (car8)\n\n[Service]\nExecStart=/usr/sbin/reefer --car car8_mail --setpoint 4\nRestart=always\n\n[Install]\nWantedBy=multi-user.target\n');
+    E('systemd/system/reefer.service', '[Unit]\nDescription=Mail van refrigeration (car8)\n\n[Service]\nExecStart=/usr/sbin/reefer --car car8_mail --setpoint 39\nRestart=always\n\n[Install]\nWantedBy=multi-user.target\n');
     fs.link('/etc/systemd/system/multi-user.target.wants/cctvd.service', '/etc/systemd/system/cctvd.service');
     fs.link('/etc/systemd/system/multi-user.target.wants/reefer.service', '/etc/systemd/system/reefer.service');
 
     /* ================= the cameras (and the disk they fill) ================= */
     D('/var/lib/cctv', { mode: 0o755, owner: 'cctv', group: 'cctv' });
     const comments = {
-      2336: 'CAM2 23:36:30 baggage car - 1 person: adult male, tall, grey overcoat; at safe',
-      2338: 'CAM2 23:38:04 baggage car - 1 person: adult male, grey overcoat; hand on safe door',
-      2340: 'CAM2 23:40:00 baggage car - 1 person: adult male, grey overcoat; seated on mail sacks',
-      2342: 'CAM2 23:42:55 baggage car - 2 persons: staff (orange hi-vis), adult male (grey overcoat)',
-      2344: 'CAM2 23:44:12 baggage car - 2 persons: staff (orange hi-vis) at safe keypad, safe OPEN; adult male (grey overcoat) beside her, holding flat case',
-      2346: 'CAM2 23:46:20 baggage car - 2 persons: staff closing safe; adult male (grey overcoat) at mail sacks K-21..K-26',
-      2348: 'CAM2 23:48:00 baggage car - 2 persons: adult male (grey overcoat) pointing toward rear of train',
+      2336: 'CAM2 23:36:30 baggage car - 1 person: adult male, tall, gray overcoat; at safe',
+      2338: 'CAM2 23:38:04 baggage car - 1 person: adult male, gray overcoat; hand on safe door',
+      2340: 'CAM2 23:40:00 baggage car - 1 person: adult male, gray overcoat; seated on mail sacks',
+      2342: 'CAM2 23:42:55 baggage car - 2 persons: staff (orange hi-vis), adult male (gray overcoat)',
+      2344: 'CAM2 23:44:12 baggage car - 2 persons: staff (orange hi-vis) at safe keypad, safe OPEN; adult male (gray overcoat) beside her, holding flat case',
+      2346: 'CAM2 23:46:20 baggage car - 2 persons: staff closing safe; adult male (gray overcoat) at mail sacks K-21..K-26',
+      2348: 'CAM2 23:48:00 baggage car - 2 persons: adult male (gray overcoat) pointing toward rear of train',
       2350: 'CAM2 23:50:40 baggage car - 2 persons leaving toward car3',
     };
     const frame = (hhmm) => ({ format: 'jpeg', data: { comment: comments[hhmm] || `CAM2 ${String(hhmm).padStart(4, '0').replace(/(..)(..)/, '$1:$2')}:00 baggage car - ${hhmm >= 2352 || hhmm < 1200 ? '0 persons' : '0 persons; safe closed'}`, size: '1280x720' }, size: 1180000 + (hhmm % 97) * 1301 });
@@ -438,9 +438,9 @@ alias grep='grep --color=auto'
     D('/home/vesna', { owner: 'vesna', group: 'vesna', mode: 0o700, mtime: T(0, 9, 55) });
     const V = (p, c, x = {}) => F('/home/vesna/' + p, c, Object.assign({ owner: 'vesna', group: 'vesna', mode: 0o600, mtime: T(21, 10) }, x));
     V('notes.txt', `tonight — 1N47
-- atlas in the car2 safe. conservator Dr Brandt (A5) holds the PIN.
+- atlas in the car2 safe. conservator Dr. Brandt (A5) holds the PIN.
 - escort: L. Marsh, "Arden Mutual". turned up at 22:40 with a letter saying
-  the real escort, a Mr Vos, was ill and he'd been sent instead. Abel
+  the real escort, a Mr. Vos, was ill and he'd been sent instead. Abel
   issued him 0417 (car2 only, until 06:30).
 - Marsh asked me three things before we left Calder:
     which car the Kessel mail sacks ride in          (car2, with the safe)
@@ -480,9 +480,9 @@ exit
     D('/home/abel', { owner: 'abel', group: 'crew', mode: 0o750 });
     F('/home/abel/cards_issued.txt', `TEMPORARY CARDS — 1N47
 22:41  0417  L. MARSH, Arden Mutual — escort for the Halvard Atlas (car2 only, until 06:30)
-             (said Mr P. Vos was taken ill; produced a letter on Arden paper signed "P. Vos")
+             (said Mr. P. Vos had fallen ill; produced a letter on Arden paper signed "P. Vos")
 `, { owner: 'abel', group: 'crew', mode: 0o640, mtime: T(22, 42) });
-    F('/home/abel/kessel_mail.txt', 'KESSEL MAIL — handed over at Kessel Junction\nsacks K-21 to K-26 · 6 sacks · 18.4 kg total · checked and signed A.O. 22:34\n', { owner: 'abel', group: 'crew', mode: 0o640, mtime: T(22, 34) });
+    F('/home/abel/kessel_mail.txt', 'KESSEL MAIL — handed over at Kessel Junction\nsacks K-21 to K-26 · 6 sacks · 40.5 lb total · checked and signed A.O. 22:34\n', { owner: 'abel', group: 'crew', mode: 0o640, mtime: T(22, 34) });
     D('/home/rosa', { owner: 'rosa', group: 'rosa', mode: 0o750 });
     D('/home/amadou', { owner: 'amadou', group: 'amadou', mode: 0o750 });
     D('/var/lib/kiosk', { owner: 'kiosk', group: 'kiosk', mode: 0o750 });
@@ -558,7 +558,7 @@ sleep 3600
     P({ pid: 602, user: 'root', comm: 'doord', args: '/usr/sbin/doord --conf /etc/meridian/doord.conf', stat: 'Ss', start: w.bootTime + 4000, service: 'doord', onKill: 'serviceDied' });
     w.reap(602);
     P({ pid: 611, user: 'cctv', comm: 'cctvd', args: '/usr/sbin/cctvd --conf /etc/meridian/cctv.conf', stat: 'Ssl', cpu: 3.1, mem: 4.2, vsz: 412000, rss: 86000, start: w.bootTime + 5000, cputime: 1900, service: 'cctvd', onKill: 'serviceDied' });
-    P({ pid: 623, user: 'root', comm: 'reefer', args: '/usr/sbin/reefer --car car8_mail --setpoint 4', stat: 'Ss', cpu: 0.4, start: w.bootTime + 5200, service: 'reefer', onKill: 'serviceDied' });
+    P({ pid: 623, user: 'root', comm: 'reefer', args: '/usr/sbin/reefer --car car8_mail --setpoint 39', stat: 'Ss', cpu: 0.4, start: w.bootTime + 5200, service: 'reefer', onKill: 'serviceDied' });
     P({ pid: 640, user: 'root', comm: 'safed', args: '/usr/sbin/safed', stat: 'Ss', start: w.bootTime + 5400 });
     P({ pid: 2071, ppid: 1, user: 'root', comm: 'hold.sh', args: '/bin/bash /tmp/.t/hold.sh', stat: 'S', start: T(0, 6, 2), cputime: 2, onKill: 'holdDied' });
     P({ pid: 2140, user: 'root', comm: 'login', args: '/bin/login -p --', tty: 'ttyS3', stat: 'Ss', start: T(0, 11, 2) });
@@ -566,7 +566,7 @@ sleep 3600
     w.nextPid = 2301;
     svc('doord', { desc: 'Meridian door controller', unit: '/etc/systemd/system/doord.service', active: false, enabled: false, since: T(0, 6, 31), comm: 'doord', exec: '/usr/sbin/doord --conf /etc/meridian/doord.conf', memory: '2.2M', cpuStr: '3.010s', onStart: 'doordStarted' });
     svc('cctvd', { desc: 'Meridian CCTV recorder', unit: '/etc/systemd/system/cctvd.service', mainPid: 611, restart: 'always', comm: 'cctvd', exec: '/usr/sbin/cctvd --conf /etc/meridian/cctv.conf', user: 'cctv', memory: '84.0M', cpuStr: '31min 40.112s' });
-    svc('reefer', { desc: 'Mail van refrigeration (car8)', unit: '/etc/systemd/system/reefer.service', mainPid: 623, restart: 'always', comm: 'reefer', exec: '/usr/sbin/reefer --car car8_mail --setpoint 4', memory: '1.0M', cpuStr: '40.020s' });
+    svc('reefer', { desc: 'Mail van refrigeration (car8)', unit: '/etc/systemd/system/reefer.service', mainPid: 623, restart: 'always', comm: 'reefer', exec: '/usr/sbin/reefer --car car8_mail --setpoint 39', memory: '1.0M', cpuStr: '40.020s' });
     w.log('meridian', 'systemd', 1, 'Started doord.service - Meridian door controller.', 'doord', true, w.bootTime + 4000);
     w.log('meridian', 'doord', 602, 'loaded 8 doors from /etc/meridian/doord.conf', 'doord', true, w.bootTime + 4100);
     w.log('meridian', 'doord', 602, 'departure: car doors to travel mode', 'doord', true, T(23, 30));
@@ -686,7 +686,7 @@ Nobody is a hero at five in the morning.
     return w;
   };
 
-  /* non-serialised data: the network, which depends on whether the radio link is up */
+  /* non-serialized data: the network, which depends on whether the radio link is up */
   pack.worldStatic = function (w) {
     const radio = !!w.flags.radio;
     /* dates on the outside world's pages follow the story's night, whatever day the game was started */
@@ -694,7 +694,7 @@ Nobody is a hero at five in the morning.
     const eve = new Date(T(18, 5));
     const nth = (d) => d + (d % 10 === 1 && d !== 11 ? 'st' : d % 10 === 2 && d !== 12 ? 'nd' : d % 10 === 3 && d !== 13 ? 'rd' : 'th');
     const sale = new Date(eve.getTime() + 4 * 86400000);
-    const dm = (d) => `${d.getDate()} ${U.MON[d.getMonth()]}`;
+    const dm = (d) => `${U.MON[d.getMonth()]} ${d.getDate()}`;
     const m = w.hosts.meridian;
     m.ifaces = [
       { name: 'eth0', ip: '10.8.0.1', prefix: 24, mac: '52:54:00:8a:14:01', up: true, brd: '10.8.0.255' },
@@ -719,22 +719,22 @@ Nobody is a hero at five in the morning.
         '/lots/halvard-atlas': { body: `HALLOWAY & PENN — SALE OF FINE MAPS · PORT ISOLDE · ${dm(sale).toUpperCase()}
 
 LOT 112   THE HALVARD ATLAS (1683)
-          41 engraved maps, hand-coloured. Estimate on request.
+          41 engraved maps, hand-colored. Estimate on request.
 
 IN TRANSIT
 The atlas travels to Port Isolde aboard the Meridian sleeper (1N47) on the
-night of the ${nth(eve.getDate())}, in the custody of Dr Ottilie Brandt, conservator, and
+night of the ${nth(eve.getDate())}, in the custody of Dr. Ottilie Brandt, conservator, and
 accompanied by the insurer's escort:
 
-    Mr Pieter Vos, Arden Mutual (escort licence AM-2291)
+    Mr. Pieter Vos, Arden Mutual (escort license AM-2291)
 
-Update, ${dm(eve)}, 18:05: Arden Mutual confirm that Mr Vos is unwell and will
-NOT be travelling. Arden are not sending a substitute; Dr Brandt will travel
+Update, ${dm(eve)}, 18:05: Arden Mutual confirms that Mr. Vos is unwell and will
+NOT be traveling. Arden is not sending a substitute; Dr. Brandt will travel
 alone and the train crew have been informed.        (Arden Mutual, claims desk)
 
 Photograph of the escort for the crew: /lots/halvard-atlas/escort.jpg
 ` },
-        '/lots/halvard-atlas/escort.jpg': { type: 'image/jpeg', body: '', binary: { format: 'jpeg', data: { comment: 'Pieter Vos, Arden Mutual escort AM-2291 — 1.66 m, bald, glasses, 61 years old', size: '600x800' } } },
+        '/lots/halvard-atlas/escort.jpg': { type: 'image/jpeg', body: '', binary: { format: 'jpeg', data: { comment: 'Pieter Vos, Arden Mutual escort AM-2291 — 5 ft 5 in, bald, glasses, 61 years old', size: '600x800' } } },
         '/robots.txt': { body: 'User-agent: *\nDisallow: /staff/\n' },
         '/staff': { body: 'HALLOWAY & PENN — STAFF NOTICES\n\n* The coffee machine is not broken, it is "descaling". It has been descaling since March.\n* Whoever keeps bidding on lot 112 from the office computer as a joke: we can see you, Gerald.\n' },
       },

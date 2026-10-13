@@ -166,7 +166,7 @@ Named like housekeeping. Narrow enough that nobody would look twice: one command
         setup: (g) => LA.stories.rootfall.plugBackup(g),
         say: N`Now — your backups. The tip said the Undercroft disk is called **sdb**. But it isn't in the city at all.
 
-@Juno: (holding up a grey disk in an anti-static bag) You gave me this at twenty to three that night. Said *keep it in your drawer, off the city, whatever happens*. Then you walked off toward the Docks.
+@Juno: (holding up a gray disk in an anti-static bag) You gave me this at twenty to three that night. Said *keep it in your drawer, off the city, whatever happens*. Then you walked off toward the Docks.
 She plugs it in. «lsblk» lists every disk and partition attached to the city.`,
         goal: 'List the city\'s disks: «lsblk»',
         hints: ['Type: «lsblk»'],
@@ -203,7 +203,7 @@ Tux presses his beak against the screen at the last one.`,
     ],
     outro: N`Lethe is stopped, disabled, and its alarm clock is gone. Unless Hollow has another way back in, three o'clock tonight will pass without a sweep.
 
-That *unless* sits in your stomach. Juno is watching the Power Station; Mara is combing the logs for any login she doesn't recognise. For now, the city is safe enough to breathe.
+That *unless* sits in your stomach. Juno is watching the Power Station; Mara is combing the logs for any login she doesn't recognize. For now, the city is safe enough to breathe.
 
 And below the city, the Undercroft door stands open. Whatever you saved down there that night is waiting.`,
   });

@@ -90,7 +90,7 @@ async function main() {
     if (at(game, 9, 'Find the rule') && once('sudoers')) {
       expect('ch9: the crontab job relies on a planted passwordless sudo rule', /NOPASSWD: \/usr\/bin\/systemctl start lethe/.test(game.fs.contentOf(game.fs.get('/etc/sudoers.d/90-lethe-watchdog'))) && /sudo -n/.test(game.fs.contentOf(game.fs.get('/var/spool/cron/crontabs/hollow'))));
     }
-    if (at(game, 10, 'Practise on a small file') && once('zcat')) {
+    if (at(game, 10, 'Practice on a small file') && once('zcat')) {
       const f = await fork(game);
       const r = await f.run(['gzip /var/tmp/evidence.txt', 'gunzip /var/tmp/evidence.txt.gz']);
       expect('ch10: compressing and decompressing without looking inside (no zcat) does not count', !r.advanced, r.out);

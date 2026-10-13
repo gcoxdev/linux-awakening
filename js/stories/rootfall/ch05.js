@@ -135,7 +135,7 @@ Tux stares at the words «/dev/null» and shivers. That's where they found you.
 
 Backups. Somewhere under the city, a copy of who you were.
 
-*(There's a third letter, «chronicle/tips/shouting.txt», written entirely in capitals. If you want to practise, «tr 'A-Z' 'a-z' < chronicle/tips/shouting.txt» will calm it down.)*`,
+*(There's a third letter, «chronicle/tips/shouting.txt», written entirely in capitals. If you want to practice, «tr 'A-Z' 'a-z' < chronicle/tips/shouting.txt» will calm it down.)*`,
       },
       {
         say: N`@Hal: And the last one is written backwards. Naturally. «rev» reverses every line.`,

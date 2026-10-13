@@ -455,7 +455,7 @@
   }
   LA.VFS = VFS;
 
-  /* ---------- serialisation ---------- */
+  /* ---------- serialization ---------- */
   VFS.serialize = function ser(n, skip) {
     const o = { t: n.type[0], n: n.name, m: n.mode, o: n.owner, g: n.group, mt: n.mtime };
     if (n.immutable) o.i = 1;

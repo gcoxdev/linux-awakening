@@ -36,7 +36,7 @@ The air is cold and smells of old disks. Your own handwriting is on a label by t
 «gzip /var/tmp/evidence.txt»  — squeezes it, replacing it with «evidence.txt.gz»
 «zcat /var/tmp/evidence.txt.gz | head -3» — reads it without unpacking
 «gunzip /var/tmp/evidence.txt.gz» — back to normal`,
-        goal: 'Practise on a small file: «gzip» it, read it with «zcat», then «gunzip» it',
+        goal: 'Practice on a small file: «gzip» it, read it with «zcat», then «gunzip» it',
         hints: ['Three commands, in order: «gzip /var/tmp/evidence.txt», «zcat /var/tmp/evidence.txt.gz | head -3», «gunzip /var/tmp/evidence.txt.gz»'],
         check: (e) => e.stepRan('gzip') && e.stepRan('zcat') && e.stepRan('gunzip') && !!e.node('/var/tmp/evidence.txt'),
         nudge: (e) => (e.stepRan('gunzip') && !e.stepRan('zcat') ? 'Back to compressed and peek inside first: «gzip» it again, then «zcat» it, then «gunzip».' : null),
@@ -150,7 +150,7 @@ You didn't fail because you were careless. You failed because you checked the pl
         hints: ['Type: «cd ~/inbox» then «unzip evidence.zip»'],
         check: (e) => !!e.node(e.home + '/inbox/hollow_key.pub'),
         solve: ['cd ~/inbox', 'unzip evidence.zip'],
-        done: N`«hollow_key.pub» — a public SSH key, labelled «hollow@nowhere» (a label anyone could type). «note.b64» — a note written in a jumble of letters and digits. And a README.`,
+        done: N`«hollow_key.pub» — a public SSH key, labeled «hollow@nowhere» (a label anyone could type). «note.b64» — a note written in a jumble of letters and digits. And a README.`,
       },
       {
         say: N`Mara's note is **base64**: a way of writing any data using only letters, digits, «+» and «/». It's not encryption — anyone can decode it with «base64 -d».`,
@@ -175,7 +175,7 @@ How the key trick works: **authorized_keys** lists *public* keys. Anyone holding
         hints: ['Never redirect a file into itself — «> same-file» empties it before grep reads it. Go via a temporary file.', 'Type: «grep -v hollow ~/.ssh/authorized_keys > ~/keys.tmp && mv ~/keys.tmp ~/.ssh/authorized_keys»', 'If your own key line went missing too, it\'s in «~/.ssh/id_ed25519.pub»: «cat ~/.ssh/id_ed25519.pub >> ~/.ssh/authorized_keys»'],
         check: (e) => { const t = e.read(e.home + '/.ssh/authorized_keys') || ''; return !t.includes('hollow') && t.includes(e.game.user + '@rootfall'); },
         solve: ['grep -v hollow ~/.ssh/authorized_keys > ~/keys.tmp && mv ~/keys.tmp ~/.ssh/authorized_keys'],
-        done: N`«cat ~/.ssh/authorized_keys» shows one line now: your own key. And since you changed your password with Mara, the rumour Ingrid sold is worthless too. Your door is yours.`,
+        done: N`«cat ~/.ssh/authorized_keys» shows one line now: your own key. And since you changed your password with Mara, the rumor Ingrid sold is worthless too. Your door is yours.`,
       },
     ],
     outro: N`So that's how he got in: a stolen copy of Wren's key to reach the Lighthouse, a password everyone could guess to reach you — and then his own key, planted in both places so he'd never need either again.

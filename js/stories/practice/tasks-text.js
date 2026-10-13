@@ -32,7 +32,7 @@
     solution: ['grep -c WARN ~/logs/app.log'],
   });
   T({
-    id: 'grep-i', topic: 'text', level: 1, cmds: ['grep'], title: 'Any capitalisation',
+    id: 'grep-i', topic: 'text', level: 1, cmds: ['grep'], title: 'Any capitalization',
     setup(t) { const w = t.word(); const lines = []; let n = 0; for (let i = 0; i < 30; i++) { const hit = t.chance(0.3); const form = t.pick([w, w.toUpperCase(), w[0].toUpperCase() + w.slice(1)]); lines.push(hit ? `the ${form} report, part ${i}` : `nothing to see on line ${i}`); if (hit) n++; } if (!n) { lines.push(`the ${w} report`); } t.file('~/notes.txt', lines); return { w, want: lines.filter((l) => l.toLowerCase().includes(w)) }; },
     prompt: (x) => `Show every line in «~/notes.txt» that mentions «${x.w}» — in any mix of upper and lower case.`,
     check: (e, x) => sameSet(e.shownLines(), x.want),

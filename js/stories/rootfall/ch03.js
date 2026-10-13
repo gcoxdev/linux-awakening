@@ -109,7 +109,7 @@ A broad woman in a fisherman's sweater waves you over to an empty patch of cobbl
 --------------------------------
 Sold to:  "H."  (wore a hood; paid in other people's memories)
 Items:    1 x copy of a private key file  (marked: wren@lighthouse)
-          1 x rumour: "the Operator's password is the penguin's
+          1 x rumor: "the Operator's password is the penguin's
               name and the year the city was founded"
           1 x tin of blank paint
 Note from the stallholder, added later, underlined twice:
@@ -119,7 +119,7 @@ Note from the stallholder, added later, underlined twice:
         say: N`Ingrid hesitates, then tips a crate out onto your stall: crumpled papers, scraps, junk.
 
 @Ingrid: These fell out of your pockets when they carried you past the market three nights ago. I kept them. Didn't know why.
-@Ingrid: Get organised. «mkdir -p» makes a whole path of directories in one go, parents and all.`,
+@Ingrid: Get organized. «mkdir -p» makes a whole path of directories in one go, parents and all.`,
         goal: 'Make a nested directory: «mkdir -p memories/fragments»',
         hints: ['«-p» creates any missing parent directories too.', 'Type: «mkdir -p memories/fragments»'],
         check: (e) => { const n = e.node(CAMP + '/memories/fragments'); return !!n && n.type === 'dir'; },

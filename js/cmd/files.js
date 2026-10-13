@@ -389,7 +389,7 @@
         if (abs === '/' && rec) {
           if (ctx.game) ctx.game.secret('nice_try');
           if (!o.N) ctx.err.write("rm: it is dangerous to operate recursively on '/'\nrm: use --no-preserve-root to override this failsafe\n");
-          else ctx.err.write(LA.paint(LA.ansi.byellow, LA.flavor('rmRoot', 'rm: operation cancelled. Not today.')) + '\n');
+          else ctx.err.write(LA.paint(LA.ansi.byellow, LA.flavor('rmRoot', 'rm: operation canceled. Not today.')) + '\n');
           st = 1;
           continue;
         }

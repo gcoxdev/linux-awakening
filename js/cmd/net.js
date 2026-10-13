@@ -411,7 +411,7 @@ Host key verification failed.
         ctx.println(out);
         return 0;
       }
-      if ('neighbour'.startsWith(obj) || obj === 'n') { ctx.println(ctx.host.neigh || `${net24}.1 dev eth0 lladdr 52:54:00:00:00:01 REACHABLE`); return 0; }
+      if ('neighbor'.startsWith(obj) || 'neighbour'.startsWith(obj) || obj === 'n') { ctx.println(ctx.host.neigh || `${net24}.1 dev eth0 lladdr 52:54:00:00:00:01 REACHABLE`); return 0; }
       ctx.err.write(`Object "${obj}" is unknown, try "ip help".\n`);
       return 1;
     },

@@ -17,9 +17,9 @@
 
   const pack = LA.defineStory('nighttrain', {
     title: 'Night Train',
-    tagline: 'A priceless atlas vanished at midnight. So did your mentor. You have until the border.',
-    blurb: 'Your first night as the systems engineer on the Meridian sleeper. Somewhere between Calder and the mountains, the Halvard Atlas disappears from the baggage-car safe — and Vesna, the engineer who trained you, is nowhere on the train. Everything the train knows is on one server. A fast-moving mystery in fourteen stops.',
-    pace: 'Fast pace · more hands-on',
+    tagline: 'A priceless atlas vanished at midnight. So did your mentor.',
+    blurb: 'A fast-moving mystery on a sleeper train, with fourteen stops until the border.',
+    pace: 'Fast pace',
     accent: '#fbbf24',
     cardArt: String.raw`  ____________   ____________   ____________
  |[] [] [] [] | |[] [] [] [] | |  MERIDIAN  |>
@@ -38,7 +38,7 @@
       lines: [
         ['MERIDIAN ONBOARD SYSTEMS — rack 7, staff car', 'fg-k2'],
         ['Train ............................... 1N47 Calder → Port Isolde', ''],
-        ['Position ............................ km 41, climbing', ''],
+        ['Position ............................ mile 25, climbing', ''],
         ['Doors ............................... 23 locked, 9 closed', ''],
         ['Radio link .......................... NO SIGNAL (mountains)', ''],
         ['Baggage car safe .................... ', ''],
@@ -63,7 +63,7 @@ Type your name and press **Enter**. It becomes your **username** on the train's 
 
     secrets: {
       choo_choo: ['All Aboard', 'Ran the steam locomotive'],
-      ghost_car: ['The Ninth Carriage', 'Found the carriage that isn\'t on the timetable'],
+      ghost_car: ['The Ninth Car', 'Found the car that isn\'t on the timetable'],
       stew: ['Family Recipe', 'Read Amadou\'s grandmother\'s stew'],
       guestbook: ['Wish You Were Here', 'Signed the lounge guestbook'],
       whistle: ['Two Short, One Long', 'Asked Rosa for the whistle'],
@@ -82,7 +82,7 @@ Type your name and press **Enter**. It becomes your **username** on the train's 
       items: {
         decoy: 'The Decoy in the Safe',
         fault: 'The 23:38 Fault',
-        witness: 'A Man in a Grey Coat',
+        witness: 'A Man in a Gray Coat',
         edited: 'Edited After Midnight',
         card0417: 'Card 0417',
         history: 'Commands She Never Typed',
@@ -100,7 +100,7 @@ Type your name and press **Enter**. It becomes your **username** on the train's 
     flavor: {
       rmGuard: 'June grabs your wrist before you can press Enter.',
       rmGuardWhy: 'the train runs on it',
-      rmRoot: 'June yanks the keyboard cable out of the rack, then plugs it back in, glaring.\nrm: operation cancelled. "You don\'t pull the emergency brake to see what happens," she says.',
+      rmRoot: 'June yanks the keyboard cable out of the rack, then plugs it back in, glaring.\nrm: operation canceled. "You don\'t pull the emergency brake to see what happens," she says.',
       killSelf: 'June puts her hand flat over the keyboard. "That\'s your own shell. Kill it and you\'re logged out of the whole train."',
       forkBomb: 'June reads it, goes pale, and deletes it character by character.',
       emacs: '(June: "Vesna says Emacs is a fine operating system lacking a decent editor. Use nano.")',

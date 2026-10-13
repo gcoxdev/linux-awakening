@@ -8,7 +8,7 @@
   const rootCron = (e) => LA.cronSpool(e.world) + '/root';
 
   pack.add({
-    n: 9, id: 'mailvan', title: 'The Mail Van', place: 'km 160 · descending', clock: [1, 2, 33],
+    n: 9, id: 'mailvan', title: 'The Mail Van', place: 'mile 99 · descending', clock: [1, 2, 33],
     unlocks: ['systemctl', 'journalctl', 'pkill', 'crontab', 'watch', 'free', 'uname', 'apt'],
     intro: N`Over the top. The train tips forward into the long descent toward Stellmark and the brakes begin their steady, grinding hum.
 
@@ -154,7 +154,7 @@ It's coming up to quarter to three.`,
 @Vesna: Never «crontab -r» in a hurry, by the way. It deletes the *whole* table, without asking, and «r» is right next to «e».`,
       },
       {
-        say: N`@Vesna: Humour me. Watch the clock go past 02:55 and make sure nothing happens to those camera stills.
+        say: N`@Vesna: Humor me. Watch the clock go past 02:55 and make sure nothing happens to those camera stills.
 «watch» re-runs a command every few seconds and shows the result full-screen. Quote the command if it has a pipe in it. **Ctrl+C** stops watching.`,
         goal: 'Watch the stills count: «watch -n 5 \'ls /var/lib/cctv/car2 | wc -l\'», then Ctrl+C',
         hints: ["Type «watch -n 5 'ls /var/lib/cctv/car2 | wc -l'».", 'When you\'ve seen enough, press Ctrl+C.'],
@@ -163,7 +163,7 @@ It's coming up to quarter to three.`,
         done: N`The number doesn't change. 02:55 comes and goes and nothing happens, which is the most satisfying nothing you've ever seen.`,
       },
       {
-        say: N`@Vesna: (her colour coming back) Right. Abel wants a line on the state of this machine for his report. «free -h» shows memory in human units; «uname -a» names the kernel and system.`,
+        say: N`@Vesna: (her color coming back) Right. Abel wants a line on the state of this machine for his report. «free -h» shows memory in human units; «uname -a» names the kernel and system.`,
         goal: 'Run «free -h», then «uname -a»',
         hints: ['«free -h»', 'then «uname -a»'],
         check: (e) => e.stepRan('free') && e.stepRan('uname'),
@@ -177,7 +177,7 @@ Software comes in **packages**, and this machine's package manager is «{pm}»: 
         hints: ['«{pkg:refresh}»', '«{pkg:install htop}» (if it asks whether to go ahead, answer «y»)', 'then «htop» — q quits.'],
         check: (e) => e.world.packages.installed.includes('htop') && !!e.stepEvent('top'),
         solve: ['{pkg:refresh}', '$PW', '{pkg:install htop}', '$PW', { answer: 'y' }, 'htop'],
-        done: N`Colour bars for each CPU, both nearly idle. June wants to know what every number means; Vesna, to everyone's surprise, tells her.
+        done: N`Color bars for each CPU, both nearly idle. June wants to know what every number means; Vesna, to everyone's surprise, tells her.
 
 :::lesson
 {pkg:lesson} Tonight's packages come from a cache on the train itself — there's no outside signal until the Merrow Tunnel.

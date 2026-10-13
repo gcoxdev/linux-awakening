@@ -7,7 +7,7 @@
   LA.now = () => Date.now() + LA.clockOffset;
   LA.timeScale = 1; // tests set this to 0 so sleeps/pings are instant
 
-  /* ---------- ANSI colour helpers ---------- */
+  /* ---------- ANSI color helpers ---------- */
   const E = '\x1b[';
   const ansi = {
     reset: E + '0m', bold: E + '1m', dim: E + '2m', italic: E + '3m', under: E + '4m', rev: E + '7m',

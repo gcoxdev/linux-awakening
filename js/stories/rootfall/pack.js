@@ -16,8 +16,8 @@
   const pack = LA.defineStory('rootfall', {
     title: 'Rootfall',
     tagline: 'Wake in a city that is a filesystem — and find out who made it forget.',
-    blurb: 'You wake in St. Inode\'s Hospital with no memory, in a city whose streets are directories. A slow, gentle mystery with a penguin, a stolen password and a sweeper that erases more than it should.',
-    pace: 'Gentle pace · thorough lessons',
+    blurb: 'A gentle mystery with a penguin, a stolen password and a sweeper that erases too much.',
+    pace: 'Gentle pace',
     cardArt: String.raw`        _    |~|     ___         _
   ____ | |___| |____|   |__ /\  | |___
  | [] || [] [] [] [] |[]| [] ||[]|| [] |
@@ -65,7 +65,7 @@ Type your name and press **Enter**. It becomes your **username** in Rootfall, so
       arcade: ['Insert Coin', 'Found the hidden arcade'],
       choo_choo: ['Choo Choo', 'Rode the steam locomotive'],
       moo: ['Super Cow Powers', 'Heard the cow'],
-      fortune: ['Fortune Favours the Curious', 'Opened a fortune cookie'],
+      fortune: ['Fortune Favors the Curious', 'Opened a fortune cookie'],
       vim_exit: ['Escape Artist', 'Got out of vim alive'],
       nice_try: ['Nice Try', 'Tried to delete the whole city'],
       fork_bomb: ['Bomb Squad', 'Typed the forbidden fork bomb'],
@@ -91,7 +91,7 @@ Type your name and press **Enter**. It becomes your **username** in Rootfall, so
     flavor: {
       rmGuard: 'Tux plants himself on the Enter key and refuses to move.',
       rmGuardWhy: 'the city stands on it',
-      rmRoot: 'Tux launches himself across the keyboard and the command dies mid-keystroke.\nrm: operation cancelled by a very brave penguin',
+      rmRoot: 'Tux launches himself across the keyboard and the command dies mid-keystroke.\nrm: operation canceled by a very brave penguin',
       killSelf: 'Tux grabs your sleeve. Killing your own shell would log you out of Rootfall entirely. Let\'s not.',
       forkBomb: 'Tux seizes the power cable in his beak and glares at you.',
       emacs: '(Tux shudders. Some wars are best not restarted. Try nano.)',

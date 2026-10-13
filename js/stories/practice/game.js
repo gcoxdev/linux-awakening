@@ -33,14 +33,14 @@
   P.cmdsOf = (t, id) => { const D = LA.distro(id); return t.cmds.map((c) => (c === 'PM' ? D.pm : c === 'LOWPM' ? D.lowPm : c)); };
   P.tasksFor = (id) => P.tasks.filter((t) => !t.distros || t.distros.includes(LA.distro(id).id));
 
-  const RANKS = [[0, 'Intern'], [100, 'Junior Admin'], [300, 'Admin'], [700, 'Sysadmin'], [1500, 'Senior Sysadmin'], [3000, 'Shell Wizard'], [6000, 'Greybeard']];
+  const RANKS = [[0, 'Intern'], [100, 'Junior Admin'], [300, 'Admin'], [700, 'Sysadmin'], [1500, 'Senior Sysadmin'], [3000, 'Shell Wizard'], [6000, 'Graybeard']];
   const XP = [0, 10, 20, 35, 60];
   const STARS = (n) => '★'.repeat(n) + '☆'.repeat(4 - n);
   P.XP = XP;
   P.rankOf = (xp) => { let r = RANKS[0]; for (const x of RANKS) if (xp >= x[0]) r = x; return r; };
   P.nextRank = (xp) => RANKS.find((x) => x[0] > xp) || null;
   /* how well you know a command, from what you actually ran in tasks you solved:
-     1 tried (even with the answer shown) · 2 practised (3 unaided uses) · 3 mastered (6 unaided uses, in 3+ different tasks) */
+     1 tried (even with the answer shown) · 2 practiced (3 unaided uses) · 3 mastered (6 unaided uses, in 3+ different tasks) */
   P.masteryLevel = (st, c) => {
     const n = (st.mastery && st.mastery[c]) || 0;
     const tasks = ((st.masteryTasks && st.masteryTasks[c]) || []).length;
@@ -222,7 +222,7 @@
       if (due) { st.review = st.review.filter((r) => r !== due); return pool.find((t) => t.id === due.id); }
       const fresh = pool.filter((t) => !st.recent.includes(t.id));
       const from = fresh.length ? fresh : pool;
-      /* favour tasks you haven't solved on your own, and commands you rarely use */
+      /* favor tasks you haven't solved on your own, and commands you rarely use */
       const weight = (t) => 1 + (st.independent[t.id] ? 0 : 2) + P.cmdsOf(t, this.distroId).filter((c) => P.masteryLevel(st, c) < 3).length * 0.5;
       const total = from.reduce((a, t) => a + weight(t), 0);
       let r = Math.random() * total;
@@ -413,7 +413,7 @@
         } else st.assistedUse[c] = (st.assistedUse[c] || 0) + 1;
       }
       let msg = `:::complete\n✓ SOLVED${gained ? `  +${gained} XP` : ' — with the answer shown, so no XP; it will come back later with new data'}${unaided && st.streak > 1 ? `  ·  streak ${st.streak}` : ''}\n:::`;
-      if (used.length) msg += `\nPractised: ${used.map((c) => `«${c}»`).join(' ')}`;
+      if (used.length) msg += `\nPracticed: ${used.map((c) => `«${c}»`).join(' ')}`;
       const sol = this.solutionLines();
       if (sol.length) msg += `\nOne way to do it:\n:::art\n${sol.join('\n')}\n:::`;
       const why = this.f(tpl.why);
@@ -581,7 +581,7 @@
       const a = (ctx.args[0] || '').toLowerCase();
       if (!a) {
         ctx.println(`Current topic: ${this.state.topic}. Choose one with «topic NAME»:`);
-        ctx.println('  mix        everything, weighted toward what you practise least');
+        ctx.println('  mix        everything, weighted toward what you practice least');
         for (const [id, label, ex] of P.TOPICS) ctx.println(`  ${U.padR(id, 10)} ${U.padR(label, 26)} ${LA.paint(A.gray, ex)}`);
         return 0;
       }
@@ -622,7 +622,7 @@
       }
       const cmds = P.allCommands(this.distroId);
       const lv = (n) => cmds.filter((x) => P.masteryLevel(st, x) >= n).length;
-      ctx.println(`\n${c(A.bcyan, 'COMMANDS')} ${lv(1)}/${cmds.length} tried · ${lv(2)} practised · ${lv(3)} mastered (see «notebook»)`);
+      ctx.println(`\n${c(A.bcyan, 'COMMANDS')} ${lv(1)}/${cmds.length} tried · ${lv(2)} practiced · ${lv(3)} mastered (see «notebook»)`);
       ctx.println(`\n${c(A.bcyan, 'BADGES')} ${st.badges.length}/${Object.keys(P.BADGES).length}`);
       for (const [k, b] of Object.entries(P.BADGES)) if (st.badges.includes(k)) ctx.println(`  ${c(A.byellow, '🏅 ' + b[0])} — ${b[1]}`);
       return 0;
@@ -630,7 +630,7 @@
     cmdNotebook(ctx) {
       const st = this.state;
       ctx.println('Commands you have actually used in solved tasks:');
-      ctx.println('  · not yet   ▪ tried   ▪▪ practised (3 times on your own)   ▪▪▪ mastered (6 times on your own, in 3+ different tasks)');
+      ctx.println('  · not yet   ▪ tried   ▪▪ practiced (3 times on your own)   ▪▪▪ mastered (6 times on your own, in 3+ different tasks)');
       const cmds = P.allCommands(this.distroId);
       const cell = (x) => `${U.padR(x, 11)}${['·  ', '▪  ', '▪▪ ', '▪▪▪'][P.masteryLevel(st, x)]}`;
       for (let i = 0; i < cmds.length; i += 5) ctx.println('  ' + cmds.slice(i, i + 5).map(cell).join('  '));

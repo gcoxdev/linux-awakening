@@ -7,7 +7,7 @@
   const SNAP = '/mnt/recorder/snapshots';
 
   pack.add({
-    n: 10, id: 'blackbox', title: 'The Black Box', place: 'km 175 · Stellmark', clock: [1, 2, 58],
+    n: 10, id: 'blackbox', title: 'The Black Box', place: 'mile 109 · Stellmark', clock: [1, 2, 58],
     unlocks: ['lsblk', 'dmesg', 'mount', 'df', 'du', 'sha256sum', 'cmp', 'diff', 'md5sum'],
     onStart(g) {
       const w = g.world, fs = g.fs;
@@ -22,7 +22,7 @@
     },
     intro: N`Stellmark. Four minutes at a platform under a mountain, snow falling past the lamps.
 
-Rosa Beltrán — the driver, who until now has been a voice on the intercom saying *"Copy"* — comes down the train in a fleece and a head-torch, carrying a grey box the size of a paperback with a cable wrapped round it.
+Rosa Beltrán — the driver, who until now has been a voice on the intercom saying *"Copy"* — comes down the train in a fleece and a headlamp, carrying a gray box the size of a paperback with a cable wrapped round it.
 
 @Rosa: Event recorder. Every fifteen minutes since Calder. I've never had to pull one before. (She plugs it into the front of rack 7.) Don't break it.
 @Vesna: Mount it **read-only**. Evidence you've written to isn't evidence any more.`,
@@ -127,7 +127,7 @@ The file on disk is not the file that was rotated at midnight.`,
 Five lines. A header like «16d15» means *line 16 of the first file was **d**eleted; after it, the two files line up again at line 15 of the second*.
 
 @Vesna: (very quietly) 23:36, he lets himself into the baggage car with the card Abel gave him and rattles the safe till it pages me. When I get there he's all apology — *heard the alarm, came to check, his employer would want to be sure the Atlas is still there.* After a vibration alarm the safe goes into fault-check mode, and fault-check wants the engineer's *own* password on its keypad, not just the PIN. So I type it. With him a foot behind me — and the keypad screen echoes every key as a star, so all he had to do was count and watch my fingers.
-@Vesna: Then the Kessel sacks slide off their pile — he'd been sitting on them — and I turn round to stack them. Twenty seconds, with my back to an open safe. The case was flat and grey and on the shelf when I closed it. I didn't open the case. Why would I?
+@Vesna: Then the Kessel sacks slide off their pile — he'd been sitting on them — and I turn round to stack them. Twenty seconds, with my back to an open safe. The case was flat and gray and on the shelf when I closed it. I didn't open the case. Why would I?
 @Vesna: 23:51, we leave together. 23:53, he says he saw someone slip into the mail van. I open it with my card and go in to look, and the door swings shut behind me and locks, because that's what sealed doors do.
 @Vesna: He even took out 23:05 — the end of the official inspection, perfectly innocent — just because it had his card number in it. Five lines. That's what I was worth to him.`,
         evidence: 'deleted',

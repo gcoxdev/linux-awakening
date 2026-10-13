@@ -7,7 +7,7 @@
   const PA = '/srv/meridian/pa/announce';
 
   pack.add({
-    n: 3, id: 'casefile', title: 'The Case File', place: 'km 70 · Ashford', clock: [1, 0, 41],
+    n: 3, id: 'casefile', title: 'The Case File', place: 'mile 43 · Ashford', clock: [1, 0, 41],
     unlocks: ['mkdir', 'cp', 'mv', 'touch', 'echo', 'nano', 'rm', 'rmdir'],
     intro: N`Vesna's rule two: *never work on the only copy of anything.* Whoever edits logs on this train hasn't finished — and you'd like to have copies before they come back for more.
 
@@ -78,16 +78,16 @@ Globs: «*» any characters · «?» exactly one character · «[0-9]» one char
         done: N`Empty. June looks at it meaningfully.`,
       },
       {
-        say: N`@June: My statement. Write it down exactly. *"At 23:52 I went to the toilet in B-car. A tall man in a grey coat went past me toward the back of the train, behind a lady in an orange jacket. He didn't say sorry."*
+        say: N`@June: My statement. Write it down exactly. *"At 23:52 I went to the restroom in B-car. A tall man in a gray coat went past me toward the back of the train, behind a lady in an orange jacket. He didn't say sorry."*
 «nano» is a simple text editor. Type the statement, then press **Ctrl+O** and **Enter** to save, and **Ctrl+X** to exit.`,
-        goal: 'Write June\'s statement in «nano ~/case/witness_june.txt» — it must mention the grey coat',
-        hints: ['Type «nano ~/case/witness_june.txt», then type the statement.', 'Save with Ctrl+O, then Enter. Leave with Ctrl+X.', 'The file must contain the words "grey coat".'],
-        check: (e) => /grey/i.test(e.read(e.home + '/case/witness_june.txt') || ''),
+        goal: 'Write June\'s statement in «nano ~/case/witness_june.txt» — it must mention the gray coat',
+        hints: ['Type «nano ~/case/witness_june.txt», then type the statement.', 'Save with Ctrl+O, then Enter. Leave with Ctrl+X.', 'The file must contain the words "gray coat".'],
+        check: (e) => /gr[ae]y/i.test(e.read(e.home + '/case/witness_june.txt') || ''),
         nudge: (e) => (e.ran('nano') && !e.node(e.home + '/case/witness_june.txt') ? '@June: You didn\'t save it! Ctrl+O, then Enter, *then* Ctrl+X.' : null),
-        solve: [{ edit: () => 'At 23:52 I went to the toilet in B-car. A tall man in a grey coat went past me toward the back of the train, behind a lady in an orange jacket. He didn\'t say sorry.\n— June Castellanos, B14, age 12\n' }, 'nano ~/case/witness_june.txt'],
+        solve: [{ edit: () => 'At 23:52 I went to the restroom in B-car. A tall man in a gray coat went past me toward the back of the train, behind a lady in an orange jacket. He didn\'t say sorry.\n— June Castellanos, B14, age 12\n' }, 'nano ~/case/witness_june.txt'],
         done: N`@June: "Age 12." Put that in. They take you more seriously if you tell them, because then they're surprised.
 
-An orange jacket — Vesna's hi-vis. And a tall man in a grey coat, following her toward the back of the train, toward the staff car, at the very minute her card opened its door.`,
+An orange jacket — Vesna's hi-vis. And a tall man in a gray coat, following her toward the back of the train, toward the staff car, at the very minute her card opened its door.`,
         evidence: 'witness',
       },
       {
@@ -95,7 +95,7 @@ An orange jacket — Vesna's hi-vis. And a tall man in a grey coat, following he
 The shell splits words at spaces, so «cp witness_june.txt June statement.txt» would mean *three* names. Quote a name with spaces in it, and the shell keeps it as one.`,
         goal: 'Copy June\'s statement to «~/case/June statement.txt» — quote the name: «cp ~/case/witness_june.txt ~/case/"June statement.txt"»',
         hints: ['The «~» isn\'t expanded inside quotes, so quote only the part with the space: «cp ~/case/witness_june.txt ~/case/"June statement.txt"»', 'A backslash before the space works too: «~/case/June\\ statement.txt».'],
-        check: (e) => /grey/i.test(e.read(e.home + '/case/June statement.txt') || ''),
+        check: (e) => /gr[ae]y/i.test(e.read(e.home + '/case/June statement.txt') || ''),
         nudge: (e) => (e.tried('cp') && !e.node(e.home + '/case/June statement.txt') ? '@June: That\'s not my file. The space split it in two. Put quotes round the name — but not round the «~».' : null),
         solve: ['cp ~/case/witness_june.txt ~/case/"June statement.txt"'],
         done: N`«ls ~/case» lists it as «'June statement.txt'» — with quotes, so you can tell it's one name.
@@ -133,10 +133,10 @@ The PA reads out whatever is written into «/srv/meridian/pa/announce». Redirec
         done: (g) => `:::art
   ((( PA )))   ${(g.fs.contentOf(g.fs.get(PA)) || '').trim().replace(/[«»]/g, '')}
 :::
-Every speaker in the train says it at once, in a flat synthesised voice. Somewhere in sleeper A, a door that had been opening closes again.`,
+Every speaker in the train says it at once, in a flat synthesized voice. Somewhere in sleeper A, a door that had been opening closes again.`,
       },
     ],
-    outro: N`@June: A tall man in a grey coat. How many tall men are there on this train?
+    outro: N`@June: A tall man in a gray coat. How many tall men are there on this train?
 @Abel: Several. And none of them are going anywhere.`,
   });
 })();

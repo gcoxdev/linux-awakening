@@ -8,9 +8,9 @@
   const PAX = '/srv/meridian/manifest/passengers.csv';
 
   pack.add({
-    n: 2, id: 'reading', title: 'Reading the Train', place: 'km 58 · Ashford Viaduct', clock: [1, 0, 27],
+    n: 2, id: 'reading', title: 'Reading the Train', place: 'mile 36 · Ashford Viaduct', clock: [1, 0, 27],
     unlocks: ['date', 'tree', 'head', 'tail', 'wc', 'man', 'less', 'apropos', 'whatis', 'file'],
-    intro: N`The Meridian rolls onto the Ashford Viaduct, and for a minute there's nothing outside the window at all — just black air, and a river a hundred metres down.
+    intro: N`The Meridian rolls onto the Ashford Viaduct, and for a minute there's nothing outside the window at all — just black air, and a river three hundred feet down.
 
 @June: Every door on this train writes down who opened it. With the time. To the second. Did you know that?
 @June: ...You did know that. You're the engineer.
@@ -56,7 +56,7 @@ Vesna's rule three: *if something is strange, write down the time.*`,
         hints: ['Type «tail /var/log/meridian/doors.log».'],
         check: (e) => !!e.ran('tail', (r) => e.targets(r).includes(LOG + '/doors.log')),
         solve: ['tail /var/log/meridian/doors.log'],
-        done: N`«00:12:05 0101 car2_baggage OPEN» — Abel, with Dr Brandt, finding the timetable.
+        done: N`«00:12:05 0101 car2_baggage OPEN» — Abel, with Dr. Brandt, finding the timetable.
 
 Each line is *time · card · door · action*. Cards starting «01» and «02» are crew; «11» and «12» are passenger cabins.`,
       },

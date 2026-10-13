@@ -183,13 +183,13 @@ async function forDistro(distro) {
     }
   }
   if (!only) {
-    /* every command the stories teach gets practised */
+    /* every command the stories teach gets practiced */
     const taught = new Set();
     for (const id of Object.keys(LA.stories)) for (const ch of LA.stories[id].chapters || []) for (const c of ch.unlocks || []) taught.add(LA.isPmCmd(c) ? LA.distro(distro).pm : c);
-    const practised = new Set(P.allCommands(distro));
+    const practiced = new Set(P.allCommands(distro));
     const ignore = new Set(['help', 'hint', 'goal', 'objective', 'story', 'progress', 'notebook', 'clear', 'exit', 'logout', 'reset', 'man']);
-    const missing = [...taught].filter((c) => !practised.has(c) && !ignore.has(c));
-    expect(`${distro}: every taught command is practised`, !missing.length, missing.join(' '));
+    const missing = [...taught].filter((c) => !practiced.has(c) && !ignore.has(c));
+    expect(`${distro}: every taught command is practiced`, !missing.length, missing.join(' '));
   }
 }
 
@@ -239,7 +239,7 @@ async function credit() {
   const st = game.state;
   expect('assisted: solved, no XP', game.task.solved && st.xp === 0, plain(view.out).slice(-600));
   expect('assisted: no mastery, but recorded as tried', !st.mastery.dig && st.assistedUse.dig === 1 && P.masteryLevel(st, 'dig') === 1, JSON.stringify([st.mastery, st.assistedUse]));
-  expect('assisted: not counted towards topic badges', !st.topicSolved.net && !st.independent['net-dns']);
+  expect('assisted: not counted toward topic badges', !st.topicSolved.net && !st.independent['net-dns']);
   expect('assisted: scheduled for review', st.review.some((r) => r.id === 'net-dns'));
   /* mastery needs repetition across different tasks */
   const fake = { mastery: { grep: 9 }, masteryTasks: { grep: ['a', 'b'] }, assistedUse: {} };

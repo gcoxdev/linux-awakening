@@ -7,7 +7,7 @@
   const LOT = 'http://auction.isolde/lots/halvard-atlas';
 
   pack.add({
-    n: 13, id: 'tunnel', title: 'Out of the Tunnel', place: 'km 214 · the Kessel valley', clock: [1, 3, 54],
+    n: 13, id: 'tunnel', title: 'Out of the Tunnel', place: 'mile 133 · the Kessel valley', clock: [1, 3, 54],
     unlocks: ['ip', 'ping', 'dig', 'host', 'curl', 'wget', 'ssh', 'scp', 'ss'],
     onStart(g) {
       const w = g.world;
@@ -70,11 +70,11 @@
         hints: ['Type «curl http://auction.isolde/lots/halvard-atlas».'],
         check: (e) => !!e.event('curl', (ev) => /halvard-atlas$/.test(ev.url)),
         solve: ['curl ' + LOT],
-        done: N`*"...accompanied by the insurer's escort: **Mr Pieter Vos**, Arden Mutual."*
-*"Update, 10 Oct, 18:05: Arden Mutual confirm that Mr Vos is unwell and will NOT be travelling. **Arden are not sending a substitute.**"*
+        done: N`*"...accompanied by the insurer's escort: **Mr. Pieter Vos**, Arden Mutual."*
+*"Update, Oct 10, 18:05: Arden Mutual confirms that Mr. Vos is unwell and will NOT be traveling. **Arden is not sending a substitute.**"*
 
 @Abel: (very still) He had a letter. Signed P. Vos.
-@Vesna: He had a letter signed by a man who was in bed with flu. There is no Mr Marsh of Arden Mutual. There never was.`,
+@Vesna: He had a letter signed by a man who was in bed with the flu. There is no Mr. Marsh of Arden Mutual. There never was.`,
         evidence: 'impostor',
       },
       {
@@ -83,9 +83,9 @@
         hints: ['«wget http://auction.isolde/lots/halvard-atlas/escort.jpg»', 'then «file escort.jpg»'],
         check: (e) => !!e.stepEvent('download', (ev) => /escort\.jpg$/.test(ev.url)) && e.stepRan('file'),
         solve: ['wget ' + LOT + '/escort.jpg', 'file escort.jpg'],
-        done: N`«JPEG image data ... comment: "Pieter Vos, Arden Mutual escort AM-2291 - 1.66 m, bald, glasses, 61 years old"»
+        done: N`«JPEG image data ... comment: "Pieter Vos, Arden Mutual escort AM-2291 - 5 ft 5 in, bald, glasses, 61 years old"»
 
-@June: The man in the grey coat was *tall*. And he had hair. Lots of hair. Very shiny.`,
+@June: The man in the gray coat was *tall*. And he had hair. Lots of hair. Very shiny.`,
       },
       {
         say: N`Kessel's police said — through the stationmaster, through Abel — to look on their server. Every crew member has an account on the station servers along the line; it's how the train files its border paperwork, and your key was copied there when you joined.
@@ -96,7 +96,7 @@
         solve: ['grep kessel /etc/meridian/stations.txt', 'ssh {user}@kessel', { answer: 'yes' }],
         done: N`The fingerprints match, character for character. Had they not, «no» would have been the right answer: someone could be sitting between you and the machine you meant to reach.
 
-Look at your prompt: «{user}@kessel». Every command you type now runs forty kilometres away, in a station building at the border.`,
+Look at your prompt: «{user}@kessel». Every command you type now runs twenty-five miles away, in a station building at the border.`,
       },
       {
         say: N`The banner mentioned «/srv/police». Read what's there.`,

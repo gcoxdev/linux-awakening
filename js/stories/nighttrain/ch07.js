@@ -7,9 +7,9 @@
   const DOORS = "alias doors='tail -n 5 /var/log/meridian/doors.log'";
 
   pack.add({
-    n: 7, id: 'ghost', title: 'Ghost in the Shell', place: 'km 140 · climbing to Brennholt', clock: [1, 1, 55],
+    n: 7, id: 'ghost', title: 'Ghost in the Shell', place: 'mile 87 · climbing to Brennholt', clock: [1, 1, 55],
     unlocks: ['history', 'last', 'who', 'w', 'env', 'export', 'printenv', 'unset', 'alias', 'type', 'unalias', 'source', 'bash', 'ln', 'readlink'],
-    intro: N`The train is climbing now, hard, the engine note deeper, the windows beginning to fog at the corners. Brennholt Pass — the summit, nineteen hundred metres up — is half an hour away.
+    intro: N`The train is climbing now, hard, the engine note deeper, the windows beginning to fog at the corners. Brennholt Pass — the summit, more than six thousand feet up — is half an hour away.
 
 @June: You've been typing everything out longhand for two hours. Vesna would be *appalled*.
 
@@ -125,7 +125,7 @@ There's a new one: «JUNE_WAS_HERE=yes». «unset» removes a variable.`,
         solve: ['last'],
         done: N`«vesna   pts/2   10.8.0.12   ... 23:58 - 00:09 (00:11)»
 
-Eleven minutes, from her laptop, starting six minutes after a man in a grey coat followed her into the staff car. And above it, still open — a login on a terminal called «ttyS3».`,
+Eleven minutes, from her laptop, starting six minutes after a man in a gray coat followed her into the staff car. And above it, still open — a login on a terminal called «ttyS3».`,
       },
       {
         say: N`«who» shows who is logged in *right now*.`,
@@ -150,7 +150,7 @@ Abel is already at the van door, hauling on the handle. It doesn't move. The rul
 @June: (quieter) It's her. It's Vesna. I know it is.`,
       },
     ],
-    outro: N`@Abel: (at the van door, his palm flat on the steel) It's four degrees in there. Four degrees, since before midnight.
+    outro: N`@Abel: (at the van door, his palm flat on the steel) It's thirty-nine degrees in there. Thirty-nine degrees, since before midnight.
 @June: Then we'd better hurry.`,
   });
 })();

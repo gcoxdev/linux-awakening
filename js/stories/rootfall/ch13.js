@@ -286,9 +286,9 @@ Work as yourself; borrow root with «sudo» for the commands that need it; use �
 
 At 03:00:01 the Night Market's lanterns flicker once — the broom passing through, sweeping up wrappers and lost receipts and nothing more. Ingrid's stall stays exactly where it is. By morning she has hung a sign over it: *KEYS NOT SOLD HERE. EVER.* Then, after some thought, a second one underneath: *PASSWORDS NEITHER.*
 
-In the Library, the archive wing stays empty, but Mags is already writing new catalogue cards. On the returns desk there is a book she hasn't seen in seven years — *On Forgetting* — with a note tucked inside: *Sorry it's late. I know how it ends now.* Hal is setting type for a morning edition with a very large number in the headline.
+In the Library, the archive wing stays empty, but Mags is already writing new catalog cards. On the returns desk there is a book she hasn't seen in seven years — *On Forgetting* — with a note tucked inside: *Sorry it's late. I know how it ends now.* Hal is setting type for a morning edition with a very large number in the headline.
 
-Up on the third floor of the hospital, Nurse Ines takes Mr Finch his tea, and he tells her — slowly, carefully, as if checking each word — what he had for dinner last night. She writes it on his chart, and has to step out into the corridor for a minute.
+Up on the third floor of the hospital, Nurse Ines brings Mr. Finch his tea, and he tells her — slowly, carefully, as if checking each word — what he had for dinner last night. She writes it on his chart, and has to step out into the corridor for a minute.
 
 At dawn, the city wakes up, and for the first time in a long time, it remembers the night before.
 

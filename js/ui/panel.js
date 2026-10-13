@@ -158,13 +158,13 @@
       $('secretLabel').textContent = `badges /${Object.keys(P.BADGES).length}`;
       $('cmdCount').textContent = st.stats.commands;
       $('collectLabel').textContent = '';
-      const lv = ['not yet used', 'tried', 'practised: 3 times on your own', 'mastered: 6 times on your own, in 3+ tasks'];
+      const lv = ['not yet used', 'tried', 'practiced: 3 times on your own', 'mastered: 6 times on your own, in 3+ tasks'];
       $('notebook').innerHTML = P.allCommands(game.distroId).map((name) => {
         const m = P.masteryLevel(st, name);
         return `<button class="chip m${m}" data-cmd="${esc(name)}" title="${esc((LA.man[name] ? LA.man[name].desc + ' — ' : '') + lv[m])}">${esc(name)}</button>`;
       }).join('');
       this.filterNotebook();
-      const topics = [['mix', 'Everything', 'a mix, favouring what you practise least']].concat(P.TOPICS);
+      const topics = [['mix', 'Everything', 'a mix, favoring what you practice least']].concat(P.TOPICS);
       /* the list is rebuilt after every command: keep keyboard focus where it was */
       const focused = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.topic : null;
       $('chapters').innerHTML = topics.map(([id, label, ex]) => {
